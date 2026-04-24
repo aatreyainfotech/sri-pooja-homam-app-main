@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Sri Pooja Homam",
+    "slug": "sri-pooja-homam",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "sripoojahomam",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aatreyainfotech.sripoojahomam",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Capture live pooja and homam rituals",
+        "NSMicrophoneUsageDescription": "Broadcast audio during live streams",
+        "NSPhotoLibraryUsageDescription": "Upload temple and pooja images",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.aatreyainfotech.sripoojahomam",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#630B0B"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_IMAGES",
+        "INTERNET",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#630B0B"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#D4AF37",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e657b261-57b0-4060-a6ca-cd25afcb25d0"
+      }
+    },
+    "owner": "aatreya2022",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e657b261-57b0-4060-a6ca-cd25afcb25d0"
+    }
+  }
+}
