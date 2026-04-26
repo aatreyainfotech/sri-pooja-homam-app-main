@@ -62,13 +62,15 @@ export default function BookPooja() {
     setShowRazorpay(true);
   };
 
-  const handlePaymentSuccess = async (paymentId: string) => {
+  const handlePaymentSuccess = async (paymentId: string, orderId: string, signature: string) => {
     setShowRazorpay(false);
     setLoading(true);
     try {
       const { data } = await api.post('/bookings/confirm-payment', {
         booking_id: booking.id,
         razorpay_payment_id: paymentId,
+        razorpay_order_id: orderId,
+        razorpay_signature: signature,
       });
       setBooking(data);
       setStep('success');

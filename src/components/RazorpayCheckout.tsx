@@ -10,7 +10,7 @@
 
 import { useEffect, useRef } from 'react';
 import {
-  Modal, View, StyleSheet, ActivityIndicator, Platform, TouchableOpacity,
+  Modal, View, StyleSheet, ActivityIndicator, Platform, TouchableOpacity, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -34,7 +34,7 @@ export interface RazorpayOptions {
 interface Props {
   visible: boolean;
   options: RazorpayOptions;
-  onSuccess: (paymentId: string, orderId: string) => void;
+  onSuccess: (paymentId: string, orderId: string, signature: string) => void;
   onFailure: (error: string) => void;
   onDismiss: () => void;
 }
@@ -152,7 +152,7 @@ function WebRazorpay({ options, onSuccess, onFailure, onDismiss }: Omit<Props, '
         theme: { color: '#8B1515' },
         modal: { ondismiss: onDismiss },
         handler: (response: any) => {
-          onSuccess(response.razorpay_payment_id, response.razorpay_order_id);
+          onSuccess(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature || '');
         },
       });
       rzp.on('payment.failed', (response: any) => {
@@ -184,13 +184,25 @@ export default function RazorpayCheckout({ visible, options, onSuccess, onFailur
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === 'success') {
-        onSuccess(data.razorpay_payment_id, data.razorpay_order_id);
+        onSuccess(data.razorpay_payment_id, data.razorpay_order_id, data.razorpay_signature || '');
       } else if (data.type === 'failure') {
         onFailure(data.error || 'Payment failed');
       } else if (data.type === 'dismiss') {
         onDismiss();
       }
     } catch {}
+  };
+
+  // Handle UPI / payment-app deep links that WebView can't open natively
+  const handleShouldStartLoad = (request: any) => {
+    const url: string = request.url || '';
+    const deepLinkSchemes = ['intent://', 'upi://', 'phonepe://', 'paytm://',
+      'gpay://', 'tez://', 'bhim://', 'credpay://', 'mobikwik://', 'freecharge://'];
+    if (deepLinkSchemes.some((s) => url.startsWith(s))) {
+      Linking.openURL(url).catch(() => {});
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -203,6 +215,7 @@ export default function RazorpayCheckout({ visible, options, onSuccess, onFailur
           <WebView
             source={{ html, baseUrl: 'https://checkout.razorpay.com' }}
             onMessage={handleMessage}
+            onShouldStartLoadWithRequest={handleShouldStartLoad}
             javaScriptEnabled
             domStorageEnabled
             startInLoadingState
