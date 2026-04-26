@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import RazorpayCheckout from '../../src/components/RazorpayCheckout';
 
 export default function BookPooja() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function BookPooja() {
   const [step, setStep] = useState<'details' | 'payment' | 'success'>('details');
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [showRazorpay, setShowRazorpay] = useState(false);
   const [form, setForm] = useState({
     devotee_name: user?.full_name || '',
     gotra: '',
@@ -56,20 +58,30 @@ export default function BookPooja() {
     }
   };
 
-  const payNow = async () => {
+  const payNow = () => {
+    setShowRazorpay(true);
+  };
+
+  const handlePaymentSuccess = async (paymentId: string) => {
+    setShowRazorpay(false);
     setLoading(true);
     try {
       const { data } = await api.post('/bookings/confirm-payment', {
         booking_id: booking.id,
-        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_payment_id: paymentId,
       });
       setBooking(data);
       setStep('success');
     } catch (e) {
-      Alert.alert('Payment failed', apiError(e));
+      Alert.alert('Payment confirmation failed', apiError(e));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentFailure = (error: string) => {
+    setShowRazorpay(false);
+    Alert.alert('Payment failed', error || 'Please try again');
   };
 
   if (!pooja) {
@@ -184,7 +196,7 @@ export default function BookPooja() {
                   </View>
                 </View>
 
-                <Text style={styles.mockHint}>🧪 MOCKED payment — will mark as paid instantly</Text>
+                <Text style={styles.secureNote}>🔒 Secured by Razorpay — UPI, Cards, Net Banking, Wallets</Text>
               </View>
 
               <TouchableOpacity testID="book-pay-btn" style={styles.btnPrimary} onPress={payNow} disabled={loading}>
@@ -195,6 +207,23 @@ export default function BookPooja() {
                   </>
                 )}
               </TouchableOpacity>
+
+              <RazorpayCheckout
+                visible={showRazorpay}
+                options={{
+                  orderId: booking.razorpay_order_id,
+                  amount: booking.amount,
+                  name: 'Sri Pooja Homam',
+                  description: pooja?.name || 'Pooja Booking',
+                  prefillName: user?.full_name,
+                  prefillContact: user?.mobile,
+                  prefillEmail: user?.email,
+                  razorpayKeyId: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || '',
+                }}
+                onSuccess={handlePaymentSuccess}
+                onFailure={handlePaymentFailure}
+                onDismiss={() => setShowRazorpay(false)}
+              />
             </>
           )}
 
@@ -303,9 +332,9 @@ const styles = StyleSheet.create({
   payVal: { fontSize: 13, color: theme.colors.text, fontWeight: '600' },
   payTotal: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
   payTotalAmt: { fontSize: 18, fontWeight: '800', color: theme.colors.primary },
-  mockHint: {
-    marginTop: 16, fontSize: 11, color: theme.colors.secondaryDark,
-    backgroundColor: 'rgba(212,175,55,0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
+  secureNote: {
+    marginTop: 16, fontSize: 11, color: '#2E7D32',
+    backgroundColor: 'rgba(46,125,50,0.08)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
   },
 
   successWrap: { alignItems: 'center', marginTop: 10 },
