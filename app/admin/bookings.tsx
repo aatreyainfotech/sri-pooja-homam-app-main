@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { api } from '../../src/services/api';
+import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
 
 export default function AllBookings() {
@@ -13,6 +13,9 @@ export default function AllBookings() {
   const safeBack = useSafeBack();
   const [items, setItems] = useState<any[]>([]);
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending'>('all');
+  const [assignFor, setAssignFor] = useState<any | null>(null);
+  const [pujaris, setPujaris] = useState<any[]>([]);
+  const [assigning, setAssigning] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -22,6 +25,30 @@ export default function AllBookings() {
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const openAssign = async (b: any) => {
+    setAssignFor(b);
+    try {
+      const { data } = await api.get('/users', { params: { role: 'poojari' } });
+      setPujaris(data);
+    } catch (e) {
+      Alert.alert('Failed to load pujaris', apiError(e));
+      setPujaris([]);
+    }
+  };
+
+  const doAssign = async (pujariId: string) => {
+    if (!assignFor) return;
+    setAssigning(true);
+    try {
+      await api.put(`/bookings/${assignFor.id}/assign-pujari`, null, { params: { pujari_id: pujariId } });
+      setAssignFor(null);
+      load();
+      Alert.alert('Assigned', 'Pujari has been assigned to this booking.');
+    } catch (e) {
+      Alert.alert('Failed', apiError(e));
+    } finally { setAssigning(false); }
+  };
 
   const filtered = items.filter((b) => {
     if (filter === 'all') return true;
@@ -81,11 +108,54 @@ export default function AllBookings() {
                   {item.payment_status === 'paid' ? '✓ PAID' : 'PENDING'}
                 </Text>
               </View>
+              <TouchableOpacity
+                testID={`assign-pujari-${item.id}`}
+                onPress={() => openAssign(item)}
+                style={styles.assignBtn}
+              >
+                <Ionicons name="person-add" size={12} color="#fff" />
+                <Text style={styles.assignBtnText}>{item.pujari_id ? 'Reassign' : 'Assign Pujari'}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.empty}>No bookings yet</Text>}
       />
+
+      <Modal visible={!!assignFor} transparent animationType="slide" onRequestClose={() => setAssignFor(null)}>
+        <View style={styles.mBackdrop}>
+          <View style={styles.mCard}>
+            <Text style={styles.mTitle}>Assign Pujari</Text>
+            <Text style={styles.mSub}>{assignFor?.pooja_name} — {assignFor?.devotee_name}</Text>
+            <ScrollView style={{ maxHeight: 360, marginTop: 14 }}>
+              {pujaris.length === 0 ? (
+                <Text style={styles.mEmpty}>No pujaris registered yet. Super-admin can add them.</Text>
+              ) : null}
+              {pujaris.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  testID={`assign-pujari-pick-${p.id}`}
+                  disabled={assigning}
+                  onPress={() => doAssign(p.id)}
+                  style={[styles.pujariRow, assignFor?.pujari_id === p.id && { borderColor: theme.colors.primary, borderWidth: 2 }]}
+                >
+                  <View style={styles.avatar}>
+                    <Ionicons name="person" size={18} color="#fff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.pujariName}>{p.full_name}</Text>
+                    <Text style={styles.pujariMobile}>{p.mobile}</Text>
+                  </View>
+                  {assignFor?.pujari_id === p.id ? <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} /> : null}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity onPress={() => setAssignFor(null)} style={styles.mClose}>
+              <Text style={styles.mCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -114,4 +184,28 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
   statusText: { fontSize: 10, fontWeight: '800' },
   empty: { textAlign: 'center', color: theme.colors.textMuted, marginTop: 40 },
+
+  assignBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: theme.colors.primary, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, marginTop: 6,
+  },
+  assignBtnText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+
+  mBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 20 },
+  mCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, maxHeight: '85%' },
+  mTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
+  mSub: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4 },
+  mEmpty: { textAlign: 'center', color: theme.colors.textMuted, padding: 24, fontSize: 13 },
+  pujariRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12,
+    borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 8,
+  },
+  avatar: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  pujariName: { fontSize: 14, fontWeight: '700', color: theme.colors.text },
+  pujariMobile: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
+  mClose: { marginTop: 14, backgroundColor: '#F5F5F5', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
+  mCloseText: { color: theme.colors.text, fontWeight: '700' },
 });

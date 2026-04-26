@@ -176,6 +176,7 @@ export default function Profile() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Links</Text>
           <MenuItem icon="receipt-outline" label="My Bookings" onPress={() => router.push('/(tabs)/bookings')} testID="profile-bookings-btn" />
+          <MenuItem icon="notifications-outline" label="Notification Settings" onPress={() => router.push('/notification-settings')} testID="profile-notif-settings-btn" />
           <MenuItem icon="business-outline" label="Browse Temples" onPress={() => router.push('/(tabs)/temples')} testID="profile-temples-btn" />
           <MenuItem icon="radio-outline" label="Live Streams" onPress={() => router.push('/(tabs)/live')} testID="profile-live-btn" />
           <MenuItem icon="calendar-outline" label="Panchangam Calendar" onPress={() => router.push('/(tabs)/calendar')} testID="profile-calendar-btn" />

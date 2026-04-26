@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, Alert,
+  RefreshControl, Alert, Modal, ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ export default function Bookings() {
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [receipt, setReceipt] = useState<any | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -81,7 +82,7 @@ export default function Bookings() {
               {item.payment_status === 'paid' ? (
                 <TouchableOpacity
                   testID={`booking-receipt-${item.id}`}
-                  onPress={() => Alert.alert('Booking confirmed', `Razorpay Payment ID: ${item.razorpay_payment_id || 'N/A'}`)}
+                  onPress={() => setReceipt(item)}
                   style={styles.btnReceipt}
                 >
                   <Ionicons name="receipt-outline" size={14} color="#fff" />
@@ -115,6 +116,47 @@ export default function Bookings() {
           </View>
         }
       />
+
+      <Modal visible={!!receipt} transparent animationType="fade" onRequestClose={() => setReceipt(null)}>
+        <View style={styles.mBackdrop}>
+          <View style={styles.mCard}>
+            <ScrollView contentContainerStyle={{ padding: 22 }} showsVerticalScrollIndicator={false}>
+              <View style={styles.mIconWrap}>
+                <Ionicons name="checkmark-circle" size={56} color="#2E7D32" />
+              </View>
+              <Text style={styles.mTitle}>Booking Confirmed</Text>
+              <Text style={styles.mSub}>Om Namah Shivaya — your pooja is reserved</Text>
+
+              <View style={styles.mDivider} />
+
+              <Text style={styles.mPooja}>{receipt?.pooja_name}</Text>
+              {receipt?.pooja_type ? (
+                <View style={[styles.typeBadge, { alignSelf: 'flex-start', marginTop: 4, backgroundColor: receipt?.pooja_type === 'homam' ? '#FFF3E0' : '#FFEBEE' }]}>
+                  <Ionicons name={receipt?.pooja_type === 'homam' ? 'flame' : 'flower'} size={12} color={receipt?.pooja_type === 'homam' ? '#E65100' : '#8B1515'} />
+                  <Text style={styles.typeText}>{String(receipt?.pooja_type || '').toUpperCase()}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.mDivider} />
+
+              <Row k="Booking ID" v={receipt?.id} mono />
+              <Row k="Payment ID" v={receipt?.razorpay_payment_id || 'N/A'} mono />
+              <Row k="Devotee" v={receipt?.devotee_name} />
+              {receipt?.gotra ? <Row k="Gotra" v={receipt.gotra} /> : null}
+              {receipt?.nakshatra ? <Row k="Nakshatra" v={receipt.nakshatra} /> : null}
+              {receipt?.scheduled_at ? (
+                <Row k="Scheduled" v={new Date(receipt.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} />
+              ) : null}
+              <Row k="Amount Paid" v={`₹${Number(receipt?.amount || 0).toFixed(2)}`} highlight />
+              <Row k="Status" v={(receipt?.status || receipt?.payment_status || '').toUpperCase()} />
+
+              <TouchableOpacity onPress={() => setReceipt(null)} style={styles.mClose} testID="receipt-close-btn">
+                <Text style={styles.mCloseText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -161,4 +203,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999,
   },
   browseBtnText: { color: '#fff', fontWeight: '700' },
+
+  mBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 20 },
+  mCard: { backgroundColor: '#fff', borderRadius: 24, maxHeight: '90%', borderWidth: 1, borderColor: theme.colors.border },
+  mIconWrap: { alignItems: 'center', marginBottom: 4 },
+  mTitle: { fontSize: 22, fontWeight: '800', color: theme.colors.text, textAlign: 'center', marginTop: 6 },
+  mSub: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center', marginTop: 4 },
+  mDivider: { height: 1, backgroundColor: theme.colors.border, marginVertical: 14 },
+  mPooja: { fontSize: 18, fontWeight: '700', color: theme.colors.primary },
+  mRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 6 },
+  mRowK: { fontSize: 12, color: theme.colors.textMuted, fontWeight: '600' },
+  mRowV: { fontSize: 13, color: theme.colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right', marginLeft: 12 },
+  mRowVHi: { fontSize: 16, color: theme.colors.primary, fontWeight: '800', flexShrink: 1, textAlign: 'right', marginLeft: 12 },
+  mRowVMono: { fontFamily: 'monospace' as any, fontSize: 11 },
+  mClose: { marginTop: 18, backgroundColor: theme.colors.primary, paddingVertical: 13, borderRadius: 999, alignItems: 'center' },
+  mCloseText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
+
+function Row({ k, v, mono, highlight }: { k: string; v: any; mono?: boolean; highlight?: boolean }) {
+  return (
+    <View style={styles.mRow}>
+      <Text style={styles.mRowK}>{k}</Text>
+      <Text style={[highlight ? styles.mRowVHi : styles.mRowV, mono ? styles.mRowVMono : null]}>{String(v ?? '-')}</Text>
+    </View>
+  );
+}

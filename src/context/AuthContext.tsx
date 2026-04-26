@@ -16,10 +16,15 @@ export type User = {
   address: string;
   city: string;
   pincode: string;
-  role: 'super_admin' | 'admin' | 'devotee';
+  role: 'super_admin' | 'admin' | 'poojari' | 'devotee';
   is_active: boolean;
   verified: boolean;
   photo_url?: string | null;
+  wallet_balance?: number;
+  notify_pooja?: boolean;
+  notify_video?: boolean;
+  notify_live?: boolean;
+  notify_booking?: boolean;
 };
 
 type AuthCtx = {

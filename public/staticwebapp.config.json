@@ -1,0 +1,30 @@
+{
+  "routes": [
+    { "route": "/privacy-policy", "rewrite": "/privacy-policy.html" },
+    { "route": "/terms", "rewrite": "/terms.html" },
+    { "route": "/refund", "rewrite": "/refund.html" }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/privacy-policy.html",
+      "/_expo/*",
+      "/assets/*",
+      "/*.js",
+      "/*.css",
+      "/*.json",
+      "/*.ico",
+      "/*.png",
+      "/*.svg",
+      "/*.webp",
+      "/*.ttf",
+      "/*.woff2"
+    ]
+  },
+  "globalHeaders": {
+    "Cache-Control": "no-store"
+  },
+  "mimeTypes": {
+    ".json": "application/json"
+  }
+}
