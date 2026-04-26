@@ -57,7 +57,16 @@ export default function ManagePoojas() {
       Alert.alert('Required', 'Temple, name, description and price are required');
       return;
     }
-    const payload = { ...form, price: parseFloat(form.price), scheduled_at: form.scheduled_at || null };
+    const payload = {
+      temple_id: form.temple_id || '',
+      name: form.name || '',
+      type: form.type || 'pooja',
+      description: form.description || '',
+      price: parseFloat(form.price) || 0,
+      duration: form.duration || '',
+      image: form.image || '',
+      scheduled_at: form.scheduled_at || null,
+    };
     try {
       if (editing) await api.put(`/poojas/${editing.id}`, payload);
       else await api.post('/poojas', payload);

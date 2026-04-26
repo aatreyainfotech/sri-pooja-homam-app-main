@@ -213,7 +213,8 @@ export default function BookPooja() {
               <RazorpayCheckout
                 visible={showRazorpay}
                 options={{
-                  orderId: booking.razorpay_order_id,
+                  // Only pass orderId if it's a real Razorpay order (not null/undefined/fake)
+                  orderId: booking.razorpay_order_id || undefined,
                   amount: booking.amount,
                   name: 'Sri Pooja Homam',
                   description: pooja?.name || 'Pooja Booking',
