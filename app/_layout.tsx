@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import { AuthProvider } from '../src/context/AuthContext';
+import { AppAlertHost } from '../src/components/AppAlert';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function RootLayout() {
             <Stack.Screen name="legal/terms" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="legal/refund" options={{ animation: 'slide_from_right' }} />
           </Stack>
+          <AppAlertHost />
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

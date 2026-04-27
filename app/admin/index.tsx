@@ -35,6 +35,8 @@ export default function AdminDashboard() {
     { title: 'Live Streams', icon: 'radio', color: '#E53935', route: '/admin/live-streams', testID: 'admin-streams-tile' },
     { title: 'Videos', icon: 'videocam', color: '#D4AF37', route: '/admin/videos', testID: 'admin-videos-tile' },
     { title: 'Bookings', icon: 'receipt', color: '#2E7D32', route: '/admin/bookings', testID: 'admin-bookings-tile' },
+    { title: 'Add Pujari', icon: 'person-add', color: '#00796B', route: '/admin/create-pujari', testID: 'admin-create-pujari-tile' },
+    { title: 'Pujari Stats', icon: 'stats-chart', color: '#1565C0', route: '/admin/pujari-stats', testID: 'admin-pujari-stats-tile' },
     ...(user?.role === 'super_admin' ? [{ title: 'Users', icon: 'people', color: '#5E35B1', route: '/admin/users', testID: 'admin-users-tile' }] : []),
   ];
 

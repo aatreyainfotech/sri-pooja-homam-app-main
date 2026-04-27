@@ -69,6 +69,7 @@ export default function Bookings() {
             </View>
 
             <Text style={styles.name}>{item.pooja_name}</Text>
+            {item.temple_name ? <Text style={styles.devotee}>🛕 {item.temple_name}</Text> : null}
             <Text style={styles.devotee}>For: {item.devotee_name}</Text>
             {item.gotra ? <Text style={styles.meta}>Gotra: {item.gotra}</Text> : null}
             {item.scheduled_at ? (
@@ -130,6 +131,12 @@ export default function Bookings() {
               <View style={styles.mDivider} />
 
               <Text style={styles.mPooja}>{receipt?.pooja_name}</Text>
+              {receipt?.temple_name ? (
+                <View style={styles.mTempleRow}>
+                  <Ionicons name="business" size={13} color={theme.colors.primary} />
+                  <Text style={styles.mTempleText} numberOfLines={2}>{receipt.temple_name}</Text>
+                </View>
+              ) : null}
               {receipt?.pooja_type ? (
                 <View style={[styles.typeBadge, { alignSelf: 'flex-start', marginTop: 4, backgroundColor: receipt?.pooja_type === 'homam' ? '#FFF3E0' : '#FFEBEE' }]}>
                   <Ionicons name={receipt?.pooja_type === 'homam' ? 'flame' : 'flower'} size={12} color={receipt?.pooja_type === 'homam' ? '#E65100' : '#8B1515'} />
@@ -211,6 +218,8 @@ const styles = StyleSheet.create({
   mSub: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center', marginTop: 4 },
   mDivider: { height: 1, backgroundColor: theme.colors.border, marginVertical: 14 },
   mPooja: { fontSize: 18, fontWeight: '700', color: theme.colors.primary },
+  mTempleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  mTempleText: { fontSize: 13, color: theme.colors.textSecondary, fontWeight: '600', flex: 1 },
   mRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 6 },
   mRowK: { fontSize: 12, color: theme.colors.textMuted, fontWeight: '600' },
   mRowV: { fontSize: 13, color: theme.colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right', marginLeft: 12 },

@@ -95,6 +95,14 @@ export default function Login() {
                 )}
               </TouchableOpacity>
 
+              <TouchableOpacity
+                testID="login-forgot-link"
+                style={styles.forgotBtn}
+                onPress={() => router.push('/(auth)/forgot-password')}
+              >
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
               <View style={styles.divider}>
                 <View style={styles.dividerLine} /><Text style={styles.dividerText}>New Devotee?</Text><View style={styles.dividerLine} />
               </View>
@@ -141,6 +149,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
   },
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '600', letterSpacing: 0.5 },
+  forgotBtn: { alignSelf: 'flex-end', paddingVertical: 10, paddingHorizontal: 4, marginTop: 4 },
+  forgotText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
   dividerLine: { flex: 1, height: 1, backgroundColor: theme.colors.border },
   dividerText: { color: theme.colors.textMuted, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
