@@ -9,8 +9,11 @@ export default function TabsLayout() {
   if (loading) return null;
   if (!user) return <Redirect href="/(auth)/login" />;
 
+  const isPujari = user?.role === 'poojari';
+
   return (
     <Tabs
+      initialRouteName={isPujari ? 'pujari' : 'index'}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
@@ -25,6 +28,15 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
+      {/* Pujari-only dashboard — shown first for pujari users; hidden for others */}
+      <Tabs.Screen
+        name="pujari"
+        options={{
+          href: isPujari ? undefined : null,
+          title: 'My Poojas',
+          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'grid' : 'grid-outline'} size={24} color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="index"
         options={{
@@ -61,6 +73,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
+          href: isPujari ? null : undefined,
           title: 'Bookings',
           tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={24} color={color} />,
         }}
@@ -72,7 +85,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />,
         }}
       />
-      <Tabs.Screen name="pujari" options={{ href: null }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />
       </Tabs>
   );
