@@ -255,7 +255,7 @@ const styles: any = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center' },
   greet: { color: 'rgba(255,255,255,0.75)', fontSize: 13 },
   name: { color: '#fff', fontSize: 22, fontWeight: '700', marginTop: 2 },
-  brandSm: { color: theme.colors.secondary, fontSize: 14, marginTop: 10, letterSpacing: 1, fontWeight: '600' },
+  brandSm: { color: theme.colors.secondary, fontSize: 15, marginTop: 10, letterSpacing: 1, fontWeight: '800' },
   avatar: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: theme.colors.secondary,
     alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff',

@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   logo: { width: '100%', height: '100%' },
-  brand: { fontSize: 32, fontWeight: '700', color: theme.colors.secondary, letterSpacing: 1 },
+  brand: { fontSize: 34, fontWeight: '800', color: theme.colors.secondary, letterSpacing: 1.2 },
   tagline: { fontSize: 18, color: '#FDFBF7', marginTop: 8, letterSpacing: 4, textTransform: 'uppercase' },
   sub: { fontSize: 13, color: 'rgba(253,251,247,0.6)', marginTop: 12, fontStyle: 'italic' },
 });

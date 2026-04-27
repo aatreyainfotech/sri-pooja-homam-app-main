@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: theme.colors.secondary, marginBottom: 12,
   },
   logo: { width: '100%', height: '100%' },
-  brand: { fontSize: 24, fontWeight: '700', color: theme.colors.secondary, letterSpacing: 0.5 },
+  brand: { fontSize: 26, fontWeight: '800', color: theme.colors.secondary, letterSpacing: 0.6 },
   sub: { fontSize: 13, color: 'rgba(253,251,247,0.7)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' },
   card: {
     backgroundColor: theme.colors.bgPaper, borderRadius: 24, padding: 24,
