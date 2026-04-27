@@ -20,6 +20,7 @@
     },
     "android": {
       "package": "com.aatreyainfotech.sripoojahomam",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#630B0B"
