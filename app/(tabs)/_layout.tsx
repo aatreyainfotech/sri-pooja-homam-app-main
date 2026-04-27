@@ -72,6 +72,8 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />,
         }}
       />
+      <Tabs.Screen name="pujari" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
       </Tabs>
   );
 }
