@@ -4,7 +4,7 @@ import {
   Modal, Pressable, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -176,7 +176,7 @@ export default function Profile() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Links</Text>
           <MenuItem icon="receipt-outline" label="My Bookings" onPress={() => router.push('/(tabs)/bookings')} testID="profile-bookings-btn" />
-          <MenuItem icon="notifications-outline" label="Notification Settings" onPress={() => router.push('/notification-settings')} testID="profile-notif-settings-btn" />
+          <MenuItem icon="bell-ring-outline" iconLib="mci" label="Notification Settings" onPress={() => router.push('/notification-settings')} testID="profile-notif-settings-btn" />
           <MenuItem icon="business-outline" label="Browse Temples" onPress={() => router.push('/(tabs)/temples')} testID="profile-temples-btn" />
           <MenuItem icon="radio-outline" label="Live Streams" onPress={() => router.push('/(tabs)/live')} testID="profile-live-btn" />
           <MenuItem icon="calendar-outline" label="Panchangam Calendar" onPress={() => router.push('/(tabs)/calendar')} testID="profile-calendar-btn" />
@@ -261,10 +261,14 @@ function InfoRow({ icon, label, value }: any) {
   );
 }
 
-function MenuItem({ icon, label, onPress, testID }: any) {
+function MenuItem({ icon, iconLib, label, onPress, testID }: any) {
   return (
     <TouchableOpacity testID={testID} activeOpacity={0.7} onPress={onPress} style={styles.menuItem}>
-      <Ionicons name={icon} size={20} color={theme.colors.primary} />
+      {iconLib === 'mci' ? (
+        <MaterialCommunityIcons name={icon} size={22} color={theme.colors.primary} />
+      ) : (
+        <Ionicons name={icon} size={20} color={theme.colors.primary} />
+      )}
       <Text style={styles.menuLabel}>{label}</Text>
       <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
     </TouchableOpacity>
