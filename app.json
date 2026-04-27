@@ -67,9 +67,7 @@
       }
     },
     "owner": "aatreya2022",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/e657b261-57b0-4060-a6ca-cd25afcb25d0"
     }
