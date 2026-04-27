@@ -1,0 +1,61 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
+
+      - name: Export Expo web build
+        run: npx expo export --platform web --output-dir dist
+        env:
+          EXPO_PUBLIC_BACKEND_URL: https://sripoojahomam-f7bvaqfxgreghkeu.centralindia-01.azurewebsites.net
+          CI: "false"
+
+      - name: Add SWA routing config
+        run: |
+          python3 -c "
+          import json
+          cfg = {
+            'navigationFallback': {
+              'rewrite': '/index.html',
+              'exclude': ['/_expo/*','/assets/*','/*.js','/*.css','/*.json','/*.ico','/*.png','/*.svg','/*.webp','/*.ttf','/*.woff2']
+            },
+            'globalHeaders': {'Cache-Control': 'no-store'},
+            'mimeTypes': {'.json': 'application/json'}
+          }
+          open('dist/staticwebapp.config.json','w').write(json.dumps(cfg, indent=2))
+          print('staticwebapp.config.json written')
+          "
+
+      - name: Deploy to Azure Static Web Apps
+        run: npx --yes @azure/static-web-apps-cli deploy dist --deployment-token "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_RIVER_017D11400 }}" --env production
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_RIVER_017D11400 }}
+          action: "close"

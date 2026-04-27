@@ -112,6 +112,20 @@ export default function Login() {
                   <Text style={styles.btnSecondaryText}>Create Account</Text>
                 </TouchableOpacity>
               </Link>
+
+              <View style={styles.legalRow}>
+                <TouchableOpacity onPress={() => router.push('/legal/privacy-policy')}>
+                  <Text style={styles.legalLink}>Privacy Policy</Text>
+                </TouchableOpacity>
+                <Text style={styles.legalDot}> · </Text>
+                <TouchableOpacity onPress={() => router.push('/legal/terms')}>
+                  <Text style={styles.legalLink}>Terms</Text>
+                </TouchableOpacity>
+                <Text style={styles.legalDot}> · </Text>
+                <TouchableOpacity onPress={() => router.push('/legal/refund')}>
+                  <Text style={styles.legalLink}>Refund</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -151,6 +165,9 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '600', letterSpacing: 0.5 },
   forgotBtn: { alignSelf: 'flex-end', paddingVertical: 10, paddingHorizontal: 4, marginTop: 4 },
   forgotText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
+  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, flexWrap: 'wrap' },
+  legalLink: { color: theme.colors.primary, fontSize: 12, fontWeight: '600' },
+  legalDot: { color: theme.colors.textMuted, fontSize: 12 },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
   dividerLine: { flex: 1, height: 1, backgroundColor: theme.colors.border },
   dividerText: { color: theme.colors.textMuted, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
