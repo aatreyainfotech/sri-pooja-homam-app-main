@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useRef } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import { Platform, View, Text, StyleSheet, Image } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Font from 'expo-font';
 import { AuthProvider } from '../src/context/AuthContext';
@@ -21,7 +21,7 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    // Handle notification tap — deep link to the URL inside notification data
+    if (Platform.OS === 'web') return;
     respRef.current = Notifications.addNotificationResponseReceivedListener((response) => {
       try {
         const url = response?.notification?.request?.content?.data?.url;
@@ -59,12 +59,37 @@ export default function RootLayout() {
 
   if (Platform.OS === 'web') {
     return (
-      <GestureHandlerRootView style={webStyles.bg}>
-        <View style={webStyles.phoneFrame}>
-          <SafeAreaProvider>
-            {inner}
-          </SafeAreaProvider>
+      <GestureHandlerRootView style={webStyles.root}>
+        {/* Rich gradient background */}
+        <View style={webStyles.gradBg} />
+
+        {/* Om watermark */}
+        <Text style={webStyles.omWatermark} aria-hidden="true">ॐ</Text>
+
+        {/* Desktop top branding */}
+        <View style={webStyles.desktopTop}>
+          <Image
+            source={require('../assets/images/icon.png')}
+            style={webStyles.desktopLogo}
+          />
+          <Text style={webStyles.desktopTelugu}>శ్రీ పూజా హోమం</Text>
+          <Text style={webStyles.desktopLatin}>SRI POOJA HOMAM</Text>
+          <Text style={webStyles.desktopTagline}>Divine devotion at your fingertips</Text>
         </View>
+
+        {/* Phone frame */}
+        <View style={webStyles.frameWrap}>
+          <View style={webStyles.phoneFrame}>
+            <SafeAreaProvider>
+              {inner}
+            </SafeAreaProvider>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <Text style={webStyles.footer}>
+          © 2026 Aatreya Infotech Systems LLP • All rights reserved
+        </Text>
       </GestureHandlerRootView>
     );
   }
@@ -79,21 +104,102 @@ export default function RootLayout() {
 }
 
 const webStyles = StyleSheet.create({
-  bg: {
+  root: {
     flex: 1,
-    backgroundColor: '#1a0a09',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  phoneFrame: {
-    width: '100%',
-    maxWidth: 430,
-    flex: 1,
-    alignSelf: 'center',
-    backgroundColor: '#FDFBF7',
-    overflow: 'hidden',
+    backgroundColor: '#0D0504',
+  } as any,
+
+  gradBg: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
     ...(Platform.OS === 'web' ? {
-      boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+      background: 'radial-gradient(ellipse at 30% 20%, #3D1010 0%, #1a0a09 40%, #0D0504 100%)',
+    } as any : { backgroundColor: '#0D0504' }),
+  },
+
+  omWatermark: {
+    position: 'absolute',
+    color: 'rgba(212,175,55,0.05)',
+    fontSize: 400,
+    lineHeight: 400,
+    userSelect: 'none',
+    ...(Platform.OS === 'web' ? {
+      pointerEvents: 'none',
+      fontWeight: '400',
+    } as any : {}),
+  } as any,
+
+  desktopTop: {
+    alignItems: 'center',
+    marginBottom: 20,
+    zIndex: 1,
+  },
+
+  desktopLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    marginBottom: 12,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0 4px 20px rgba(212,175,55,0.3)',
     } as any : {}),
   },
+
+  desktopTelugu: {
+    color: '#D4AF37',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+
+  desktopLatin: {
+    color: 'rgba(212,175,55,0.75)',
+    fontSize: 11,
+    letterSpacing: 4,
+    marginTop: 4,
+    fontFamily: 'Cinzel-Bold',
+  },
+
+  desktopTagline: {
+    color: 'rgba(253,251,247,0.35)',
+    fontSize: 11,
+    marginTop: 6,
+    letterSpacing: 1.5,
+    fontFamily: 'DMSans-Regular',
+  },
+
+  frameWrap: {
+    zIndex: 1,
+    alignItems: 'center',
+    width: '100%',
+    ...(Platform.OS === 'web' ? {
+      maxWidth: 430,
+      flex: 1,
+      maxHeight: 800,
+    } as any : { flex: 1 }),
+  },
+
+  phoneFrame: {
+    width: '100%',
+    flex: 1,
+    backgroundColor: '#FDFBF7',
+    overflow: 'hidden',
+    alignSelf: 'center',
+    ...(Platform.OS === 'web' ? {
+      borderRadius: 12,
+      boxShadow: '0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(212,175,55,0.18), 0 0 40px rgba(212,175,55,0.06)',
+    } as any : {}),
+  },
+
+  footer: {
+    color: 'rgba(212,175,55,0.25)',
+    fontSize: 11,
+    marginTop: 16,
+    letterSpacing: 1,
+    zIndex: 1,
+    fontFamily: 'DMSans-Regular',
+    textAlign: 'center',
+  } as any,
 });
