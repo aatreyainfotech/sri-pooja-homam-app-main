@@ -51,7 +51,7 @@ SQL_PASSWORD = os.environ.get('SQL_PASSWORD', 'Aatreya@2022')
 JWT_SECRET = os.environ.get('JWT_SECRET', 'sripoojahomam_jwt_secret_2026')
 JWT_ALG = "HS256"
 ADMIN_MOBILE = os.environ.get("ADMIN_MOBILE", "9999999999")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin@123")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 ADMIN_NAME = os.environ.get("ADMIN_NAME", "Super Admin")
 
 # pymssql bundles FreeTDS — no system ODBC driver required on Azure App Service
