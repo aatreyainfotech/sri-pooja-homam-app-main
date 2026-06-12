@@ -12,7 +12,7 @@ export default function AllBookings() {
   const router = useRouter();
   const safeBack = useSafeBack();
   const [items, setItems] = useState<any[]>([]);
-  const [filter, setFilter] = useState<'all' | 'paid' | 'pending'>('all');
+  const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'unassigned'>('all');
   const [assignFor, setAssignFor] = useState<any | null>(null);
   const [pujaris, setPujaris] = useState<any[]>([]);
   const [assigning, setAssigning] = useState(false);
@@ -53,10 +53,12 @@ export default function AllBookings() {
   const filtered = items.filter((b) => {
     if (filter === 'all') return true;
     if (filter === 'paid') return b.payment_status === 'paid';
+    if (filter === 'unassigned') return !b.pujari_id;
     return b.payment_status === 'pending';
   });
 
   const totalRevenue = items.filter((b) => b.payment_status === 'paid').reduce((s, b) => s + (b.amount || 0), 0);
+  const unassignedCount = items.filter((b) => !b.pujari_id).length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top']}>
@@ -70,17 +72,23 @@ export default function AllBookings() {
 
       <View style={styles.summary}>
         <View style={styles.sumCard}>
-          <Text style={styles.sumLabel}>TOTAL BOOKINGS</Text>
+          <Text style={styles.sumLabel}>TOTAL</Text>
           <Text style={styles.sumValue}>{items.length}</Text>
         </View>
         <View style={styles.sumCard}>
           <Text style={styles.sumLabel}>REVENUE</Text>
           <Text style={[styles.sumValue, { color: theme.colors.secondary }]}>₹{totalRevenue.toFixed(0)}</Text>
         </View>
+        <View style={[styles.sumCard, unassignedCount > 0 && { borderColor: '#E65100' }]}>
+          <Text style={styles.sumLabel}>UNASSIGNED</Text>
+          <Text style={[styles.sumValue, { color: unassignedCount > 0 ? '#E65100' : '#2E7D32', fontSize: 18 }]}>
+            {unassignedCount}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.chipRow}>
-        {(['all', 'paid', 'pending'] as const).map((f) => (
+        {(['all', 'paid', 'pending', 'unassigned'] as const).map((f) => (
           <TouchableOpacity key={f} testID={`bmg-filter-${f}`} onPress={() => setFilter(f)} style={[styles.chip, filter === f && styles.chipActive]}>
             <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>{f.toUpperCase()}</Text>
           </TouchableOpacity>
@@ -100,6 +108,17 @@ export default function AllBookings() {
               <Text style={styles.sub}>
                 {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
               </Text>
+              {item.pujari_name ? (
+                <View style={styles.pujariTag}>
+                  <Ionicons name="person-circle" size={13} color={theme.colors.primary} />
+                  <Text style={styles.pujariTagText}>{item.pujari_name}</Text>
+                </View>
+              ) : (
+                <View style={styles.unassignedTag}>
+                  <Ionicons name="alert-circle-outline" size={12} color="#E65100" />
+                  <Text style={styles.unassignedText}>Unassigned</Text>
+                </View>
+              )}
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={styles.amt}>₹{item.amount?.toFixed(0)}</Text>
@@ -126,7 +145,13 @@ export default function AllBookings() {
         <View style={styles.mBackdrop}>
           <View style={styles.mCard}>
             <Text style={styles.mTitle}>Assign Pujari</Text>
-            <Text style={styles.mSub}>{assignFor?.pooja_name} — {assignFor?.devotee_name}</Text>
+            <Text style={styles.mSub}>{assignFor?.pooja_name} • {assignFor?.devotee_name}</Text>
+            {assignFor?.pujari_name && (
+              <View style={styles.currentPujari}>
+                <Ionicons name="checkmark-circle" size={14} color="#2E7D32" />
+                <Text style={styles.currentPujariText}>Currently: {assignFor.pujari_name}</Text>
+              </View>
+            )}
             <ScrollView style={{ maxHeight: 360, marginTop: 14 }}>
               {pujaris.length === 0 ? (
                 <Text style={styles.mEmpty}>No pujaris registered yet. Super-admin can add them.</Text>
@@ -195,6 +220,8 @@ const styles = StyleSheet.create({
   mCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, maxHeight: '85%' },
   mTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
   mSub: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4 },
+  currentPujari: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: '#E8F5E9', padding: 8, borderRadius: 8 },
+  currentPujariText: { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
   mEmpty: { textAlign: 'center', color: theme.colors.textMuted, padding: 24, fontSize: 13 },
   pujariRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12,
@@ -208,4 +235,17 @@ const styles = StyleSheet.create({
   pujariMobile: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
   mClose: { marginTop: 14, backgroundColor: '#F5F5F5', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
   mCloseText: { color: theme.colors.text, fontWeight: '700' },
+
+  pujariTag: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
+    backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 6, alignSelf: 'flex-start',
+  },
+  pujariTagText: { fontSize: 11, fontWeight: '700', color: theme.colors.primary },
+  unassignedTag: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
+    backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 6, alignSelf: 'flex-start',
+  },
+  unassignedText: { fontSize: 11, fontWeight: '700', color: '#E65100' },
 });

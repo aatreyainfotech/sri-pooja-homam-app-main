@@ -826,7 +826,9 @@ BOOKING_COLS = ("id, user_id, user_name, user_mobile, pooja_id, pooja_name, pooj
                 "amount, devotee_name, gotra, nakshatra, notes, status, payment_status, "
                 "razorpay_order_id, razorpay_payment_id, scheduled_at, paid_at, created_at, "
                 "pujari_id, pujari_amount, company_amount, "
-                "completed_at, completion_video_url, pujari_paid")
+                "completed_at, completion_video_url, pujari_paid, "
+                "(SELECT TOP 1 full_name FROM dbo.users u2 WHERE u2.id = dbo.bookings.pujari_id) AS pujari_name, "
+                "(SELECT TOP 1 mobile FROM dbo.users u3 WHERE u3.id = dbo.bookings.pujari_id) AS pujari_mobile")
 
 @api.post("/bookings")
 async def create_booking(data: BookingIn, user: dict = Depends(get_current_user)):
@@ -1514,14 +1516,32 @@ async def pujari_bookings(user: dict = Depends(require_poojari_or_admin)):
 
 @api.put("/bookings/{booking_id}/assign-pujari")
 async def assign_pujari_to_booking(booking_id: str, pujari_id: str, user: dict = Depends(require_admin)):
-    booking = await sql_fetch_one("SELECT id FROM dbo.bookings WHERE id = ?", (booking_id,))
+    booking = await sql_fetch_one(
+        "SELECT id, amount, payment_status, pujari_amount FROM dbo.bookings WHERE id = ?", (booking_id,)
+    )
     if not booking:
         raise HTTPException(404, "Booking not found")
-    pujari = await sql_fetch_one("SELECT id FROM dbo.users WHERE id = ? AND role = ?", (pujari_id, "poojari"))
+    pujari = await sql_fetch_one(
+        "SELECT id, full_name FROM dbo.users WHERE id = ? AND role = ?", (pujari_id, "poojari")
+    )
     if not pujari:
         raise HTTPException(404, "Pujari not found")
-    await sql_execute("UPDATE dbo.bookings SET pujari_id = ? WHERE id = ?", (pujari_id, booking_id))
-    return {"ok": True}
+
+    # If booking is already paid but amounts not set (assigned after payment), calculate now
+    if booking.get("payment_status") == "paid" and not booking.get("pujari_amount"):
+        amt = float(booking.get("amount") or 0)
+        co_amt = round(amt * COMPANY_PERCENTAGE, 2)
+        pu_amt = round(amt - co_amt, 2)
+        await sql_execute(
+            "UPDATE dbo.bookings SET pujari_id=?, pujari_amount=?, company_amount=? WHERE id=?",
+            (pujari_id, pu_amt, co_amt, booking_id)
+        )
+    else:
+        await sql_execute("UPDATE dbo.bookings SET pujari_id = ? WHERE id = ?", (pujari_id, booking_id))
+
+    logger.info("[Assign] Booking %s → Pujari %s (%s) by admin %s",
+                booking_id[:8], pujari["full_name"], pujari_id[:8], user.get("full_name"))
+    return {"ok": True, "pujari_name": pujari["full_name"]}
 
 # ----------------------------- Pujari Wallet & Complete ----------------------
 class CompleteBookingIn(BaseModel):
