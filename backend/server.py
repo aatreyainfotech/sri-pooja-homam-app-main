@@ -30,6 +30,7 @@ from whatsapp_service import (
     send_welcome as whatsapp_send_welcome,
     send_booking_confirmation as whatsapp_send_booking,
     is_configured as whatsapp_is_configured,
+    test_send as whatsapp_test_send,
 )
 
 try:
@@ -1383,6 +1384,18 @@ async def admin_stats(user: dict = Depends(require_admin)):
         "company_revenue": float(company_rev) if isinstance(company_rev, Decimal) else company_rev,
         "live_count": live_count,
     }
+
+# ----------------------------- WhatsApp Test ---------------------------------
+
+class WhatsAppTestIn(BaseModel):
+    mobile: str
+    otp: str = "123456"
+
+@api.post("/admin/whatsapp-test")
+async def admin_whatsapp_test(data: WhatsAppTestIn, user: dict = Depends(require_admin)):
+    """Send a test OTP via WhatsApp and return the full Meta API response for debugging."""
+    result = await whatsapp_test_send(data.mobile, data.otp)
+    return result
 
 # ----------------------------- Pujari Endpoints ------------------------------
 
