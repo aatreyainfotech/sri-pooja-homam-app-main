@@ -36,8 +36,8 @@ export const theme = {
     full: 999,
   },
   font: {
-    heading: 'serif',
-    body: 'System',
+    heading: 'Cinzel-Bold',
+    body: 'DMSans-Regular',
   },
 };
 

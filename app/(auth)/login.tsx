@@ -49,6 +49,7 @@ export default function Login() {
                 />
               </View>
               <Text style={styles.brand}>శ్రీ పూజా హోమం</Text>
+              <Text style={styles.brandLatin}>SRI POOJA HOMAM</Text>
               <Text style={styles.sub}>Welcome back, devotee</Text>
             </View>
 
@@ -143,13 +144,14 @@ const styles = StyleSheet.create({
   },
   logo: { width: '100%', height: '100%' },
   brand: { fontSize: 26, fontWeight: '800', color: theme.colors.secondary, letterSpacing: 0.6 },
-  sub: { fontSize: 13, color: 'rgba(253,251,247,0.7)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' },
+  brandLatin: { fontFamily: 'Cinzel-Bold', fontSize: 12, color: theme.colors.secondary, letterSpacing: 3, marginTop: 4, opacity: 0.85 },
+  sub: { fontFamily: 'DMSans-Regular', fontSize: 13, color: 'rgba(253,251,247,0.7)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' },
   card: {
     backgroundColor: theme.colors.bgPaper, borderRadius: 24, padding: 24,
-    borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 },
+    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.4)',
+    shadowColor: theme.colors.secondary, shadowOpacity: 0.15, shadowRadius: 24, shadowOffset: { width: 0, height: 8 },
   },
-  cardTitle: { fontSize: 26, fontWeight: '700', color: theme.colors.text },
+  cardTitle: { fontFamily: 'Cinzel-Bold', fontSize: 24, color: theme.colors.text },
   cardSub: { fontSize: 14, color: theme.colors.textMuted, marginTop: 4, marginBottom: 20 },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,

@@ -253,14 +253,14 @@ const styles: any = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
   headerBg: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 22, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
   headerRow: { flexDirection: 'row', alignItems: 'center' },
-  greet: { color: 'rgba(255,255,255,0.75)', fontSize: 13 },
-  name: { color: '#fff', fontSize: 22, fontWeight: '700', marginTop: 2 },
-  brandSm: { color: theme.colors.secondary, fontSize: 15, marginTop: 10, letterSpacing: 1, fontWeight: '800' },
+  greet: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.8)', fontSize: 13 },
+  name: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 19, marginTop: 2 },
+  brandSm: { color: theme.colors.secondary, fontSize: 14, marginTop: 10, letterSpacing: 2, fontWeight: '800' },
   avatar: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: theme.colors.secondary,
     alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff',
   },
-  avatarText: { color: theme.colors.primary, fontWeight: '800', fontSize: 18 },
+  avatarText: { fontFamily: 'Cinzel-Bold', color: theme.colors.primary, fontSize: 18 },
 
   liveWrap: { marginTop: 18 },
   liveBanner: { height: 180, borderRadius: 20, overflow: 'hidden' },
@@ -280,8 +280,8 @@ const styles: any = StyleSheet.create({
 
   section: { marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text, paddingHorizontal: 20, marginBottom: 12 },
-  seeAll: { color: theme.colors.primary, fontWeight: '600', fontSize: 13 },
+  sectionTitle: { fontFamily: 'Cinzel-Bold', fontSize: 16, color: theme.colors.text, paddingHorizontal: 20, marginBottom: 12 },
+  seeAll: { fontFamily: 'DMSans-Regular', color: theme.colors.primary, fontWeight: '600', fontSize: 13 },
 
   catRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10 },
   catCard: {
@@ -289,8 +289,8 @@ const styles: any = StyleSheet.create({
     borderWidth: 1, borderColor: theme.colors.border, alignItems: 'flex-start',
   },
   catIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  catTitle: { fontWeight: '700', fontSize: 15, color: theme.colors.text },
-  catSub: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
+  catTitle: { fontFamily: 'Cinzel-Bold', fontSize: 14, color: theme.colors.text },
+  catSub: { fontFamily: 'DMSans-Regular', fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
 
   templeCard: {
     width: width * 0.75, height: 180, borderRadius: 20, overflow: 'hidden',
@@ -298,7 +298,7 @@ const styles: any = StyleSheet.create({
   },
   templeImg: { width: '100%', height: '100%' },
   templeOverlay: { ...StyleSheet.absoluteFillObject, padding: 14, justifyContent: 'flex-end' },
-  templeName: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  templeName: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 16 },
   templeMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   templeLoc: { color: theme.colors.secondary, fontSize: 12 },
 
@@ -313,9 +313,9 @@ const styles: any = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4,
   }),
   typeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: theme.colors.primary },
-  poojaName: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
-  poojaDesc: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
+  poojaName: { fontFamily: 'Cinzel-Bold', fontSize: 14, color: theme.colors.text },
+  poojaDesc: { fontFamily: 'DMSans-Regular', fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
   poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  poojaPrice: { fontSize: 15, fontWeight: '800', color: theme.colors.primary },
-  poojaDur: { fontSize: 12, color: theme.colors.textMuted },
+  poojaPrice: { fontFamily: 'Cinzel-Bold', fontSize: 15, color: theme.colors.primary },
+  poojaDur: { fontFamily: 'DMSans-Regular', fontSize: 12, color: theme.colors.textMuted },
 });

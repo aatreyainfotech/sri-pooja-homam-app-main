@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     width: 96, height: 96, borderRadius: 48,
     borderWidth: 3, borderColor: '#fff', backgroundColor: '#eee',
   },
-  avatarText: { color: theme.colors.primary, fontSize: 40, fontWeight: '800' },
+  avatarText: { fontFamily: 'Cinzel-Bold', color: theme.colors.primary, fontSize: 40 },
   editBadge: {
     position: 'absolute', bottom: 0, right: 0,
     width: 32, height: 32, borderRadius: 16,
@@ -307,22 +307,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: '#fff',
   },
-  name: { color: '#fff', fontSize: 22, fontWeight: '700', marginTop: 12 },
-  mobile: { color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
+  name: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 20, marginTop: 12 },
+  mobile: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
   roleBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10,
     backgroundColor: 'rgba(212,175,55,0.2)', borderWidth: 1, borderColor: theme.colors.secondary,
     paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999,
   },
-  roleText: { color: theme.colors.secondary, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  roleText: { fontFamily: 'Cinzel-Bold', color: theme.colors.secondary, fontSize: 10, letterSpacing: 1.5 },
 
   adminCard: { marginHorizontal: 20, marginTop: 18, borderRadius: 20, overflow: 'hidden' },
   adminGrad: { flexDirection: 'row', alignItems: 'center', padding: 18 },
-  adminTitle: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  adminSub: { color: 'rgba(255,255,255,0.9)', fontSize: 12, marginTop: 2 },
+  adminTitle: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 17 },
+  adminSub: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.9)', fontSize: 12, marginTop: 2 },
 
   section: { marginTop: 22, paddingHorizontal: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginBottom: 10 },
+  sectionTitle: { fontFamily: 'Cinzel-Bold', fontSize: 11, color: theme.colors.textMuted, letterSpacing: 2, marginBottom: 10 },
 
   infoRow: {
     flexDirection: 'row', alignItems: 'center',

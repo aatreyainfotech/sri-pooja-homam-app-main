@@ -5,12 +5,20 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import * as Font from 'expo-font';
 import { AuthProvider } from '../src/context/AuthContext';
 import { AppAlertHost } from '../src/components/AppAlert';
 
 export default function RootLayout() {
   const router = useRouter();
   const respRef = useRef<any>(null);
+
+  useEffect(() => {
+    Font.loadAsync({
+      'Cinzel-Bold': require('../assets/fonts/Cinzel-Bold.ttf'),
+      'DMSans-Regular': require('../assets/fonts/DMSans-Regular.ttf'),
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     // Handle notification tap — deep link to the URL inside notification data
