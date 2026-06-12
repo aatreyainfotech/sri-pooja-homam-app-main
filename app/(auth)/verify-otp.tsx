@@ -101,9 +101,9 @@ export default function VerifyOtp() {
 
           {otp_mock ? (
             <View style={styles.mockBox}>
-              <Text style={styles.mockLabel}>🧪 MOCKED OTP (for testing)</Text>
+              <Text style={styles.mockLabel}>🧪 TEST MODE — WhatsApp not configured</Text>
               <Text style={styles.mockOtp}>{otp_mock}</Text>
-              <Text style={styles.mockSub}>Real WhatsApp integration can be plugged in later</Text>
+              <Text style={styles.mockSub}>Configure META_WHATSAPP_TOKEN in backend .env to send real OTPs</Text>
             </View>
           ) : null}
         </KeyboardAvoidingView>
