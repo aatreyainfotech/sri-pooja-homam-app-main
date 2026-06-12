@@ -133,7 +133,7 @@ export default function AllBookings() {
                 style={styles.assignBtn}
               >
                 <Ionicons name="person-add" size={12} color="#fff" />
-                <Text style={styles.assignBtnText}>{item.pujari_id ? 'Reassign' : 'Assign Pujari'}</Text>
+                <Text style={styles.assignBtnText}>{item.pujari_name ? 'Reassign' : 'Assign Pujari'}</Text>
               </TouchableOpacity>
             </View>
           </View>
