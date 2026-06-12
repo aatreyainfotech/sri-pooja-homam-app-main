@@ -313,6 +313,9 @@ class VerifyOtpIn(BaseModel):
     mobile: str
     otp: str
 
+class ResendOtpIn(BaseModel):
+    mobile: str
+
 class LoginIn(BaseModel):
     mobile: str
     password: str
@@ -556,7 +559,7 @@ async def root():
     return {"message": "Sri Pooja Homam API", "status": "ok"}
 
 @api.post("/auth/register")
-async def register(data: RegisterIn, background_tasks: BackgroundTasks):
+async def register(data: RegisterIn):
     mobile = data.mobile.strip()
     email = data.email.lower()
     if await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile = ?", (mobile,)):
@@ -583,19 +586,18 @@ async def register(data: RegisterIn, background_tasks: BackgroundTasks):
             "created_at": to_iso(now_utc()),
         },
     }
-    logger.info("[WhatsApp OTP] Queuing for %s", mobile)
+    logger.info("[WhatsApp OTP] Sending for %s", mobile)
     if whatsapp_is_configured():
-        # Fire-and-forget: return instantly, WhatsApp message arrives within seconds
-        background_tasks.add_task(whatsapp_send_otp, mobile, otp)
-        return {"message": "OTP sent via WhatsApp", "mobile": mobile}
+        ok = await whatsapp_send_otp(mobile, otp)
+        if ok:
+            return {"message": "OTP sent via WhatsApp", "mobile": mobile}
+        # WhatsApp configured but delivery failed (expired token / template error)
+        logger.error("[WhatsApp OTP] DELIVERY FAILED for %s — check META_WHATSAPP_TOKEN in Azure App Settings", mobile)
+        return {"message": "OTP generated but WhatsApp delivery failed. Tap Resend OTP.", "mobile": mobile, "delivery_failed": True}
     else:
         # Fallback for dev/staging — WhatsApp not yet configured
         logger.warning("[WhatsApp OTP] FALLBACK: %s -> %s (META_* env vars not set)", mobile, otp)
-        return {
-            "message": "OTP sent (fallback — WhatsApp API not configured)",
-            "mobile": mobile,
-            "otp_mock": otp,
-        }
+        return {"message": "OTP sent (test mode — WhatsApp not configured)", "mobile": mobile, "otp_mock": otp}
 
 @api.post("/auth/verify-otp")
 async def verify_otp(data: VerifyOtpIn):
@@ -626,6 +628,25 @@ async def verify_otp(data: VerifyOtpIn):
         logger.warning("[WhatsApp] Welcome message error (ignored): %s", exc)
 
     return {"token": token, "user": clean_user(user)}
+
+@api.post("/auth/resend-otp")
+async def resend_otp(data: ResendOtpIn):
+    """Regenerate and resend OTP for the registration flow."""
+    mobile = data.mobile.strip()
+    rec = _otp_store.get(mobile)
+    if not rec:
+        raise HTTPException(400, "No registration in progress. Please start registration again.")
+    new_otp = gen_otp()
+    rec["otp"] = new_otp
+    rec["expires"] = now_utc() + timedelta(minutes=10)
+    _otp_store[mobile] = rec
+    logger.info("[Resend OTP] New OTP for %s", mobile)
+    if whatsapp_is_configured():
+        ok = await whatsapp_send_otp(mobile, new_otp)
+        if ok:
+            return {"message": "OTP resent via WhatsApp"}
+        return {"message": "WhatsApp delivery failed. Please check META_WHATSAPP_TOKEN in Azure settings.", "delivery_failed": True}
+    return {"message": "OTP resent (test mode)", "otp_mock": new_otp}
 
 @api.post("/auth/login")
 async def login(data: LoginIn):
@@ -1152,20 +1173,23 @@ class ResetPasswordOtpIn(BaseModel):
     new_password: str
 
 @api.post("/auth/forgot-password")
-async def forgot_password(data: ForgotPasswordIn, background_tasks: BackgroundTasks):
+async def forgot_password(data: ForgotPasswordIn):
     mobile = data.mobile.strip()
     u = await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile = ?", (mobile,))
     if not u:
         raise HTTPException(404, "No account found with this mobile number")
     otp = gen_otp()
     _reset_otp_store[mobile] = {"otp": otp, "expires": now_utc() + timedelta(minutes=10)}
-    logger.info("[ForgotPw OTP] Queuing for %s", mobile)
+    logger.info("[ForgotPw OTP] Sending for %s", mobile)
     if whatsapp_is_configured():
-        background_tasks.add_task(whatsapp_send_otp, mobile, otp)
-        return {"message": "OTP sent via WhatsApp", "mobile": mobile}
+        ok = await whatsapp_send_otp(mobile, otp)
+        if ok:
+            return {"message": "OTP sent via WhatsApp", "mobile": mobile}
+        logger.error("[ForgotPw OTP] DELIVERY FAILED for %s — check META_WHATSAPP_TOKEN", mobile)
+        return {"message": "OTP generated but WhatsApp delivery failed. Tap Resend OTP.", "mobile": mobile, "delivery_failed": True}
     else:
         logger.warning("[ForgotPw OTP] FALLBACK: %s -> %s", mobile, otp)
-        return {"message": "OTP sent (fallback)", "mobile": mobile, "otp_debug": otp}
+        return {"message": "OTP sent (test mode)", "mobile": mobile, "otp_debug": otp}
 
 @api.post("/auth/reset-password-otp")
 async def reset_password_otp(data: ResetPasswordOtpIn):
@@ -1186,6 +1210,25 @@ async def reset_password_otp(data: ResetPasswordOtpIn):
     )
     _reset_otp_store.pop(mobile, None)
     return {"ok": True, "message": "Password reset successfully"}
+
+@api.post("/auth/resend-reset-otp")
+async def resend_reset_otp(data: ResendOtpIn):
+    """Regenerate and resend OTP for the forgot-password flow."""
+    mobile = data.mobile.strip()
+    rec = _reset_otp_store.get(mobile)
+    if not rec:
+        raise HTTPException(400, "No reset OTP found. Please request forgot password again.")
+    new_otp = gen_otp()
+    rec["otp"] = new_otp
+    rec["expires"] = now_utc() + timedelta(minutes=10)
+    _reset_otp_store[mobile] = rec
+    logger.info("[Resend Reset OTP] New OTP for %s", mobile)
+    if whatsapp_is_configured():
+        ok = await whatsapp_send_otp(mobile, new_otp)
+        if ok:
+            return {"message": "OTP resent via WhatsApp"}
+        return {"message": "WhatsApp delivery failed.", "delivery_failed": True}
+    return {"message": "OTP resent (test mode)", "otp_mock": new_otp}
 
 @api.put("/users/{user_id}/password")
 async def reset_user_password(user_id: str, data: ResetPasswordIn, user: dict = Depends(require_super_admin)):

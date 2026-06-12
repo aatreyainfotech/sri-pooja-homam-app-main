@@ -19,6 +19,8 @@ export default function VerifyOtp() {
   const { setSession } = useAuth();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const refs = useRef<(TextInput | null)[]>([]);
 
   // Auto-fill mocked OTP after 500ms for UX convenience
@@ -28,6 +30,33 @@ export default function VerifyOtp() {
       return () => clearTimeout(t);
     }
   }, [otp_mock]);
+
+  // Resend cooldown countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const resend = async () => {
+    setResending(true);
+    try {
+      const { data } = await api.post('/auth/resend-otp', { mobile });
+      setCooldown(60);
+      if (data.otp_mock) {
+        setOtp(data.otp_mock.split(''));
+        Alert.alert('Test Mode', `Your OTP: ${data.otp_mock}`);
+      } else if (data.delivery_failed) {
+        Alert.alert('Delivery Failed', 'WhatsApp not working. Contact support: +91 9999999999');
+      } else {
+        Alert.alert('OTP Resent', 'Check your WhatsApp messages.');
+      }
+    } catch (e) {
+      Alert.alert('Error', apiError(e));
+    } finally {
+      setResending(false);
+    }
+  };
 
   const setDigit = (i: number, v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 1);
@@ -99,6 +128,20 @@ export default function VerifyOtp() {
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity
+            onPress={resend}
+            disabled={cooldown > 0 || resending}
+            style={styles.resendBtn}
+          >
+            {resending ? (
+              <ActivityIndicator color={theme.colors.secondary} size="small" />
+            ) : (
+              <Text style={[styles.resendText, cooldown > 0 && styles.resendDisabled]}>
+                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
           {otp_mock ? (
             <View style={styles.mockBox}>
               <Text style={styles.mockLabel}>🧪 TEST MODE — WhatsApp not configured</Text>
@@ -132,6 +175,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   btnPrimaryText: { color: '#2D1B19', fontSize: 16, fontWeight: '700' },
+  resendBtn: { alignItems: 'center', paddingVertical: 14 },
+  resendText: { color: theme.colors.secondary, fontSize: 14, fontWeight: '600' },
+  resendDisabled: { color: 'rgba(212,175,55,0.4)' },
   mockBox: {
     marginTop: 24, padding: 14, borderRadius: 14,
     backgroundColor: 'rgba(212,175,55,0.15)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)',

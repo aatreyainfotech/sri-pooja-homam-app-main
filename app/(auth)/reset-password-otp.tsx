@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
+  Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,8 @@ export default function ResetPasswordOtp() {
   const [newPw, setNewPw] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const refs = useRef<(TextInput | null)[]>([]);
 
   // Auto-fill mocked OTP in dev/staging (WhatsApp not configured)
@@ -26,6 +28,32 @@ export default function ResetPasswordOtp() {
       return () => clearTimeout(t);
     }
   }, [otp_mock]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const resend = async () => {
+    setResending(true);
+    try {
+      const { data } = await api.post('/auth/resend-reset-otp', { mobile });
+      setCooldown(60);
+      if (data.otp_mock) {
+        setOtp(data.otp_mock.split(''));
+        Alert.alert('Test Mode', `Your OTP: ${data.otp_mock}`);
+      } else if (data.delivery_failed) {
+        Alert.alert('Delivery Failed', 'WhatsApp not working. Contact support.');
+      } else {
+        Alert.alert('OTP Resent', 'Check your WhatsApp messages.');
+      }
+    } catch (e) {
+      Alert.alert('Error', apiError(e));
+    } finally {
+      setResending(false);
+    }
+  };
 
   const setDigit = (i: number, v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 1);
@@ -113,6 +141,20 @@ export default function ResetPasswordOtp() {
                 )}
               </TouchableOpacity>
 
+              <TouchableOpacity
+                onPress={resend}
+                disabled={cooldown > 0 || resending}
+                style={styles.resendBtn}
+              >
+                {resending ? (
+                  <ActivityIndicator color={theme.colors.primary} size="small" />
+                ) : (
+                  <Text style={[styles.resendText, cooldown > 0 && styles.resendDisabled]}>
+                    {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP via WhatsApp'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
                 <Text style={styles.backLinkText}>← Back</Text>
               </TouchableOpacity>
@@ -149,6 +191,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  resendBtn: { alignItems: 'center', paddingVertical: 8 },
+  resendText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
+  resendDisabled: { color: 'rgba(139,21,21,0.35)' },
   backLink: { alignItems: 'center', paddingVertical: 4 },
   backLinkText: { color: theme.colors.primary, fontSize: 14, fontWeight: '600' },
 });
