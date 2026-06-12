@@ -41,17 +41,22 @@ export default function Login() {
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-            <View style={styles.header}>
-              <View style={styles.logoWrap}>
-                <Image
-                  source={require('../../assets/images/icon.png')}
-                  style={styles.logo}
-                />
+            {Platform.OS !== 'web' && (
+              <View style={styles.header}>
+                <View style={styles.logoWrap}>
+                  <Image
+                    source={require('../../assets/images/icon.png')}
+                    style={styles.logo}
+                  />
+                </View>
+                <Text style={styles.brand}>శ్రీ పూజా హోమం</Text>
+                <Text style={styles.brandLatin}>SRI POOJA HOMAM</Text>
+                <Text style={styles.sub}>Welcome back, devotee</Text>
               </View>
-              <Text style={styles.brand}>శ్రీ పూజా హోమం</Text>
-              <Text style={styles.brandLatin}>SRI POOJA HOMAM</Text>
-              <Text style={styles.sub}>Welcome back, devotee</Text>
-            </View>
+            )}
+            {Platform.OS === 'web' && (
+              <Text style={styles.webWelcome}>WELCOME BACK, DEVOTEE</Text>
+            )}
 
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Sign In</Text>
@@ -136,7 +141,17 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, padding: 24, paddingBottom: 40 },
+  scroll: { flexGrow: 1, padding: 24, paddingBottom: 40, paddingTop: Platform.OS === 'web' ? 16 : 24 },
+  webWelcome: {
+    fontFamily: 'DMSans-Regular',
+    color: 'rgba(253,251,247,0.75)',
+    fontSize: 12,
+    letterSpacing: 2.5,
+    textAlign: 'center',
+    marginBottom: 16,
+    marginTop: 8,
+    textTransform: 'uppercase',
+  } as any,
   header: { alignItems: 'center', marginTop: 10, marginBottom: 24 },
   logoWrap: {
     width: 96, height: 96, borderRadius: 20, overflow: 'hidden',
