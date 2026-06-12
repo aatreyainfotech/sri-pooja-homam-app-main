@@ -24,6 +24,8 @@ export default function Root({ children }: PropsWithChildren) {
               body > div:first-child { position: fixed !important; top: 0; left: 0; right: 0; bottom: 0; display: flex !important; flex-direction: column !important; }
               [role="tablist"] [role="tab"] * { overflow: visible !important; }
               [role="heading"], [role="heading"] * { overflow: visible !important; }
+              * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+              *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
             `,
           }}
         />

@@ -71,11 +71,16 @@ export default function Home() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       >
         {/* Header */}
-        <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.headerBg}>
+        <LinearGradient colors={['#5C0A0A', '#8B1515', '#630B0B']} style={styles.headerBg}>
+          <Text style={styles.omSymbol}>ॐ</Text>
           <View style={styles.headerRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.greet}>🙏 Namaste,</Text>
+              <Text style={styles.greet}>Namaste,</Text>
               <Text style={styles.name} numberOfLines={1}>{user?.full_name}</Text>
+              <View style={styles.rolePill}>
+                <Ionicons name="shield-checkmark" size={10} color={theme.colors.secondary} />
+                <Text style={styles.rolePillText}>{(user?.role || 'devotee').replace('_', ' ').toUpperCase()}</Text>
+              </View>
             </View>
             <TouchableOpacity testID="home-profile-btn" onPress={() => router.push('/(tabs)/profile')}>
               <View style={styles.avatar}>
@@ -83,6 +88,7 @@ export default function Home() {
               </View>
             </TouchableOpacity>
           </View>
+          <View style={styles.headerDivider} />
           <Text style={styles.brandSm}>శ్రీ పూజా హోమం</Text>
         </LinearGradient>
 
@@ -146,6 +152,7 @@ export default function Home() {
               title="Homam"
               subtitle="Fire rituals"
               color="#E65100"
+              gradColors={['#E65100', '#BF360C']}
               onPress={() => router.push('/(tabs)/temples')}
             />
             <CategoryCard
@@ -153,6 +160,7 @@ export default function Home() {
               title="Pooja"
               subtitle="Daily sevas"
               color="#8B1515"
+              gradColors={['#A32A2A', '#630B0B']}
               onPress={() => router.push('/(tabs)/temples')}
             />
             <CategoryCard
@@ -160,6 +168,7 @@ export default function Home() {
               title="Live"
               subtitle="Watch live"
               color="#D4AF37"
+              gradColors={['#D4AF37', '#AA8721']}
               onPress={() => router.push('/(tabs)/live')}
             />
           </View>
@@ -237,30 +246,38 @@ export default function Home() {
   );
 }
 
-function CategoryCard({ icon, title, subtitle, color, onPress }: any) {
+function CategoryCard({ icon, title, subtitle, color, gradColors, onPress }: any) {
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.catCard} testID={`home-cat-${title.toLowerCase()}`}>
-      <View style={[styles.catIconWrap, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={28} color={color} />
-      </View>
-      <Text style={styles.catTitle}>{title}</Text>
-      <Text style={styles.catSub}>{subtitle}</Text>
+      <LinearGradient colors={gradColors} style={styles.catGrad}>
+        <Ionicons name={icon} size={26} color="#fff" style={{ marginBottom: 8 }} />
+        <Text style={styles.catTitle}>{title}</Text>
+        <Text style={styles.catSub}>{subtitle}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
 
 const styles: any = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
-  headerBg: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 22, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  headerRow: { flexDirection: 'row', alignItems: 'center' },
-  greet: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.8)', fontSize: 13 },
-  name: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 19, marginTop: 2 },
-  brandSm: { color: theme.colors.secondary, fontSize: 14, marginTop: 10, letterSpacing: 2, fontWeight: '800' },
-  avatar: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: theme.colors.secondary,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff',
+  headerBg: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 18, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  omSymbol: { color: 'rgba(212,175,55,0.25)', fontSize: 64, position: 'absolute', right: 16, top: -4, fontWeight: '400' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  greet: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.7)', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' },
+  name: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 20, marginTop: 2 },
+  rolePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
+    backgroundColor: 'rgba(212,175,55,0.18)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)',
+    alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
   },
-  avatarText: { fontFamily: 'Cinzel-Bold', color: theme.colors.primary, fontSize: 18 },
+  rolePillText: { fontFamily: 'Cinzel-Bold', color: theme.colors.secondary, fontSize: 9, letterSpacing: 1.5 },
+  headerDivider: { height: 1, backgroundColor: 'rgba(212,175,55,0.2)', marginVertical: 10 },
+  brandSm: { color: theme.colors.secondary, fontSize: 14, letterSpacing: 2, fontWeight: '800' },
+  avatar: {
+    width: 48, height: 48, borderRadius: 24, backgroundColor: theme.colors.secondary,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.9)',
+  },
+  avatarText: { fontFamily: 'Cinzel-Bold', color: theme.colors.primary, fontSize: 20 },
 
   liveWrap: { marginTop: 18 },
   liveBanner: { height: 180, borderRadius: 20, overflow: 'hidden' },
@@ -278,19 +295,16 @@ const styles: any = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.border },
   dotActive: { width: 20, backgroundColor: theme.colors.primary },
 
-  section: { marginTop: 24 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle: { fontFamily: 'Cinzel-Bold', fontSize: 16, color: theme.colors.text, paddingHorizontal: 20, marginBottom: 12 },
+  section: { marginTop: 26 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 14 },
+  sectionTitle: { fontFamily: 'Cinzel-Bold', fontSize: 15, color: theme.colors.text, paddingHorizontal: 20, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: theme.colors.secondary, paddingLeft: 12 },
   seeAll: { fontFamily: 'DMSans-Regular', color: theme.colors.primary, fontWeight: '600', fontSize: 13 },
 
   catRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10 },
-  catCard: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 18, padding: 14,
-    borderWidth: 1, borderColor: theme.colors.border, alignItems: 'flex-start',
-  },
-  catIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  catTitle: { fontFamily: 'Cinzel-Bold', fontSize: 14, color: theme.colors.text },
-  catSub: { fontFamily: 'DMSans-Regular', fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
+  catCard: { flex: 1, borderRadius: 18, overflow: 'hidden' },
+  catGrad: { padding: 16, alignItems: 'flex-start', borderRadius: 18, minHeight: 110 },
+  catTitle: { fontFamily: 'Cinzel-Bold', fontSize: 14, color: '#fff' },
+  catSub: { fontFamily: 'DMSans-Regular', fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   templeCard: {
     width: width * 0.75, height: 180, borderRadius: 20, overflow: 'hidden',
