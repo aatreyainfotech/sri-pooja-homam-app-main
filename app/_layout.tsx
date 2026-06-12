@@ -52,11 +52,11 @@ export default function RootLayout() {
   if (Platform.OS === 'web') {
     return (
       <GestureHandlerRootView style={webStyles.bg}>
-        <SafeAreaProvider>
-          <View style={webStyles.phoneFrame}>
+        <View style={webStyles.phoneFrame}>
+          <SafeAreaProvider>
             {inner}
-          </View>
-        </SafeAreaProvider>
+          </SafeAreaProvider>
+        </View>
       </GestureHandlerRootView>
     );
   }
@@ -81,9 +81,9 @@ const webStyles = StyleSheet.create({
     width: '100%',
     maxWidth: 430,
     flex: 1,
+    alignSelf: 'center',
     backgroundColor: '#FDFBF7',
     overflow: 'hidden',
-    // subtle shadow so it looks like a phone on desktop
     ...(Platform.OS === 'web' ? {
       boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
     } as any : {}),
