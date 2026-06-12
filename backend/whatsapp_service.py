@@ -16,7 +16,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-_META_GRAPH_VERSION = "v20.0"
+_META_GRAPH_VERSION = "v25.0"
 _META_API_BASE = "https://graph.facebook.com"
 
 # ---------------------------------------------------------------------------
