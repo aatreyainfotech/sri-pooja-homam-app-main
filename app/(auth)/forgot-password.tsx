@@ -63,8 +63,8 @@ export default function ForgotPassword() {
               <TouchableOpacity style={styles.btn} onPress={send} disabled={loading}>
                 {loading ? <ActivityIndicator color="#fff" /> : (
                   <>
-                    <Text style={styles.btnText}>Send OTP</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#fff" />
+                    <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+                    <Text style={styles.btnText}>Send WhatsApp OTP</Text>
                   </>
                 )}
               </TouchableOpacity>
