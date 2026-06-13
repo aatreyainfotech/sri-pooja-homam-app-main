@@ -9,6 +9,8 @@ import uuid
 import logging
 import random
 import string
+import re
+import json
 import asyncio
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
@@ -399,8 +401,50 @@ class AgoraTokenIn(BaseModel):
     role: str = "subscriber"
     uid: Optional[int] = None
 
+# ----------------------------- SQL OTP helpers --------------------------------
+async def otp_save(mobile: str, otp: str, otp_type: str, pending_user: dict = None) -> None:
+    """Upsert an OTP record into SQL — survives server restarts and multi-worker deployments."""
+    expires = now_naive() + timedelta(minutes=10)
+    pending_json = json.dumps(pending_user) if pending_user else None
+    await sql_execute(
+        "DELETE FROM dbo.otp_store WHERE mobile = ? AND otp_type = ?", (mobile, otp_type)
+    )
+    await sql_execute(
+        "INSERT INTO dbo.otp_store (mobile, otp_type, otp_code, otp_expires, pending_data) VALUES (?, ?, ?, ?, ?)",
+        (mobile, otp_type, otp, expires, pending_json)
+    )
+
+
+async def otp_get(mobile: str, otp_type: str):
+    """Fetch OTP record. Returns dict with 'otp', 'expired', optional 'pending_user'; or None."""
+    rec = await sql_fetch_one(
+        "SELECT otp_code, otp_expires, pending_data FROM dbo.otp_store WHERE mobile = ? AND otp_type = ?",
+        (mobile, otp_type)
+    )
+    if not rec:
+        return None
+    exp_raw = rec["otp_expires"]
+    if isinstance(exp_raw, str):
+        exp_dt = datetime.fromisoformat(exp_raw)
+    else:
+        exp_dt = exp_raw.replace(tzinfo=None) if getattr(exp_raw, "tzinfo", None) else exp_raw
+    result = {"otp": rec["otp_code"], "expires": exp_dt, "expired": exp_dt < now_naive()}
+    if rec.get("pending_data"):
+        result["pending_user"] = json.loads(rec["pending_data"])
+    return result
+
+
+async def otp_delete(mobile: str, otp_type: str) -> None:
+    """Remove OTP record (best-effort — ignore failure)."""
+    try:
+        await sql_execute(
+            "DELETE FROM dbo.otp_store WHERE mobile = ? AND otp_type = ?", (mobile, otp_type)
+        )
+    except Exception:
+        pass
+
+
 # ----------------------------- Startup ---------------------------------------
-_otp_store = {}  # mobile -> {otp, expires, pending_user}
 
 @app.on_event("startup")
 async def startup():
@@ -444,6 +488,16 @@ async def _startup_init():
         "IF COL_LENGTH('dbo.users','notify_video') IS NULL ALTER TABLE dbo.users ADD notify_video BIT NOT NULL DEFAULT 1",
         "IF COL_LENGTH('dbo.users','notify_live') IS NULL ALTER TABLE dbo.users ADD notify_live BIT NOT NULL DEFAULT 1",
         "IF COL_LENGTH('dbo.users','notify_booking') IS NULL ALTER TABLE dbo.users ADD notify_booking BIT NOT NULL DEFAULT 1",
+        # --- SQL-backed OTP store (replaces in-memory dicts, survives restarts/multi-worker) ---
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'otp_store' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.otp_store (
+               mobile NVARCHAR(20) NOT NULL,
+               otp_type NVARCHAR(20) NOT NULL,
+               otp_code NVARCHAR(10) NOT NULL,
+               otp_expires DATETIME2 NOT NULL,
+               pending_data NVARCHAR(MAX) NULL,
+               CONSTRAINT PK_otp_store PRIMARY KEY (mobile, otp_type)
+           )""",
     ]
     for stmt in alters:
         try:
@@ -561,6 +615,13 @@ async def root():
 @api.post("/auth/register")
 async def register(data: RegisterIn):
     mobile = data.mobile.strip()
+    # Normalize: remove +91, strip to 10 digits
+    mobile = re.sub(r"\D", "", mobile)  # remove all non-digits
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]  # strip country code
+    if len(mobile) != 10:
+        raise HTTPException(400, "Mobile must be 10 digits")
+    
     email = data.email.lower()
     if await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile = ?", (mobile,)):
         raise HTTPException(400, "Mobile already registered")
@@ -568,24 +629,21 @@ async def register(data: RegisterIn):
         raise HTTPException(400, "Email already registered")
 
     otp = gen_otp()
-    _otp_store[mobile] = {
-        "otp": otp,
-        "expires": now_utc() + timedelta(minutes=10),
-        "pending_user": {
-            "id": str(uuid.uuid4()),
-            "full_name": data.full_name,
-            "mobile": mobile,
-            "email": email,
-            "address": data.address,
-            "city": data.city,
-            "pincode": data.pincode,
-            "password_hash": hash_password(data.password),
-            "role": "devotee",
-            "is_active": True,
-            "verified": False,
-            "created_at": to_iso(now_utc()),
-        },
+    pending_user = {
+        "id": str(uuid.uuid4()),
+        "full_name": data.full_name,
+        "mobile": mobile,
+        "email": email,
+        "address": data.address,
+        "city": data.city,
+        "pincode": data.pincode,
+        "password_hash": hash_password(data.password),
+        "role": "devotee",
+        "is_active": True,
+        "verified": False,
+        "created_at": to_iso(now_utc()),
     }
+    await otp_save(mobile, otp, 'register', pending_user)
     logger.info("[WhatsApp OTP] Sending for %s", mobile)
     if whatsapp_is_configured():
         ok = await whatsapp_send_otp(mobile, otp)
@@ -601,11 +659,19 @@ async def register(data: RegisterIn):
 
 @api.post("/auth/verify-otp")
 async def verify_otp(data: VerifyOtpIn):
-    rec = _otp_store.get(data.mobile)
+    # Normalize: remove +91, strip to 10 digits (MUST MATCH register normalization)
+    mobile = data.mobile.strip()
+    mobile = re.sub(r"\D", "", mobile)  # remove all non-digits
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]  # strip country code
+    if len(mobile) != 10:
+        raise HTTPException(400, "Mobile must be 10 digits")
+    
+    rec = await otp_get(mobile, 'register')
     if not rec:
         raise HTTPException(400, "No OTP requested for this mobile")
-    if rec["expires"] < now_utc():
-        _otp_store.pop(data.mobile, None)
+    if rec["expired"]:
+        await otp_delete(mobile, 'register')
         raise HTTPException(400, "OTP expired")
     if data.otp != rec["otp"]:
         raise HTTPException(400, "Invalid OTP")
@@ -618,7 +684,7 @@ async def verify_otp(data: VerifyOtpIn):
          user["address"], user["city"], user["pincode"], user["password_hash"],
          user["role"], 1, 1, now_naive())
     )
-    _otp_store.pop(data.mobile, None)
+    await otp_delete(mobile, 'register')
     token = create_token(user["id"], user["role"], user)
 
     # Send WhatsApp welcome message (non-blocking — failure won't break login)
@@ -633,13 +699,14 @@ async def verify_otp(data: VerifyOtpIn):
 async def resend_otp(data: ResendOtpIn):
     """Regenerate and resend OTP for the registration flow."""
     mobile = data.mobile.strip()
-    rec = _otp_store.get(mobile)
+    mobile = re.sub(r"\D", "", mobile)
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]
+    rec = await otp_get(mobile, 'register')
     if not rec:
         raise HTTPException(400, "No registration in progress. Please start registration again.")
     new_otp = gen_otp()
-    rec["otp"] = new_otp
-    rec["expires"] = now_utc() + timedelta(minutes=10)
-    _otp_store[mobile] = rec
+    await otp_save(mobile, new_otp, 'register', rec.get("pending_user"))
     logger.info("[Resend OTP] New OTP for %s", mobile)
     if whatsapp_is_configured():
         ok = await whatsapp_send_otp(mobile, new_otp)
@@ -1164,8 +1231,6 @@ async def set_user_role(user_id: str, role: str, user: dict = Depends(require_su
 class ResetPasswordIn(BaseModel):
     new_password: str
 
-_reset_otp_store: dict = {}  # mobile -> {otp, expires}
-
 class ForgotPasswordIn(BaseModel):
     mobile: str
 
@@ -1176,12 +1241,19 @@ class ResetPasswordOtpIn(BaseModel):
 
 @api.post("/auth/forgot-password")
 async def forgot_password(data: ForgotPasswordIn):
+    # Normalize: remove +91, strip to 10 digits
     mobile = data.mobile.strip()
+    mobile = re.sub(r"\D", "", mobile)  # remove all non-digits
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]  # strip country code
+    if len(mobile) != 10:
+        raise HTTPException(400, "Mobile must be 10 digits")
+    
     u = await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile = ?", (mobile,))
     if not u:
         raise HTTPException(404, "No account found with this mobile number")
     otp = gen_otp()
-    _reset_otp_store[mobile] = {"otp": otp, "expires": now_utc() + timedelta(minutes=10)}
+    await otp_save(mobile, otp, 'reset')
     logger.info("[ForgotPw OTP] Sending for %s", mobile)
     if whatsapp_is_configured():
         ok = await whatsapp_send_otp(mobile, otp)
@@ -1195,13 +1267,20 @@ async def forgot_password(data: ForgotPasswordIn):
 
 @api.post("/auth/reset-password-otp")
 async def reset_password_otp(data: ResetPasswordOtpIn):
+    # Normalize: remove +91, strip to 10 digits (MUST MATCH forgot_password normalization)
     mobile = data.mobile.strip()
-    rec = _reset_otp_store.get(mobile)
+    mobile = re.sub(r"\D", "", mobile)  # remove all non-digits
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]  # strip country code
+    if len(mobile) != 10:
+        raise HTTPException(400, "Mobile must be 10 digits")
+    
+    rec = await otp_get(mobile, 'reset')
     if not rec:
-        raise HTTPException(400, "No OTP requested for this mobile")
-    if rec["expires"] < now_utc():
-        _reset_otp_store.pop(mobile, None)
-        raise HTTPException(400, "OTP expired")
+        raise HTTPException(400, "No OTP requested for this mobile. Please request forgot password again.")
+    if rec["expired"]:
+        await otp_delete(mobile, 'reset')
+        raise HTTPException(400, "OTP expired. Request a new one.")
     if data.otp != rec["otp"]:
         raise HTTPException(400, "Invalid OTP")
     if not data.new_password or len(data.new_password) < 6:
@@ -1210,20 +1289,25 @@ async def reset_password_otp(data: ResetPasswordOtpIn):
         "UPDATE dbo.users SET password_hash = ? WHERE mobile = ?",
         (hash_password(data.new_password), mobile)
     )
-    _reset_otp_store.pop(mobile, None)
+    await otp_delete(mobile, 'reset')
     return {"ok": True, "message": "Password reset successfully"}
 
 @api.post("/auth/resend-reset-otp")
 async def resend_reset_otp(data: ResendOtpIn):
     """Regenerate and resend OTP for the forgot-password flow."""
+    # Normalize: remove +91, strip to 10 digits (MUST MATCH forgot_password normalization)
     mobile = data.mobile.strip()
-    rec = _reset_otp_store.get(mobile)
+    mobile = re.sub(r"\D", "", mobile)  # remove all non-digits
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]  # strip country code
+    if len(mobile) != 10:
+        raise HTTPException(400, "Mobile must be 10 digits")
+    
+    rec = await otp_get(mobile, 'reset')
     if not rec:
         raise HTTPException(400, "No reset OTP found. Please request forgot password again.")
     new_otp = gen_otp()
-    rec["otp"] = new_otp
-    rec["expires"] = now_utc() + timedelta(minutes=10)
-    _reset_otp_store[mobile] = rec
+    await otp_save(mobile, new_otp, 'reset')
     logger.info("[Resend Reset OTP] New OTP for %s", mobile)
     if whatsapp_is_configured():
         ok = await whatsapp_send_otp(mobile, new_otp)
@@ -1435,6 +1519,18 @@ async def admin_stats(user: dict = Depends(require_admin)):
 class WhatsAppTestIn(BaseModel):
     mobile: str
     otp: str = "123456"
+
+@api.get("/health/whatsapp")
+async def health_whatsapp():
+    """Public endpoint to check WhatsApp configuration status."""
+    return {
+        "configured": whatsapp_is_configured(),
+        "token_set": bool(os.environ.get("WHATSAPP_TOKEN") or os.environ.get("META_WHATSAPP_TOKEN")),
+        "phone_id_set": bool(os.environ.get("WHATSAPP_PHONE_NUMBER_ID") or os.environ.get("META_PHONE_NUMBER_ID")),
+        "token_prefix": (os.environ.get("WHATSAPP_TOKEN") or os.environ.get("META_WHATSAPP_TOKEN") or "")[:20] + "...",
+        "phone_id": os.environ.get("WHATSAPP_PHONE_NUMBER_ID") or os.environ.get("META_PHONE_NUMBER_ID") or "NOT SET",
+        "message": "WhatsApp is ready" if whatsapp_is_configured() else "WhatsApp not configured - check credentials",
+    }
 
 @api.post("/admin/whatsapp-test")
 async def admin_whatsapp_test(data: WhatsAppTestIn, user: dict = Depends(require_admin)):

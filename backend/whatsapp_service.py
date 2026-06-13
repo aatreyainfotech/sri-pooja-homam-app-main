@@ -27,9 +27,8 @@ _COUNTRY_CODE = os.environ.get("WHATSAPP_COUNTRY_CODE", "91").strip()
 
 _TEMPLATE_NAME = os.environ.get("META_OTP_TEMPLATE_NAME", "sri_otp").strip()
 _TEMPLATE_LANG = os.environ.get("META_OTP_TEMPLATE_LANG", "en_US").strip()
-# Default FALSE — body-only template (like your working yatra_pass code).
-# Set META_OTP_TEMPLATE_HAS_BUTTON=true only if sri_otp is Authentication category with Copy Code button.
-_TEMPLATE_HAS_BUTTON = os.environ.get("META_OTP_TEMPLATE_HAS_BUTTON", "false").lower() == "true"
+# sri_otp is Authentication category — has "Copy code" button → MUST send button component
+_TEMPLATE_HAS_BUTTON = os.environ.get("META_OTP_TEMPLATE_HAS_BUTTON", "true").lower() == "true"
 
 _WELCOME_TEMPLATE_NAME = os.environ.get("META_WELCOME_TEMPLATE_NAME", "sri_welcome").strip()
 _WELCOME_TEMPLATE_LANG = os.environ.get("META_WELCOME_TEMPLATE_LANG", "en_US").strip()
