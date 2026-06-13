@@ -43,7 +43,6 @@ export default function PujariDashboard() {
     setStartingLive(true);
     try {
       const { data: stream } = await api.post(`/pujari/start-live/${completing.id}`);
-      const bookingId = completing.id;
       setCompleting(null);
       router.push(`/live-broadcast/${stream.id}` as any);
     } catch (e) {
