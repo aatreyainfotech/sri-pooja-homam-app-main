@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useRef } from 'react';
-import { Platform, View, Text, StyleSheet, Image, Linking, TouchableOpacity, ScrollView } from 'react-native';
+import { Platform, View, Text, StyleSheet, Image, Linking, TouchableOpacity } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,14 +27,12 @@ export default function RootLayout() {
       try {
         const url = response?.notification?.request?.content?.data?.url;
         if (typeof url === 'string' && url.length > 0) {
-          // @ts-ignore expo-router dynamic route
+          // @ts-ignore
           router.push(url);
         }
       } catch {}
     });
-    return () => {
-      try { respRef.current?.remove?.(); } catch {}
-    };
+    return () => { try { respRef.current?.remove?.(); } catch {} };
   }, [router]);
 
   const inner = (
@@ -61,334 +59,250 @@ export default function RootLayout() {
   if (Platform.OS === 'web') {
     return (
       <GestureHandlerRootView style={w.root}>
-        {/* ── Top announcement bar ── */}
-        <View style={w.topBar}>
-          <Text style={w.topBarText}>✦ Book Sacred Poojas & Homams Online • Sri Pooja Homam ✦</Text>
+
+        {/* ── Top announcement strip ── */}
+        <View style={w.topStrip}>
+          <Text style={w.topStripText}>
+            ✦  Book Sacred Poojas & Homams Online  •  Sri Pooja Homam  ✦
+          </Text>
         </View>
 
-        {/* ── Main Navigation Header ── */}
-        <View style={w.header}>
-          <View style={w.headerInner}>
-            {/* Logo + Brand */}
-            <TouchableOpacity onPress={() => router.push('/' as any)} style={w.brandBlock}>
-              <Image source={require('../assets/images/icon.png')} style={w.headerLogo} />
-              <View style={w.brandNames}>
-                <Text style={w.headerTelugu}>శ్రీ పూజా హోమం</Text>
-                <Text style={w.headerLatin}>SRI POOJA HOMAM</Text>
+        {/* ── Navigation header ── */}
+        <View style={w.navbar}>
+          <View style={w.navInner}>
+            <TouchableOpacity onPress={() => router.push('/' as any)} style={w.brandRow}>
+              <Image source={require('../assets/images/icon.png')} style={w.navLogo} />
+              <View>
+                <Text style={w.navTelugu}>శ్రీ పూజా హోమం</Text>
+                <Text style={w.navLatin}>SRI POOJA HOMAM</Text>
               </View>
             </TouchableOpacity>
 
-            {/* Navigation links */}
             <View style={w.navLinks}>
-              <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} style={w.navItem}>
-                <Text style={w.navText}>Home</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)' as any)}>
+                <Text style={w.navLink}>Home</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)} style={w.navItem}>
-                <Text style={w.navText}>Temples</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)}>
+                <Text style={w.navLink}>Temples</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/live' as any)} style={w.navItem}>
-                <View style={w.liveChip}>
-                  <View style={w.liveDot} />
-                  <Text style={w.liveText}>Live</Text>
-                </View>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/bookings' as any)}>
+                <Text style={w.navLink}>My Bookings</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/bookings' as any)} style={w.navItem}>
-                <Text style={w.navText}>My Bookings</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/live' as any)} style={w.livePill}>
+                <View style={w.liveDot} />
+                <Text style={w.liveLabel}>Live</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Sign In button */}
-            <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)} style={w.signInBtn}>
-              <Ionicons name="person-circle-outline" size={16} color="#D4AF37" />
-              <Text style={w.signInText}>Sign In</Text>
+            <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)} style={w.loginBtn}>
+              <Ionicons name="person-circle-outline" size={17} color="#D4AF37" />
+              <Text style={w.loginBtnText}>Sign In</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Gold border bottom */}
-          <View style={w.headerBorder} />
+          <View style={w.navGoldLine} />
         </View>
 
-        {/* ── Page content (full width) ── */}
-        <View style={w.pageContent}>
-          <SafeAreaProvider style={{ flex: 1 }}>
-            {inner}
-          </SafeAreaProvider>
+        {/* ── Main content — centered column with dark temple bg on sides ── */}
+        <View style={w.pageWrap}>
+          {/* Dark temple background on wide screens */}
+          <View style={w.pageBg} />
+          {/* Centered app column */}
+          <View style={w.appColumn}>
+            <SafeAreaProvider style={{ flex: 1 }}>
+              {inner}
+            </SafeAreaProvider>
+          </View>
         </View>
 
         {/* ── Footer ── */}
         <View style={w.footer}>
-          <View style={w.footerTop}>
-            <Text style={w.footerDecor}>✦ ॥ ✦</Text>
-          </View>
-          <View style={w.footerInner}>
-            {/* Brand column */}
-            <View style={w.footerBrand}>
+          <View style={w.footerRow}>
+            {/* Brand */}
+            <TouchableOpacity onPress={() => router.push('/' as any)} style={w.footerBrand}>
               <Image source={require('../assets/images/icon.png')} style={w.footerLogo} />
-              <Text style={w.footerBrandName}>శ్రీ పూజా హోమం</Text>
-              <Text style={w.footerTagline}>Divine devotion at your fingertips</Text>
-            </View>
+              <View>
+                <Text style={w.footerTelugu}>శ్రీ పూజా హోమం</Text>
+                <Text style={w.footerTagline}>Divine devotion at your fingertips</Text>
+              </View>
+            </TouchableOpacity>
 
-            {/* Quick links */}
+            {/* Links */}
             <View style={w.footerLinks}>
-              <Text style={w.footerLinkHead}>Quick Links</Text>
-              <TouchableOpacity onPress={() => router.push('/(tabs)' as any)}>
-                <Text style={w.footerLink}>Home</Text>
+              <Text style={w.footerHead}>Quick Links</Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
+                <Text style={w.footerLink}>Register</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)}>
                 <Text style={w.footerLink}>Temples</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
-                <Text style={w.footerLink}>Register</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
                 <Text style={w.footerLink}>Privacy Policy</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Download column */}
+            {/* Download */}
             <View style={w.footerLinks}>
-              <Text style={w.footerLinkHead}>Download App</Text>
+              <Text style={w.footerHead}>Download App</Text>
               <TouchableOpacity
-                onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}
                 style={w.storeBtn}
+                onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}
               >
                 <Ionicons name="logo-android" size={14} color="#A5D6A7" />
-                <Text style={w.storeBtnText}>Google Play</Text>
+                <Text style={w.storeTxt}>Google Play</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}
                 style={w.storeBtn}
+                onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}
               >
                 <Ionicons name="logo-apple" size={14} color="#90CAF9" />
-                <Text style={w.storeBtnText}>App Store</Text>
+                <Text style={w.storeTxt}>App Store</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Bottom bar */}
           <View style={w.footerBottom}>
-            <Text style={w.footerCopy}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
+            <Text style={w.copyright}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
             <TouchableOpacity onPress={() => Linking.openURL('https://aatreya.org')}>
-              <Text style={w.devCredit}>
+              <Text style={w.devTxt}>
                 Developed with ❤ by{' '}
                 <Text style={w.devName}>Aatreya Infotech Systems LLP</Text>
               </Text>
             </TouchableOpacity>
           </View>
         </View>
+
       </GestureHandlerRootView>
     );
   }
 
-  // ── Native mobile (unchanged) ──
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        {inner}
-      </SafeAreaProvider>
+      <SafeAreaProvider>{inner}</SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
 const MAROON = '#8B1515';
-const DARK   = '#2D0B00';
+const DARK   = '#1C0505';
 const GOLD   = '#D4AF37';
 
 const w = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F5F0E8' } as any,
+  root: { flex: 1, flexDirection: 'column' } as any,
 
-  // ── Top announcement bar ──
-  topBar: {
-    backgroundColor: DARK,
-    paddingVertical: 6,
-    alignItems: 'center',
-  },
-  topBarText: {
-    color: GOLD,
-    fontSize: 11,
-    letterSpacing: 1.5,
-    fontWeight: '600',
-  } as any,
+  // ── Top strip ──
+  topStrip: { backgroundColor: '#2D0B00', paddingVertical: 7, alignItems: 'center' },
+  topStripText: { color: GOLD, fontSize: 11, letterSpacing: 1.8, fontWeight: '600' } as any,
 
-  // ── Header ──
-  header: {
+  // ── Navbar ──
+  navbar: {
     backgroundColor: MAROON,
-    ...(Platform.OS === 'web' ? {
-      boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
-    } as any : {}),
+    flexShrink: 0,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 16px rgba(0,0,0,0.5)' } as any : {}),
   },
-  headerInner: {
+  navInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
     paddingVertical: 10,
-    gap: 32,
-    ...(Platform.OS === 'web' ? { maxWidth: 1200, alignSelf: 'center', width: '100%' } as any : {}),
+    ...(Platform.OS === 'web' ? { maxWidth: 1100, alignSelf: 'center', width: '100%' } as any : {}),
   },
-  brandBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 0,
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginRight: 32 },
+  navLogo: {
+    width: 42, height: 42, borderRadius: 10,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 2px rgba(212,175,55,0.55)' } as any : {}),
   },
-  headerLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    ...(Platform.OS === 'web' ? {
-      boxShadow: '0 0 0 2px rgba(212,175,55,0.6)',
-    } as any : {}),
+  navTelugu: { color: GOLD, fontSize: 17, fontWeight: '800', letterSpacing: 0.3 },
+  navLatin: { color: 'rgba(212,175,55,0.6)', fontSize: 8, letterSpacing: 3, fontFamily: 'Cinzel-Bold' },
+
+  navLinks: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  navLink: { color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: '600', paddingHorizontal: 12, paddingVertical: 8 },
+
+  livePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(229,57,53,0.22)', paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 999, borderWidth: 1, borderColor: 'rgba(229,57,53,0.45)',
   },
-  brandNames: { gap: 1 },
-  headerTelugu: {
-    color: GOLD,
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF5350' },
+  liveLabel: { color: '#EF9A9A', fontSize: 13, fontWeight: '700' },
+
+  loginBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(212,175,55,0.12)', paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 999, borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)',
   },
-  headerLatin: {
-    color: 'rgba(212,175,55,0.65)',
-    fontSize: 8,
-    letterSpacing: 3,
-    fontFamily: 'Cinzel-Bold',
-  },
-  navLinks: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  navItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  navText: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  liveChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(229,57,53,0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(229,57,53,0.5)',
-  },
-  liveDot: {
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: '#EF5350',
-  },
-  liveText: { color: '#EF9A9A', fontSize: 13, fontWeight: '700' },
-  signInBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(212,175,55,0.15)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.4)',
-  },
-  signInText: {
-    color: GOLD,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  headerBorder: {
+  loginBtnText: { color: GOLD, fontSize: 13, fontWeight: '700' },
+
+  navGoldLine: {
     height: 2,
     ...(Platform.OS === 'web' ? {
-      background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.6) 30%, rgba(212,175,55,0.6) 70%, transparent)',
-    } as any : { backgroundColor: 'rgba(212,175,55,0.4)' }),
+      background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.55) 25%, rgba(212,175,55,0.55) 75%, transparent 100%)',
+    } as any : { backgroundColor: 'rgba(212,175,55,0.35)' }),
   },
 
   // ── Content ──
-  pageContent: {
+  pageWrap: {
     flex: 1,
-    backgroundColor: '#F5F0E8',
-  },
+    overflow: 'hidden',
+    position: 'relative',
+    alignItems: 'center',
+  } as any,
+
+  pageBg: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    ...(Platform.OS === 'web' ? {
+      background: 'radial-gradient(ellipse at 50% 0%, #5C1010 0%, #1C0505 55%, #0D0302 100%)',
+    } as any : { backgroundColor: '#2D0B00' }),
+  } as any,
+
+  appColumn: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 680,
+    zIndex: 1,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0 0 120px rgba(0,0,0,0.7)',
+    } as any : {}),
+  } as any,
 
   // ── Footer ──
   footer: {
     backgroundColor: DARK,
-    ...(Platform.OS === 'web' ? {
-      boxShadow: 'inset 0 2px 0 rgba(212,175,55,0.15)',
-    } as any : {}),
+    flexShrink: 0,
+    ...(Platform.OS === 'web' ? { boxShadow: 'inset 0 2px 0 rgba(212,175,55,0.12)' } as any : {}),
   },
-  footerTop: {
-    alignItems: 'center',
+  footerRow: {
+    flexDirection: 'row',
+    gap: 32,
+    paddingHorizontal: 32,
     paddingTop: 20,
-    paddingBottom: 8,
-  },
-  footerDecor: {
-    color: 'rgba(212,175,55,0.4)',
-    fontSize: 16,
-    letterSpacing: 6,
-  },
-  footerInner: {
-    flexDirection: 'row',
-    gap: 40,
-    paddingHorizontal: 40,
-    paddingBottom: 24,
+    paddingBottom: 16,
     flexWrap: 'wrap',
-    ...(Platform.OS === 'web' ? { maxWidth: 1200, alignSelf: 'center', width: '100%' } as any : {}),
+    ...(Platform.OS === 'web' ? { maxWidth: 1100, alignSelf: 'center', width: '100%' } as any : {}),
   },
-  footerBrand: { flex: 1, minWidth: 180, gap: 8 },
-  footerLogo: { width: 36, height: 36, borderRadius: 8 },
-  footerBrandName: { color: GOLD, fontSize: 15, fontWeight: '800' },
-  footerTagline: { color: 'rgba(253,251,247,0.4)', fontSize: 12 },
-  footerLinks: { gap: 10, minWidth: 120 },
-  footerLinkHead: {
-    color: GOLD,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  footerLink: {
-    color: 'rgba(253,251,247,0.55)',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  storeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 2,
-  },
-  storeBtnText: {
-    color: 'rgba(253,251,247,0.55)',
-    fontSize: 13,
-    fontWeight: '500',
-  },
+  footerBrand: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 160 },
+  footerLogo: { width: 34, height: 34, borderRadius: 8 },
+  footerTelugu: { color: GOLD, fontSize: 14, fontWeight: '800' },
+  footerTagline: { color: 'rgba(253,251,247,0.38)', fontSize: 11, marginTop: 2 },
+
+  footerLinks: { gap: 8, minWidth: 110 },
+  footerHead: { color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 2 },
+  footerLink: { color: 'rgba(253,251,247,0.5)', fontSize: 13 },
+
+  storeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  storeTxt: { color: 'rgba(253,251,247,0.5)', fontSize: 13 },
+
   footerBottom: {
     borderTopWidth: 1,
     borderTopColor: 'rgba(212,175,55,0.1)',
-    paddingVertical: 12,
-    paddingHorizontal: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 32,
     flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    gap: 8,
-    ...(Platform.OS === 'web' ? { maxWidth: 1200, alignSelf: 'center', width: '100%' } as any : {}),
+    gap: 6,
+    ...(Platform.OS === 'web' ? { maxWidth: 1100, alignSelf: 'center', width: '100%' } as any : {}),
   },
-  footerCopy: {
-    color: 'rgba(212,175,55,0.25)',
-    fontSize: 11,
-  },
-  devCredit: {
-    color: 'rgba(253,251,247,0.3)',
-    fontSize: 11,
-  } as any,
-  devName: {
-    color: 'rgba(212,175,55,0.5)',
-    fontWeight: '700',
-  },
+  copyright: { color: 'rgba(212,175,55,0.22)', fontSize: 11 },
+  devTxt: { color: 'rgba(253,251,247,0.28)', fontSize: 11 } as any,
+  devName: { color: 'rgba(212,175,55,0.48)', fontWeight: '700' },
 });
