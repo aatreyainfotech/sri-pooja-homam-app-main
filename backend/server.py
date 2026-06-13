@@ -1469,6 +1469,32 @@ async def create_pujari(data: CreatePujariIn, user: dict = Depends(require_admin
     )
     return {"ok": True, "id": u_id, "role": "poojari", "full_name": data.full_name}
 
+class CreateAdminIn(BaseModel):
+    full_name: str
+    mobile: str
+    email: Optional[str] = None
+    password: str
+    city: Optional[str] = None
+
+@api.post("/admin/create-admin")
+async def create_admin_user(data: CreateAdminIn, user: dict = Depends(require_admin)):
+    if user.get("role") != "super_admin":
+        raise HTTPException(403, "Only super admins can create admin accounts")
+    mobile = data.mobile.strip()
+    existing = await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile = ?", (mobile,))
+    if existing:
+        raise HTTPException(400, "A user with this mobile already exists")
+    if len(data.password) < 6:
+        raise HTTPException(400, "Password must be at least 6 characters")
+    u_id = str(uuid.uuid4())
+    await sql_execute(
+        "INSERT INTO dbo.users (id, full_name, mobile, email, address, city, pincode, "
+        "password_hash, role, is_active, verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        (u_id, data.full_name, mobile, data.email or "", "", data.city or "", "",
+         hash_password(data.password), "admin", 1, 1, now_naive())
+    )
+    return {"ok": True, "id": u_id, "role": "admin", "full_name": data.full_name}
+
 @api.get("/admin/pujari-summary")
 async def admin_pujari_summary(user: dict = Depends(require_admin)):
     pujaris = await sql_fetch_all(
@@ -1545,7 +1571,7 @@ async def assign_pujari_to_booking(booking_id: str, pujari_id: str, user: dict =
 
 # ----------------------------- Pujari Wallet & Complete ----------------------
 class CompleteBookingIn(BaseModel):
-    video_url: str
+    video_url: Optional[str] = ""
 
 @api.post("/bookings/{booking_id}/complete")
 async def complete_booking(booking_id: str, data: CompleteBookingIn, user: dict = Depends(require_poojari_or_admin)):

@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, View, Text, StyleSheet, Image } from 'react-native';
+import { Platform, View, Text, StyleSheet, Image, Linking, TouchableOpacity } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,10 +74,16 @@ export default function RootLayout() {
   if (Platform.OS === 'web') {
     return (
       <GestureHandlerRootView style={webStyles.root}>
-        {/* Gradient background */}
+        {/* Rich traditional background */}
         <View style={webStyles.gradBg} />
         {/* Om watermark */}
         <Text style={webStyles.omWatermark} aria-hidden="true">ॐ</Text>
+        {/* Decorative lotus watermarks */}
+        <Text style={webStyles.lotusLeft} aria-hidden="true">❀</Text>
+        <Text style={webStyles.lotusRight} aria-hidden="true">❀</Text>
+
+        {/* Traditional top border */}
+        <Text style={webStyles.topBorder}>✦ ॥ శ్రీ గణేశాయ నమః ॥ ✦</Text>
 
         {/* Desktop brand header */}
         <View style={webStyles.brandRow}>
@@ -87,7 +93,14 @@ export default function RootLayout() {
             <Text style={webStyles.brandLatin}>SRI POOJA HOMAM</Text>
           </View>
         </View>
-        <Text style={webStyles.brandTagline}>Divine devotion at your fingertips</Text>
+        <Text style={webStyles.brandTagline}>✦ Divine devotion at your fingertips ✦</Text>
+
+        {/* Gold divider */}
+        <View style={webStyles.goldDivider}>
+          <View style={webStyles.dividerLine} />
+          <Text style={webStyles.dividerDot}>❋</Text>
+          <View style={webStyles.dividerLine} />
+        </View>
 
         {/* Phone device */}
         <View style={webStyles.deviceBezel}>
@@ -124,10 +137,36 @@ export default function RootLayout() {
           </View>
         </View>
 
-        {/* Footer */}
-        <Text style={webStyles.footer}>
-          © 2026 Aatreya Infotech Systems LLP • All rights reserved
-        </Text>
+        {/* Store links */}
+        <View style={webStyles.storeRow}>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}
+            style={webStyles.storeBtn}
+          >
+            <Ionicons name="logo-android" size={14} color="#A5D6A7" />
+            <Text style={webStyles.storeBtnText}>Google Play</Text>
+          </TouchableOpacity>
+          <View style={webStyles.storeDot} />
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}
+            style={webStyles.storeBtn}
+          >
+            <Ionicons name="logo-apple" size={14} color="#90CAF9" />
+            <Text style={webStyles.storeBtnText}>App Store</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Developer footer */}
+        <TouchableOpacity
+          onPress={() => Linking.openURL('https://aatreya.org')}
+          style={webStyles.devRow}
+        >
+          <Text style={webStyles.devCredit}>
+            Developed with ❤ by{' '}
+            <Text style={webStyles.devName}>Aatreya Infotech Systems LLP</Text>
+          </Text>
+        </TouchableOpacity>
+        <Text style={webStyles.footer}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
       </GestureHandlerRootView>
     );
   }
@@ -146,71 +185,121 @@ const webStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     backgroundColor: '#0D0504',
-    paddingTop: 18,
-    paddingBottom: 10,
+    paddingTop: 14,
+    paddingBottom: 8,
   } as any,
 
   gradBg: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     ...(Platform.OS === 'web' ? {
-      background: 'radial-gradient(ellipse at 25% 15%, #4A1010 0%, #1a0a09 45%, #0A0302 100%)',
+      background: [
+        'radial-gradient(ellipse at 20% 0%, #5C1A00 0%, #2D0B00 30%, #0D0302 65%, #080101 100%)',
+      ].join(', '),
     } as any : { backgroundColor: '#0D0504' }),
   },
 
   omWatermark: {
     position: 'absolute',
-    top: '5%',
-    right: '3%',
-    color: 'rgba(212,175,55,0.04)',
-    fontSize: 340,
-    lineHeight: 340,
+    top: '8%',
+    right: '2%',
+    color: 'rgba(212,175,55,0.035)',
+    fontSize: 300,
+    lineHeight: 300,
     ...(Platform.OS === 'web' ? {
       userSelect: 'none',
       pointerEvents: 'none',
     } as any : {}),
   } as any,
 
+  lotusLeft: {
+    position: 'absolute',
+    top: '30%',
+    left: '2%',
+    color: 'rgba(212,175,55,0.06)',
+    fontSize: 120,
+    lineHeight: 120,
+    ...(Platform.OS === 'web' ? { userSelect: 'none', pointerEvents: 'none' } as any : {}),
+  } as any,
+  lotusRight: {
+    position: 'absolute',
+    top: '55%',
+    right: '2%',
+    color: 'rgba(212,175,55,0.06)',
+    fontSize: 120,
+    lineHeight: 120,
+    ...(Platform.OS === 'web' ? { userSelect: 'none', pointerEvents: 'none' } as any : {}),
+  } as any,
+
+  topBorder: {
+    color: 'rgba(212,175,55,0.5)',
+    fontSize: 11,
+    letterSpacing: 2,
+    marginBottom: 10,
+    zIndex: 1,
+    fontFamily: 'DMSans-Regular',
+    textAlign: 'center',
+  } as any,
+
   // ─── Brand header ──────────────────────────────
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     marginBottom: 4,
     zIndex: 1,
   },
   brandIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 11,
+    width: 52,
+    height: 52,
+    borderRadius: 13,
     ...(Platform.OS === 'web' ? {
-      boxShadow: '0 4px 16px rgba(212,175,55,0.4)',
+      boxShadow: '0 0 0 2px rgba(212,175,55,0.5), 0 6px 20px rgba(212,175,55,0.3)',
     } as any : {}),
   },
   brandText: {
-    gap: 2,
+    gap: 3,
   },
   brandTelugu: {
     color: '#D4AF37',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     letterSpacing: 0.5,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   brandLatin: {
-    color: 'rgba(212,175,55,0.65)',
+    color: 'rgba(212,175,55,0.7)',
     fontSize: 9,
-    letterSpacing: 3.5,
+    letterSpacing: 4,
     fontFamily: 'Cinzel-Bold',
     lineHeight: 14,
   },
   brandTagline: {
-    color: 'rgba(253,251,247,0.28)',
+    color: 'rgba(212,175,55,0.45)',
     fontSize: 10,
-    letterSpacing: 1.5,
+    letterSpacing: 2,
     fontFamily: 'DMSans-Regular',
-    marginBottom: 14,
+    marginBottom: 8,
     zIndex: 1,
+  },
+
+  // Gold divider
+  goldDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+    zIndex: 1,
+    width: 320,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(212,175,55,0.25)',
+  },
+  dividerDot: {
+    color: 'rgba(212,175,55,0.6)',
+    fontSize: 14,
   },
 
   // ─── Phone device ──────────────────────────────
@@ -226,11 +315,11 @@ const webStyles = StyleSheet.create({
     position: 'relative',
     ...(Platform.OS === 'web' ? {
       boxShadow: [
-        '0 50px 130px rgba(0,0,0,0.98)',
-        '0 0 0 1.5px rgba(212,175,55,0.45)',
-        '0 0 0 10px rgba(212,175,55,0.03)',
-        'inset 0 0 0 1px rgba(255,255,255,0.07)',
-        'inset 0 2px 4px rgba(255,255,255,0.04)',
+        '0 60px 140px rgba(0,0,0,0.99)',
+        '0 0 0 1.5px rgba(212,175,55,0.5)',
+        '0 0 0 10px rgba(212,175,55,0.04)',
+        'inset 0 0 0 1px rgba(255,255,255,0.06)',
+        'inset 0 2px 4px rgba(255,255,255,0.03)',
       ].join(', '),
     } as any : {}),
   },
@@ -331,11 +420,61 @@ const webStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.45)',
   },
 
+  // Store links row
+  storeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+    zIndex: 1,
+  },
+  storeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    ...(Platform.OS === 'web' ? {
+      border: '1px solid rgba(212,175,55,0.2)',
+    } as any : { borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)' }),
+  },
+  storeBtnText: {
+    color: 'rgba(212,175,55,0.55)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    fontFamily: 'DMSans-Regular',
+  },
+  storeDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(212,175,55,0.25)',
+  },
+
+  // Developer credit
+  devRow: {
+    marginTop: 6,
+    zIndex: 1,
+  },
+  devCredit: {
+    color: 'rgba(253,251,247,0.3)',
+    fontSize: 11,
+    letterSpacing: 0.5,
+    fontFamily: 'DMSans-Regular',
+    textAlign: 'center',
+  } as any,
+  devName: {
+    color: 'rgba(212,175,55,0.5)',
+    fontWeight: '700',
+  },
+
   // Footer
   footer: {
-    color: 'rgba(212,175,55,0.2)',
-    fontSize: 10,
-    marginTop: 12,
+    color: 'rgba(212,175,55,0.18)',
+    fontSize: 9,
+    marginTop: 4,
     letterSpacing: 0.8,
     zIndex: 1,
     fontFamily: 'DMSans-Regular',

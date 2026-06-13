@@ -37,7 +37,10 @@ export default function AdminDashboard() {
     { title: 'Bookings', icon: 'receipt', color: '#2E7D32', route: '/admin/bookings', testID: 'admin-bookings-tile' },
     { title: 'Add Pujari', icon: 'account-tie-hat', iconLib: 'mci', color: '#FF6F00', route: '/admin/create-pujari', testID: 'admin-create-pujari-tile' },
     { title: 'Pujari Stats', icon: 'chart-donut', iconLib: 'mci', color: '#1565C0', route: '/admin/pujari-stats', testID: 'admin-pujari-stats-tile' },
-    ...(user?.role === 'super_admin' ? [{ title: 'Users', icon: 'people', color: '#5E35B1', route: '/admin/users', testID: 'admin-users-tile' }] : []),
+    ...(user?.role === 'super_admin' ? [
+      { title: 'Manage Users', icon: 'people', color: '#5E35B1', route: '/admin/users', testID: 'admin-users-tile' },
+      { title: 'Create Admin', icon: 'person-add', color: '#7B1FA2', route: '/admin/create-admin', testID: 'admin-create-admin-tile' },
+    ] : []),
   ];
 
   return (
