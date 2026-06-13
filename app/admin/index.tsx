@@ -40,6 +40,7 @@ export default function AdminDashboard() {
     ...(user?.role === 'super_admin' ? [
       { title: 'Manage Users', icon: 'people', color: '#5E35B1', route: '/admin/users', testID: 'admin-users-tile' },
       { title: 'Create Admin', icon: 'person-add', color: '#7B1FA2', route: '/admin/create-admin', testID: 'admin-create-admin-tile' },
+      { title: 'WhatsApp Test', icon: 'logo-whatsapp', color: '#25D366', route: '/admin/whatsapp-test', testID: 'admin-whatsapp-tile' },
     ] : []),
   ];
 
