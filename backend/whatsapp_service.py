@@ -1,11 +1,10 @@
-"""WhatsApp OTP delivery via Meta Cloud API (WhatsApp Business Platform).
+"""WhatsApp messaging via Meta Cloud API v18.0 (matches working yatra_pass pattern).
 
-Template categories:
-- AUTHENTICATION (CAPI) templates like sri_otp: need body + button components
-- UTILITY (MM_LITE) templates: body component only
-
-Set META_OTP_TEMPLATE_HAS_BUTTON=true when using an Authentication-category
-template that has a "Copy code" or "One-tap" button (CAPI templates).
+All templates use body-only components (no button) unless META_OTP_TEMPLATE_HAS_BUTTON=true.
+Env vars accepted (both old META_* and new WHATSAPP_* names):
+  WHATSAPP_TOKEN          or META_WHATSAPP_TOKEN
+  WHATSAPP_PHONE_NUMBER_ID or META_PHONE_NUMBER_ID
+  WHATSAPP_COUNTRY_CODE   (default: 91)
 """
 
 import logging
@@ -16,57 +15,60 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-_META_GRAPH_VERSION = "v25.0"
+_META_GRAPH_VERSION = "v18.0"          # same as working yatra_pass code
 _META_API_BASE = "https://graph.facebook.com"
 
 # ---------------------------------------------------------------------------
-# Config (loaded from environment at module import time)
-# Accepts both WHATSAPP_* (preferred) and META_* (legacy) env var names
+# Config — accepts both WHATSAPP_* (preferred) and META_* (legacy) names
 # ---------------------------------------------------------------------------
 _TOKEN = (os.environ.get("WHATSAPP_TOKEN") or os.environ.get("META_WHATSAPP_TOKEN", "")).strip()
 _PHONE_NUMBER_ID = (os.environ.get("WHATSAPP_PHONE_NUMBER_ID") or os.environ.get("META_PHONE_NUMBER_ID", "")).strip()
 _COUNTRY_CODE = os.environ.get("WHATSAPP_COUNTRY_CODE", "91").strip()
-_TEMPLATE_NAME = os.environ.get("META_OTP_TEMPLATE_NAME", "sri_otp")
-_TEMPLATE_LANG = os.environ.get("META_OTP_TEMPLATE_LANG", "en_US")
-# Set to "true" if sri_otp is an Authentication category template (CAPI/has button)
-_TEMPLATE_HAS_BUTTON = os.environ.get("META_OTP_TEMPLATE_HAS_BUTTON", "true").lower() == "true"
 
-_WELCOME_TEMPLATE_NAME = os.environ.get("META_WELCOME_TEMPLATE_NAME", "sri_welcome")
-_WELCOME_TEMPLATE_LANG = os.environ.get("META_WELCOME_TEMPLATE_LANG", "en_US")
-_BOOKING_TEMPLATE_NAME = os.environ.get("META_BOOKING_TEMPLATE_NAME", "sri_bc")
-_BOOKING_TEMPLATE_LANG = os.environ.get("META_BOOKING_TEMPLATE_LANG", "en_US")
+_TEMPLATE_NAME = os.environ.get("META_OTP_TEMPLATE_NAME", "sri_otp").strip()
+_TEMPLATE_LANG = os.environ.get("META_OTP_TEMPLATE_LANG", "en_US").strip()
+# Default FALSE — body-only template (like your working yatra_pass code).
+# Set META_OTP_TEMPLATE_HAS_BUTTON=true only if sri_otp is Authentication category with Copy Code button.
+_TEMPLATE_HAS_BUTTON = os.environ.get("META_OTP_TEMPLATE_HAS_BUTTON", "false").lower() == "true"
+
+_WELCOME_TEMPLATE_NAME = os.environ.get("META_WELCOME_TEMPLATE_NAME", "sri_welcome").strip()
+_WELCOME_TEMPLATE_LANG = os.environ.get("META_WELCOME_TEMPLATE_LANG", "en_US").strip()
+_BOOKING_TEMPLATE_NAME = os.environ.get("META_BOOKING_TEMPLATE_NAME", "sri_bc").strip()
+_BOOKING_TEMPLATE_LANG = os.environ.get("META_BOOKING_TEMPLATE_LANG", "en_US").strip()
 
 
 def is_configured() -> bool:
-    """Return True when all required env vars are present."""
     return bool(_TOKEN and _PHONE_NUMBER_ID)
 
 
 def _normalise_mobile(mobile: str) -> str:
-    """Convert mobile to full international format required by WhatsApp API."""
-    digits = re.sub(r"\D", "", mobile)
-    cc = _COUNTRY_CODE  # e.g. "91" for India
+    """Return full international number: 9876543210 → 919876543210."""
+    digits = re.sub(r"\D", "", str(mobile or ""))
+    cc = _COUNTRY_CODE
+    if digits.startswith(cc) and len(digits) > 10:
+        return digits          # already has country code
     if len(digits) == 10:
         return cc + digits
     if digits.startswith("0"):
-        digits = cc + digits[1:]
+        return cc + digits[1:]
     return digits
 
 
+def _build_url() -> str:
+    return f"{_META_API_BASE}/{_META_GRAPH_VERSION}/{_PHONE_NUMBER_ID}/messages"
+
+
+def _headers() -> dict:
+    return {
+        "Authorization": f"Bearer {_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+
 def _otp_components(otp: str) -> list:
-    """Build template components for OTP.
-
-    Authentication-category templates (CAPI, e.g. sri_otp) require both:
-      - body component with {{1}} = OTP text
-      - button component (sub_type=url, index=0) with the OTP as the URL suffix
-
-    Utility templates (MM_LITE) only need the body component.
-    """
+    """Body-only by default; add button only when template requires it."""
     components = [
-        {
-            "type": "body",
-            "parameters": [{"type": "text", "text": otp}],
-        }
+        {"type": "body", "parameters": [{"type": "text", "text": otp}]}
     ]
     if _TEMPLATE_HAS_BUTTON:
         components.append({
@@ -79,20 +81,12 @@ def _otp_components(otp: str) -> list:
 
 
 async def send_otp(mobile: str, otp: str) -> bool:
-    """Send *otp* to *mobile* via Meta WhatsApp Cloud API template message.
-
-    Returns True on success, False on failure (errors are logged).
-    """
+    """Send OTP via WhatsApp template. Returns True on success."""
     if not is_configured():
-        logger.warning(
-            "[WhatsApp] META_WHATSAPP_TOKEN or META_PHONE_NUMBER_ID not set — "
-            "OTP NOT sent (configure .env or Azure App Settings)."
-        )
+        logger.warning("[WhatsApp] Token/PhoneID not set — OTP skipped.")
         return False
 
     to = _normalise_mobile(mobile)
-    url = f"{_META_API_BASE}/{_META_GRAPH_VERSION}/{_PHONE_NUMBER_ID}/messages"
-
     payload = {
         "messaging_product": "whatsapp",
         "to": to,
@@ -103,41 +97,26 @@ async def send_otp(mobile: str, otp: str) -> bool:
             "components": _otp_components(otp),
         },
     }
-
-    headers = {
-        "Authorization": f"Bearer {_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-
+            resp = await client.post(_build_url(), json=payload, headers=_headers())
         if resp.status_code == 200:
-            logger.info("[WhatsApp] OTP sent to +%s (template: %s)", to, _TEMPLATE_NAME)
+            logger.info("[WhatsApp] OTP sent to +%s", to)
             return True
-
-        # Log full error so Azure App Service logs show exact Meta API error
-        logger.error(
-            "[WhatsApp] OTP API error %s | to=%s | template=%s | response=%s",
-            resp.status_code, to, _TEMPLATE_NAME, resp.text[:600],
-        )
+        logger.error("[WhatsApp] OTP failed %s | to=%s | body=%s",
+                     resp.status_code, to, resp.text[:600])
         return False
-
     except httpx.RequestError as exc:
-        logger.error("[WhatsApp] Network error sending OTP to +%s: %s", to, exc)
+        logger.error("[WhatsApp] Network error (OTP) +%s: %s", to, exc)
         return False
 
 
 async def send_welcome(mobile: str, full_name: str) -> bool:
-    """Send a welcome message to a newly registered user."""
+    """Send welcome message after registration."""
     if not is_configured():
-        logger.warning("[WhatsApp] Welcome message NOT sent — META_* env vars missing.")
         return False
 
     to = _normalise_mobile(mobile)
-    url = f"{_META_API_BASE}/{_META_GRAPH_VERSION}/{_PHONE_NUMBER_ID}/messages"
-
     payload = {
         "messaging_product": "whatsapp",
         "to": to,
@@ -146,35 +125,21 @@ async def send_welcome(mobile: str, full_name: str) -> bool:
             "name": _WELCOME_TEMPLATE_NAME,
             "language": {"code": _WELCOME_TEMPLATE_LANG},
             "components": [
-                {
-                    "type": "body",
-                    "parameters": [{"type": "text", "text": full_name}],
-                }
+                {"type": "body", "parameters": [{"type": "text", "text": full_name}]}
             ],
         },
     }
-
-    headers = {
-        "Authorization": f"Bearer {_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-
+            resp = await client.post(_build_url(), json=payload, headers=_headers())
         if resp.status_code == 200:
             logger.info("[WhatsApp] Welcome sent to +%s (%s)", to, full_name)
             return True
-
-        logger.error(
-            "[WhatsApp] Welcome API error %s | to=%s | response=%s",
-            resp.status_code, to, resp.text[:400],
-        )
+        logger.error("[WhatsApp] Welcome failed %s | to=%s | body=%s",
+                     resp.status_code, to, resp.text[:400])
         return False
-
     except httpx.RequestError as exc:
-        logger.error("[WhatsApp] Network error sending welcome to +%s: %s", to, exc)
+        logger.error("[WhatsApp] Network error (welcome) +%s: %s", to, exc)
         return False
 
 
@@ -186,23 +151,11 @@ async def send_booking_confirmation(
     payment_id: str,
     amount: float,
 ) -> bool:
-    """Send booking confirmation via WhatsApp template ``sri_bc``."""
+    """Send payment confirmation via sri_bc template."""
     if not is_configured():
-        logger.warning("[WhatsApp] Booking confirmation NOT sent — META_* env vars missing.")
         return False
 
     to = _normalise_mobile(mobile)
-    url = f"{_META_API_BASE}/{_META_GRAPH_VERSION}/{_PHONE_NUMBER_ID}/messages"
-
-    params = [
-        {"type": "text", "text": full_name},
-        {"type": "text", "text": pooja_name},
-        {"type": "text", "text": booking_id[:12]},
-        {"type": "text", "text": payment_id},
-        {"type": "text", "text": f"₹{int(amount)}"},
-        {"type": "text", "text": "CONFIRMED"},
-    ]
-
     payload = {
         "messaging_product": "whatsapp",
         "to": to,
@@ -210,39 +163,38 @@ async def send_booking_confirmation(
         "template": {
             "name": _BOOKING_TEMPLATE_NAME,
             "language": {"code": _BOOKING_TEMPLATE_LANG},
-            "components": [{"type": "body", "parameters": params}],
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {"type": "text", "text": full_name},
+                        {"type": "text", "text": pooja_name},
+                        {"type": "text", "text": booking_id[:12]},
+                        {"type": "text", "text": payment_id},
+                        {"type": "text", "text": f"₹{int(amount)}"},
+                        {"type": "text", "text": "CONFIRMED"},
+                    ],
+                }
+            ],
         },
     }
-
-    headers = {
-        "Authorization": f"Bearer {_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-
+            resp = await client.post(_build_url(), json=payload, headers=_headers())
         if resp.status_code == 200:
-            logger.info("[WhatsApp] Booking confirmation sent to +%s (%s)", to, pooja_name)
+            logger.info("[WhatsApp] Booking confirm sent to +%s (%s)", to, pooja_name)
             return True
-
-        logger.error(
-            "[WhatsApp] Booking confirm API error %s | to=%s | response=%s",
-            resp.status_code, to, resp.text[:400],
-        )
+        logger.error("[WhatsApp] Booking confirm failed %s | to=%s | body=%s",
+                     resp.status_code, to, resp.text[:400])
         return False
-
     except httpx.RequestError as exc:
-        logger.error("[WhatsApp] Network error sending booking confirmation to +%s: %s", to, exc)
+        logger.error("[WhatsApp] Network error (booking) +%s: %s", to, exc)
         return False
 
 
 async def test_send(mobile: str, otp: str = "123456") -> dict:
-    """Test OTP send and return full Meta API response (for /admin/whatsapp-test endpoint)."""
+    """Full diagnostic: send test OTP and return raw Meta API response."""
     to = _normalise_mobile(mobile)
-    url = f"{_META_API_BASE}/{_META_GRAPH_VERSION}/{_PHONE_NUMBER_ID}/messages"
-
     payload = {
         "messaging_product": "whatsapp",
         "to": to,
@@ -253,24 +205,26 @@ async def test_send(mobile: str, otp: str = "123456") -> dict:
             "components": _otp_components(otp),
         },
     }
-
-    headers = {
-        "Authorization": f"Bearer {_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
+            resp = await client.post(_build_url(), json=payload, headers=_headers())
         return {
-            "status_code": resp.status_code,
             "ok": resp.status_code == 200,
-            "response": resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text,
+            "status_code": resp.status_code,
+            "response": resp.json() if "application/json" in resp.headers.get("content-type", "") else resp.text,
             "to": to,
+            "api_version": _META_GRAPH_VERSION,
             "template": _TEMPLATE_NAME,
+            "template_lang": _TEMPLATE_LANG,
             "has_button": _TEMPLATE_HAS_BUTTON,
             "phone_number_id": _PHONE_NUMBER_ID,
-            "token_prefix": _TOKEN[:20] + "..." if _TOKEN else "NOT SET",
+            "token_prefix": (_TOKEN[:20] + "...") if _TOKEN else "NOT SET",
+            "configured": is_configured(),
         }
     except Exception as exc:
-        return {"ok": False, "error": str(exc), "to": to}
+        return {
+            "ok": False,
+            "error": str(exc),
+            "to": to,
+            "configured": is_configured(),
+        }
