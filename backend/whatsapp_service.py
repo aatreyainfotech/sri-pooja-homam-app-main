@@ -1,6 +1,7 @@
 """WhatsApp messaging via Meta Cloud API v18.0 (matches working yatra_pass pattern).
 
-All templates use body-only components (no button) unless META_OTP_TEMPLATE_HAS_BUTTON=true.
+OTP template uses body-only (no button component). Meta adds Copy Code button automatically
+for Authentication-category templates. Default: body-only (confirmed working).
 Env vars accepted (both old META_* and new WHATSAPP_* names):
   WHATSAPP_TOKEN          or META_WHATSAPP_TOKEN
   WHATSAPP_PHONE_NUMBER_ID or META_PHONE_NUMBER_ID
@@ -27,8 +28,8 @@ _COUNTRY_CODE = os.environ.get("WHATSAPP_COUNTRY_CODE", "91").strip()
 
 _TEMPLATE_NAME = os.environ.get("META_OTP_TEMPLATE_NAME", "sri_otp").strip()
 _TEMPLATE_LANG = os.environ.get("META_OTP_TEMPLATE_LANG", "en_US").strip()
-# sri_otp is Authentication category — has "Copy code" button → MUST send button component
-_TEMPLATE_HAS_BUTTON = os.environ.get("META_OTP_TEMPLATE_HAS_BUTTON", "true").lower() == "true"
+# sri_otp Authentication template: Meta adds Copy Code button automatically — send body-only
+_TEMPLATE_HAS_BUTTON = os.environ.get("META_OTP_TEMPLATE_HAS_BUTTON", "false").lower() == "true"
 
 _WELCOME_TEMPLATE_NAME = os.environ.get("META_WELCOME_TEMPLATE_NAME", "sri_welcome").strip()
 _WELCOME_TEMPLATE_LANG = os.environ.get("META_WELCOME_TEMPLATE_LANG", "en_US").strip()
