@@ -21,9 +21,11 @@ _META_API_BASE = "https://graph.facebook.com"
 
 # ---------------------------------------------------------------------------
 # Config (loaded from environment at module import time)
+# Accepts both WHATSAPP_* (preferred) and META_* (legacy) env var names
 # ---------------------------------------------------------------------------
-_TOKEN = os.environ.get("META_WHATSAPP_TOKEN", "")
-_PHONE_NUMBER_ID = os.environ.get("META_PHONE_NUMBER_ID", "")
+_TOKEN = (os.environ.get("WHATSAPP_TOKEN") or os.environ.get("META_WHATSAPP_TOKEN", "")).strip()
+_PHONE_NUMBER_ID = (os.environ.get("WHATSAPP_PHONE_NUMBER_ID") or os.environ.get("META_PHONE_NUMBER_ID", "")).strip()
+_COUNTRY_CODE = os.environ.get("WHATSAPP_COUNTRY_CODE", "91").strip()
 _TEMPLATE_NAME = os.environ.get("META_OTP_TEMPLATE_NAME", "sri_otp")
 _TEMPLATE_LANG = os.environ.get("META_OTP_TEMPLATE_LANG", "en_US")
 # Set to "true" if sri_otp is an Authentication category template (CAPI/has button)
@@ -41,17 +43,13 @@ def is_configured() -> bool:
 
 
 def _normalise_mobile(mobile: str) -> str:
-    """Convert mobile to full international format required by WhatsApp API.
-
-    Accepts:
-    - 10-digit Indian numbers  : 9876543210  → 919876543210
-    - Already prefixed         : +919876543210 / 919876543210 → 919876543210
-    """
+    """Convert mobile to full international format required by WhatsApp API."""
     digits = re.sub(r"\D", "", mobile)
+    cc = _COUNTRY_CODE  # e.g. "91" for India
     if len(digits) == 10:
-        return "91" + digits          # assume India (+91)
+        return cc + digits
     if digits.startswith("0"):
-        digits = "91" + digits[1:]    # strip leading 0, add country code
+        digits = cc + digits[1:]
     return digits
 
 
