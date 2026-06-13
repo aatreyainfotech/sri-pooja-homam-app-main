@@ -2,8 +2,8 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useEffect, useRef, useState } from 'react';
-import { Platform, View, Text, StyleSheet, Image, Linking, TouchableOpacity } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Platform, View, Text, StyleSheet, Image, Linking, TouchableOpacity, ScrollView } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,25 +13,12 @@ import { AppAlertHost } from '../src/components/AppAlert';
 export default function RootLayout() {
   const router = useRouter();
   const respRef = useRef<any>(null);
-  const [clockTime, setClockTime] = useState(() => {
-    const d = new Date();
-    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-  });
 
   useEffect(() => {
     Font.loadAsync({
       'Cinzel-Bold': require('../assets/fonts/Cinzel-Bold.ttf'),
       'DMSans-Regular': require('../assets/fonts/DMSans-Regular.ttf'),
     }).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    const t = setInterval(() => {
-      const d = new Date();
-      setClockTime(`${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`);
-    }, 30000);
-    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -73,104 +60,127 @@ export default function RootLayout() {
 
   if (Platform.OS === 'web') {
     return (
-      <GestureHandlerRootView style={webStyles.root}>
-        {/* Rich traditional background */}
-        <View style={webStyles.gradBg} />
-        {/* Om watermark */}
-        <Text style={webStyles.omWatermark} aria-hidden="true">ॐ</Text>
-        {/* Decorative lotus watermarks */}
-        <Text style={webStyles.lotusLeft} aria-hidden="true">❀</Text>
-        <Text style={webStyles.lotusRight} aria-hidden="true">❀</Text>
+      <GestureHandlerRootView style={w.root}>
+        {/* ── Top announcement bar ── */}
+        <View style={w.topBar}>
+          <Text style={w.topBarText}>✦ Book Sacred Poojas & Homams Online • Sri Pooja Homam ✦</Text>
+        </View>
 
-        {/* Traditional top border */}
-        <Text style={webStyles.topBorder}>✦ ॥ శ్రీ గణేశాయ నమః ॥ ✦</Text>
+        {/* ── Main Navigation Header ── */}
+        <View style={w.header}>
+          <View style={w.headerInner}>
+            {/* Logo + Brand */}
+            <TouchableOpacity onPress={() => router.push('/' as any)} style={w.brandBlock}>
+              <Image source={require('../assets/images/icon.png')} style={w.headerLogo} />
+              <View style={w.brandNames}>
+                <Text style={w.headerTelugu}>శ్రీ పూజా హోమం</Text>
+                <Text style={w.headerLatin}>SRI POOJA HOMAM</Text>
+              </View>
+            </TouchableOpacity>
 
-        {/* Desktop brand header */}
-        <View style={webStyles.brandRow}>
-          <Image source={require('../assets/images/icon.png')} style={webStyles.brandIcon} />
-          <View style={webStyles.brandText}>
-            <Text style={webStyles.brandTelugu}>శ్రీ పూజా హోమం</Text>
-            <Text style={webStyles.brandLatin}>SRI POOJA HOMAM</Text>
+            {/* Navigation links */}
+            <View style={w.navLinks}>
+              <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} style={w.navItem}>
+                <Text style={w.navText}>Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)} style={w.navItem}>
+                <Text style={w.navText}>Temples</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/live' as any)} style={w.navItem}>
+                <View style={w.liveChip}>
+                  <View style={w.liveDot} />
+                  <Text style={w.liveText}>Live</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/bookings' as any)} style={w.navItem}>
+                <Text style={w.navText}>My Bookings</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Sign In button */}
+            <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)} style={w.signInBtn}>
+              <Ionicons name="person-circle-outline" size={16} color="#D4AF37" />
+              <Text style={w.signInText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Gold border bottom */}
+          <View style={w.headerBorder} />
+        </View>
+
+        {/* ── Page content (full width) ── */}
+        <View style={w.pageContent}>
+          <SafeAreaProvider style={{ flex: 1 }}>
+            {inner}
+          </SafeAreaProvider>
+        </View>
+
+        {/* ── Footer ── */}
+        <View style={w.footer}>
+          <View style={w.footerTop}>
+            <Text style={w.footerDecor}>✦ ॥ ✦</Text>
+          </View>
+          <View style={w.footerInner}>
+            {/* Brand column */}
+            <View style={w.footerBrand}>
+              <Image source={require('../assets/images/icon.png')} style={w.footerLogo} />
+              <Text style={w.footerBrandName}>శ్రీ పూజా హోమం</Text>
+              <Text style={w.footerTagline}>Divine devotion at your fingertips</Text>
+            </View>
+
+            {/* Quick links */}
+            <View style={w.footerLinks}>
+              <Text style={w.footerLinkHead}>Quick Links</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)' as any)}>
+                <Text style={w.footerLink}>Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)}>
+                <Text style={w.footerLink}>Temples</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
+                <Text style={w.footerLink}>Register</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
+                <Text style={w.footerLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Download column */}
+            <View style={w.footerLinks}>
+              <Text style={w.footerLinkHead}>Download App</Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}
+                style={w.storeBtn}
+              >
+                <Ionicons name="logo-android" size={14} color="#A5D6A7" />
+                <Text style={w.storeBtnText}>Google Play</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}
+                style={w.storeBtn}
+              >
+                <Ionicons name="logo-apple" size={14} color="#90CAF9" />
+                <Text style={w.storeBtnText}>App Store</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Bottom bar */}
+          <View style={w.footerBottom}>
+            <Text style={w.footerCopy}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://aatreya.org')}>
+              <Text style={w.devCredit}>
+                Developed with ❤ by{' '}
+                <Text style={w.devName}>Aatreya Infotech Systems LLP</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-        <Text style={webStyles.brandTagline}>✦ Divine devotion at your fingertips ✦</Text>
-
-        {/* Gold divider */}
-        <View style={webStyles.goldDivider}>
-          <View style={webStyles.dividerLine} />
-          <Text style={webStyles.dividerDot}>❋</Text>
-          <View style={webStyles.dividerLine} />
-        </View>
-
-        {/* Phone device */}
-        <View style={webStyles.deviceBezel}>
-          {/* Decorative side buttons */}
-          <View style={webStyles.volBtn1} />
-          <View style={webStyles.volBtn2} />
-          <View style={webStyles.powerBtn} />
-
-          {/* Phone screen */}
-          <View style={webStyles.deviceScreen}>
-            {/* Fake status bar */}
-            <View style={webStyles.statusBar}>
-              <Text style={webStyles.sbTime}>{clockTime}</Text>
-              <View style={webStyles.sbCenter}>
-                <View style={webStyles.sbCamDot} />
-              </View>
-              <View style={webStyles.sbRight}>
-                <Ionicons name="wifi" size={12} color="rgba(255,255,255,0.8)" />
-                <Ionicons name="battery-full" size={14} color="rgba(255,255,255,0.8)" />
-              </View>
-            </View>
-
-            {/* App content */}
-            <View style={webStyles.appArea}>
-              <SafeAreaProvider>
-                {inner}
-              </SafeAreaProvider>
-            </View>
-
-            {/* Home indicator */}
-            <View style={webStyles.homeArea}>
-              <View style={webStyles.homePill} />
-            </View>
-          </View>
-        </View>
-
-        {/* Store links */}
-        <View style={webStyles.storeRow}>
-          <TouchableOpacity
-            onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}
-            style={webStyles.storeBtn}
-          >
-            <Ionicons name="logo-android" size={14} color="#A5D6A7" />
-            <Text style={webStyles.storeBtnText}>Google Play</Text>
-          </TouchableOpacity>
-          <View style={webStyles.storeDot} />
-          <TouchableOpacity
-            onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}
-            style={webStyles.storeBtn}
-          >
-            <Ionicons name="logo-apple" size={14} color="#90CAF9" />
-            <Text style={webStyles.storeBtnText}>App Store</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Developer footer */}
-        <TouchableOpacity
-          onPress={() => Linking.openURL('https://aatreya.org')}
-          style={webStyles.devRow}
-        >
-          <Text style={webStyles.devCredit}>
-            Developed with ❤ by{' '}
-            <Text style={webStyles.devName}>Aatreya Infotech Systems LLP</Text>
-          </Text>
-        </TouchableOpacity>
-        <Text style={webStyles.footer}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
       </GestureHandlerRootView>
     );
   }
 
+  // ── Native mobile (unchanged) ──
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -180,304 +190,205 @@ export default function RootLayout() {
   );
 }
 
-const webStyles = StyleSheet.create({
-  root: {
-    flex: 1,
+const MAROON = '#8B1515';
+const DARK   = '#2D0B00';
+const GOLD   = '#D4AF37';
+
+const w = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#F5F0E8' } as any,
+
+  // ── Top announcement bar ──
+  topBar: {
+    backgroundColor: DARK,
+    paddingVertical: 6,
     alignItems: 'center',
-    backgroundColor: '#0D0504',
-    paddingTop: 14,
-    paddingBottom: 8,
-  } as any,
-
-  gradBg: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    ...(Platform.OS === 'web' ? {
-      background: [
-        'radial-gradient(ellipse at 20% 0%, #5C1A00 0%, #2D0B00 30%, #0D0302 65%, #080101 100%)',
-      ].join(', '),
-    } as any : { backgroundColor: '#0D0504' }),
   },
-
-  omWatermark: {
-    position: 'absolute',
-    top: '8%',
-    right: '2%',
-    color: 'rgba(212,175,55,0.035)',
-    fontSize: 300,
-    lineHeight: 300,
-    ...(Platform.OS === 'web' ? {
-      userSelect: 'none',
-      pointerEvents: 'none',
-    } as any : {}),
-  } as any,
-
-  lotusLeft: {
-    position: 'absolute',
-    top: '30%',
-    left: '2%',
-    color: 'rgba(212,175,55,0.06)',
-    fontSize: 120,
-    lineHeight: 120,
-    ...(Platform.OS === 'web' ? { userSelect: 'none', pointerEvents: 'none' } as any : {}),
-  } as any,
-  lotusRight: {
-    position: 'absolute',
-    top: '55%',
-    right: '2%',
-    color: 'rgba(212,175,55,0.06)',
-    fontSize: 120,
-    lineHeight: 120,
-    ...(Platform.OS === 'web' ? { userSelect: 'none', pointerEvents: 'none' } as any : {}),
-  } as any,
-
-  topBorder: {
-    color: 'rgba(212,175,55,0.5)',
+  topBarText: {
+    color: GOLD,
     fontSize: 11,
-    letterSpacing: 2,
-    marginBottom: 10,
-    zIndex: 1,
-    fontFamily: 'DMSans-Regular',
-    textAlign: 'center',
+    letterSpacing: 1.5,
+    fontWeight: '600',
   } as any,
 
-  // ─── Brand header ──────────────────────────────
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginBottom: 4,
-    zIndex: 1,
-  },
-  brandIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 13,
+  // ── Header ──
+  header: {
+    backgroundColor: MAROON,
     ...(Platform.OS === 'web' ? {
-      boxShadow: '0 0 0 2px rgba(212,175,55,0.5), 0 6px 20px rgba(212,175,55,0.3)',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
     } as any : {}),
   },
-  brandText: {
-    gap: 3,
-  },
-  brandTelugu: {
-    color: '#D4AF37',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    lineHeight: 24,
-  },
-  brandLatin: {
-    color: 'rgba(212,175,55,0.7)',
-    fontSize: 9,
-    letterSpacing: 4,
-    fontFamily: 'Cinzel-Bold',
-    lineHeight: 14,
-  },
-  brandTagline: {
-    color: 'rgba(212,175,55,0.45)',
-    fontSize: 10,
-    letterSpacing: 2,
-    fontFamily: 'DMSans-Regular',
-    marginBottom: 8,
-    zIndex: 1,
-  },
-
-  // Gold divider
-  goldDivider: {
+  headerInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-    zIndex: 1,
-    width: 320,
+    paddingHorizontal: 32,
+    paddingVertical: 10,
+    gap: 32,
+    ...(Platform.OS === 'web' ? { maxWidth: 1200, alignSelf: 'center', width: '100%' } as any : {}),
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(212,175,55,0.25)',
+  brandBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 0,
   },
-  dividerDot: {
-    color: 'rgba(212,175,55,0.6)',
-    fontSize: 14,
-  },
-
-  // ─── Phone device ──────────────────────────────
-  deviceBezel: {
-    zIndex: 1,
-    width: 390,
-    flex: 1,
-    maxHeight: 820,
-    minHeight: 580,
-    borderRadius: 52,
-    backgroundColor: '#1C1C1E',
-    padding: 8,
-    position: 'relative',
-    ...(Platform.OS === 'web' ? {
-      boxShadow: [
-        '0 60px 140px rgba(0,0,0,0.99)',
-        '0 0 0 1.5px rgba(212,175,55,0.5)',
-        '0 0 0 10px rgba(212,175,55,0.04)',
-        'inset 0 0 0 1px rgba(255,255,255,0.06)',
-        'inset 0 2px 4px rgba(255,255,255,0.03)',
-      ].join(', '),
-    } as any : {}),
-  },
-
-  // Side buttons
-  volBtn1: {
-    position: 'absolute',
-    left: -3,
-    top: 100,
-    width: 3,
-    height: 36,
-    borderRadius: 2,
-    backgroundColor: '#2C2C2E',
-    zIndex: 5,
-  } as any,
-  volBtn2: {
-    position: 'absolute',
-    left: -3,
-    top: 148,
-    width: 3,
-    height: 36,
-    borderRadius: 2,
-    backgroundColor: '#2C2C2E',
-    zIndex: 5,
-  } as any,
-  powerBtn: {
-    position: 'absolute',
-    right: -3,
-    top: 130,
-    width: 3,
-    height: 56,
-    borderRadius: 2,
-    backgroundColor: '#2C2C2E',
-    zIndex: 5,
-  } as any,
-
-  deviceScreen: {
-    flex: 1,
-    borderRadius: 46,
-    overflow: 'hidden',
-    backgroundColor: '#FDFBF7',
-  },
-
-  // Status bar (fake notch area)
-  statusBar: {
+  headerLogo: {
+    width: 44,
     height: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    backgroundColor: '#0D0504',
-    flexShrink: 0,
-    ...(Platform.OS === 'web' ? { pointerEvents: 'none' } as any : {}),
-  } as any,
-  sbTime: {
-    flex: 1,
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    borderRadius: 10,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0 0 0 2px rgba(212,175,55,0.6)',
+    } as any : {}),
   },
-  sbCenter: {
-    alignItems: 'center',
+  brandNames: { gap: 1 },
+  headerTelugu: {
+    color: GOLD,
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  headerLatin: {
+    color: 'rgba(212,175,55,0.65)',
+    fontSize: 8,
+    letterSpacing: 3,
+    fontFamily: 'Cinzel-Bold',
+  },
+  navLinks: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 8,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  sbCamDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#2A2A2E',
-    borderWidth: 1.5,
-    borderColor: '#3D3D42',
+  navItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  sbRight: {
-    flex: 1,
+  navText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  liveChip: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(229,57,53,0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(229,57,53,0.5)',
+  },
+  liveDot: {
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: '#EF5350',
+  },
+  liveText: { color: '#EF9A9A', fontSize: 13, fontWeight: '700' },
+  signInBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    backgroundColor: 'rgba(212,175,55,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.4)',
+  },
+  signInText: {
+    color: GOLD,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  headerBorder: {
+    height: 2,
+    ...(Platform.OS === 'web' ? {
+      background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.6) 30%, rgba(212,175,55,0.6) 70%, transparent)',
+    } as any : { backgroundColor: 'rgba(212,175,55,0.4)' }),
   },
 
-  // App content area
-  appArea: {
+  // ── Content ──
+  pageContent: {
     flex: 1,
+    backgroundColor: '#F5F0E8',
   },
 
-  // Home indicator
-  homeArea: {
-    height: 28,
-    flexShrink: 0,
+  // ── Footer ──
+  footer: {
+    backgroundColor: DARK,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: 'inset 0 2px 0 rgba(212,175,55,0.15)',
+    } as any : {}),
+  },
+  footerTop: {
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(5,2,1,0.88)',
+    paddingTop: 20,
+    paddingBottom: 8,
   },
-  homePill: {
-    width: 120,
-    height: 4,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.45)',
+  footerDecor: {
+    color: 'rgba(212,175,55,0.4)',
+    fontSize: 16,
+    letterSpacing: 6,
   },
-
-  // Store links row
-  storeRow: {
+  footerInner: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 14,
-    zIndex: 1,
+    gap: 40,
+    paddingHorizontal: 40,
+    paddingBottom: 24,
+    flexWrap: 'wrap',
+    ...(Platform.OS === 'web' ? { maxWidth: 1200, alignSelf: 'center', width: '100%' } as any : {}),
+  },
+  footerBrand: { flex: 1, minWidth: 180, gap: 8 },
+  footerLogo: { width: 36, height: 36, borderRadius: 8 },
+  footerBrandName: { color: GOLD, fontSize: 15, fontWeight: '800' },
+  footerTagline: { color: 'rgba(253,251,247,0.4)', fontSize: 12 },
+  footerLinks: { gap: 10, minWidth: 120 },
+  footerLinkHead: {
+    color: GOLD,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  footerLink: {
+    color: 'rgba(253,251,247,0.55)',
+    fontSize: 13,
+    fontWeight: '500',
   },
   storeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    ...(Platform.OS === 'web' ? {
-      border: '1px solid rgba(212,175,55,0.2)',
-    } as any : { borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)' }),
+    gap: 6,
+    paddingVertical: 2,
   },
   storeBtnText: {
-    color: 'rgba(212,175,55,0.55)',
+    color: 'rgba(253,251,247,0.55)',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  footerBottom: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(212,175,55,0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+    ...(Platform.OS === 'web' ? { maxWidth: 1200, alignSelf: 'center', width: '100%' } as any : {}),
+  },
+  footerCopy: {
+    color: 'rgba(212,175,55,0.25)',
     fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    fontFamily: 'DMSans-Regular',
-  },
-  storeDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(212,175,55,0.25)',
-  },
-
-  // Developer credit
-  devRow: {
-    marginTop: 6,
-    zIndex: 1,
   },
   devCredit: {
     color: 'rgba(253,251,247,0.3)',
     fontSize: 11,
-    letterSpacing: 0.5,
-    fontFamily: 'DMSans-Regular',
-    textAlign: 'center',
   } as any,
   devName: {
     color: 'rgba(212,175,55,0.5)',
     fontWeight: '700',
   },
-
-  // Footer
-  footer: {
-    color: 'rgba(212,175,55,0.18)',
-    fontSize: 9,
-    marginTop: 4,
-    letterSpacing: 0.8,
-    zIndex: 1,
-    fontFamily: 'DMSans-Regular',
-    textAlign: 'center',
-  } as any,
 });
