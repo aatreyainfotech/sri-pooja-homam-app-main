@@ -4,6 +4,8 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Build: 2026-06-14  (touch to force Azure redeploy)
+
 import os
 import uuid
 import logging
