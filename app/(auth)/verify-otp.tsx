@@ -15,7 +15,8 @@ import { theme } from '../../src/constants/theme';
 export default function VerifyOtp() {
   const router = useRouter();
   const safeBack = useSafeBack();
-  const { mobile, otp_mock } = useLocalSearchParams<{ mobile: string; otp_mock: string }>();
+  const { mobile, otp_mock, delivery_failed } = useLocalSearchParams<{ mobile: string; otp_mock: string; delivery_failed: string }>();
+  const whatsappFailed = delivery_failed === '1';
   const { setSession } = useAuth();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -101,6 +102,15 @@ export default function VerifyOtp() {
             We sent a 6-digit code via WhatsApp to{'\n'}<Text style={{ color: theme.colors.secondary, fontWeight: '700' }}>+91 {mobile}</Text>
           </Text>
 
+          {whatsappFailed && (
+            <View style={styles.warnBox}>
+              <Ionicons name="warning" size={18} color="#FF6F00" />
+              <Text style={styles.warnText}>
+                WhatsApp delivery failed. Tap <Text style={{ fontWeight: '800' }}>Resend OTP</Text> below to try again.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.otpRow}>
             {otp.map((d, i) => (
               <TextInput
@@ -178,6 +188,12 @@ const styles = StyleSheet.create({
   resendBtn: { alignItems: 'center', paddingVertical: 14 },
   resendText: { color: theme.colors.secondary, fontSize: 14, fontWeight: '600' },
   resendDisabled: { color: 'rgba(212,175,55,0.4)' },
+  warnBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 16,
+    backgroundColor: 'rgba(255,111,0,0.15)', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: 'rgba(255,111,0,0.4)',
+  },
+  warnText: { flex: 1, color: '#FFD180', fontSize: 13, lineHeight: 19 },
   mockBox: {
     marginTop: 24, padding: 14, borderRadius: 14,
     backgroundColor: 'rgba(212,175,55,0.15)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)',

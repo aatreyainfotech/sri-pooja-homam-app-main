@@ -23,10 +23,18 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/forgot-password', { mobile: mobile.trim() });
-      router.push({
-        pathname: '/(auth)/reset-password-otp',
-        params: { mobile: mobile.trim(), otp_mock: data.otp_debug || '' },
-      } as any);
+      const params: any = { mobile: mobile.trim() };
+      if (data.otp_debug) params.otp_mock = data.otp_debug;
+      if (data.delivery_failed) params.delivery_failed = '1';
+      if (data.delivery_failed) {
+        Alert.alert(
+          'WhatsApp Delivery Failed',
+          'OTP could not be sent via WhatsApp.\n\nTap "Resend OTP via WhatsApp" on the next screen to try again.',
+          [{ text: 'OK', onPress: () => router.push({ pathname: '/(auth)/reset-password-otp', params } as any) }]
+        );
+      } else {
+        router.push({ pathname: '/(auth)/reset-password-otp', params } as any);
+      }
     } catch (e) {
       Alert.alert('Error', apiError(e));
     } finally {
