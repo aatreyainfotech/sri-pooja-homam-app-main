@@ -56,7 +56,7 @@ export default function Register() {
     { key: 'email', label: 'Email', icon: 'mail-outline', keyboardType: 'email-address' },
     { key: 'address', label: 'Full Address', icon: 'home-outline' },
     { key: 'city', label: 'City', icon: 'location-outline' },
-    { key: 'pincode', label: 'Pincode', icon: 'mail-unread-outline', keyboardType: 'number-pad', maxLen: 6 },
+    { key: 'pincode', label: 'Pincode', icon: 'keypad-outline', keyboardType: 'number-pad', maxLen: 6 },
     { key: 'password', label: 'Password', icon: 'lock-closed-outline', secure: true },
   ];
 
