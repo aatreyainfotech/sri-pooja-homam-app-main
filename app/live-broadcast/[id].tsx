@@ -8,7 +8,6 @@ import { api, apiError } from '../../src/services/api';
 import {
   isAgoraAvailable, getAgora, fetchLiveConfig, fetchStreamToken,
 } from '../../src/services/agoraService';
-import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { theme } from '../../src/constants/theme';
 
 // Channel profile / roles (Agora constants)
@@ -18,7 +17,6 @@ const CLIENT_ROLE_BROADCASTER = 1;
 export default function LiveBroadcastScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const safeBack = useSafeBack();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
@@ -110,7 +108,7 @@ export default function LiveBroadcastScreen() {
   const confirmEnd = () => {
     Alert.alert('End broadcast?', 'Viewers will be disconnected.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'End Live', style: 'destructive', onPress: async () => { await stopBroadcast(); safeBack('/admin/live-streams'); } },
+      { text: 'End Live', style: 'destructive', onPress: async () => { await stopBroadcast(); router.back(); } },
     ]);
   };
 
@@ -122,7 +120,7 @@ export default function LiveBroadcastScreen() {
     <View style={{ flex: 1, backgroundColor: '#000' }}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => safeBack('/admin/live-streams')} style={styles.iconBtn}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>

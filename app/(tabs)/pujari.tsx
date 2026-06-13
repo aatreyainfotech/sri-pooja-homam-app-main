@@ -20,6 +20,7 @@ export default function PujariDashboard() {
   const [wallet, setWallet] = useState<{ balance: number; transactions: any[] }>({ balance: 0, transactions: [] });
   const [completing, setCompleting] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [startingLive, setStartingLive] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -36,6 +37,21 @@ export default function PujariDashboard() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
+
+  const startLive = async () => {
+    if (!completing) return;
+    setStartingLive(true);
+    try {
+      const { data: stream } = await api.post(`/pujari/start-live/${completing.id}`);
+      const bookingId = completing.id;
+      setCompleting(null);
+      router.push(`/live-broadcast/${stream.id}` as any);
+    } catch (e) {
+      Alert.alert('Cannot start live', apiError(e));
+    } finally {
+      setStartingLive(false);
+    }
+  };
 
   const submitComplete = async () => {
     if (!completing) return;
@@ -126,7 +142,7 @@ export default function PujariDashboard() {
               <TouchableOpacity
                 testID={`complete-booking-${b.id}`}
                 style={styles.completeBtn}
-                onPress={() => { setCompleting(b); setVideoUrl(''); }}
+                onPress={() => setCompleting(b)}
               >
                 <Ionicons name="videocam" size={14} color="#fff" />
                 <Text style={styles.completeBtnText}>Mark Complete & Submit Video</Text>
@@ -159,14 +175,18 @@ export default function PujariDashboard() {
             {/* Go Live button */}
             <TouchableOpacity
               testID="complete-go-live-btn"
-              onPress={() => {
-                setCompleting(null);
-                router.push(`/live-broadcast/${completing?.id}` as any);
-              }}
-              style={styles.mLiveBtn}
+              onPress={startLive}
+              disabled={startingLive}
+              style={[styles.mLiveBtn, startingLive && { opacity: 0.6 }]}
             >
-              <Ionicons name="videocam" size={18} color="#fff" />
-              <Text style={styles.mLiveBtnText}>Start Mobile Live Pooja</Text>
+              {startingLive ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="videocam" size={18} color="#fff" />
+                  <Text style={styles.mLiveBtnText}>Start Mobile Live Pooja</Text>
+                </>
+              )}
             </TouchableOpacity>
 
             <Text style={styles.mOrText}>— or —</Text>

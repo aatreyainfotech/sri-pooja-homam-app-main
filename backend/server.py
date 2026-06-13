@@ -1079,7 +1079,7 @@ async def create_live_stream(data: LiveStreamIn, user: dict = Depends(require_po
     return result
 
 @api.put("/live-streams/{stream_id}")
-async def update_live_stream(stream_id: str, data: LiveStreamIn, user: dict = Depends(require_admin)):
+async def update_live_stream(stream_id: str, data: LiveStreamIn, user: dict = Depends(require_poojari_or_admin)):
     prev = await sql_fetch_one(f"SELECT {STREAM_COLS} FROM dbo.live_streams WHERE id = ?", (stream_id,))
     await sql_execute(
         "UPDATE dbo.live_streams SET temple_id=?, pooja_id=?, title=?, stream_url=?, "
@@ -1539,6 +1539,52 @@ async def pujari_bookings(user: dict = Depends(require_poojari_or_admin)):
         f"SELECT TOP 500 {BOOKING_COLS} FROM dbo.bookings WHERE pujari_id = ? ORDER BY created_at DESC",
         (user["id"],)
     )
+
+@api.post("/pujari/start-live/{booking_id}")
+async def pujari_start_live(booking_id: str, user: dict = Depends(require_poojari_or_admin)):
+    """Create (or return existing) Agora live stream for a pujari's assigned booking."""
+    booking = await sql_fetch_one(
+        "SELECT id, pooja_id, pooja_name, devotee_name, temple_id "
+        "FROM dbo.bookings WHERE id = ? AND pujari_id = ?",
+        (booking_id, user["id"])
+    )
+    if not booking:
+        raise HTTPException(404, "Booking not found or not assigned to you")
+
+    channel_name = f"book_{booking_id.replace('-', '')[:12]}"
+
+    # Return existing stream if already created for this booking
+    existing = await sql_fetch_one(
+        f"SELECT {STREAM_COLS} FROM dbo.live_streams WHERE channel_name = ?",
+        (channel_name,)
+    )
+    if existing:
+        # Re-mark as live in case it was stopped
+        await sql_execute("UPDATE dbo.live_streams SET is_live = 1 WHERE id = ?", (existing["id"],))
+        existing["is_live"] = True
+        return existing
+
+    s_id = str(uuid.uuid4())
+    title = f"Live Pooja: {booking.get('pooja_name', 'Pooja')} — {booking.get('devotee_name', 'Devotee')}"
+    temple_id = booking.get("temple_id") or ""
+
+    await sql_execute(
+        "INSERT INTO dbo.live_streams (id, temple_id, pooja_id, title, stream_url, channel_name, "
+        "provider, is_paid_only, is_live, is_approved, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (s_id, temple_id, booking.get("pooja_id"), title, "", channel_name,
+         "agora", 0, 1, 1, now_naive())
+    )
+    try:
+        tokens = await _tokens_for_topic("live")
+        fire_and_forget_push(
+            tokens,
+            title=f"\U0001f534 LIVE — {title}",
+            body="A live pooja has started. Tap to watch.",
+            data={"type": "live_stream_started", "streamId": s_id, "url": f"/live-stream/{s_id}"},
+        )
+    except Exception as e:
+        logger.warning("push (pujari livestream) failed: %s", e)
+    return await sql_fetch_one(f"SELECT {STREAM_COLS} FROM dbo.live_streams WHERE id = ?", (s_id,))
 
 @api.put("/bookings/{booking_id}/assign-pujari")
 async def assign_pujari_to_booking(booking_id: str, pujari_id: str, user: dict = Depends(require_admin)):
