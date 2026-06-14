@@ -195,7 +195,7 @@ export default function Home() {
                 onPress={() => router.push(`/temple/${item.id}`)}
                 style={styles.templeCard}
               >
-                <Image source={{ uri: item.banner }} style={styles.templeImg} />
+                {!!item.banner && <Image source={{ uri: item.banner }} style={styles.templeImg} />}
                 <LinearGradient colors={['transparent', 'rgba(45,27,25,0.95)']} style={styles.templeOverlay}>
                   <Text style={styles.templeName} numberOfLines={1}>{item.name}</Text>
                   <View style={styles.templeMeta}>
@@ -222,7 +222,9 @@ export default function Home() {
                 onPress={() => router.push(`/book-pooja/${p.id}`)}
                 style={styles.poojaRow}
               >
-                <Image source={{ uri: p.image }} style={styles.poojaImg} />
+                <View style={styles.poojaImgWrap}>
+                  {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+                </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <View style={styles.typeBadge(p.type)}>
                     <Text style={styles.typeBadgeText}>{p.type.toUpperCase()}</Text>
@@ -308,9 +310,9 @@ const styles: any = StyleSheet.create({
 
   templeCard: {
     width: width * 0.75, height: 180, borderRadius: 20, overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#3D1515',
   },
-  templeImg: { width: '100%', height: '100%' },
+  templeImg: { ...StyleSheet.absoluteFillObject },
   templeOverlay: { ...StyleSheet.absoluteFillObject, padding: 14, justifyContent: 'flex-end' },
   templeName: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 16 },
   templeMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
@@ -320,7 +322,7 @@ const styles: any = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
     borderRadius: 18, padding: 10, borderWidth: 1, borderColor: theme.colors.border,
   },
-  poojaImg: { width: 70, height: 70, borderRadius: 14 },
+  poojaImgWrap: { width: 70, height: 70, borderRadius: 14, backgroundColor: '#F5E6D0', overflow: 'hidden' },
   typeBadge: (type: string) => ({
     alignSelf: 'flex-start',
     backgroundColor: type === 'homam' ? '#FFF3E0' : '#FFEBEE',

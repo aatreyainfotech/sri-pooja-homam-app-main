@@ -1,4 +1,4 @@
-# Build: 2026-06-14-payout (touch to force Azure redeploy)
+# Build: 2026-06-14-wa-btn-fix (touch to force Azure redeploy)
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -562,8 +562,8 @@ async def _seed_demo_data():
         "VALUES (?,?,?,?,?,?,?,?,?)",
         (t1_id, "Sri Venkateswara Temple", "Lord Venkateswara", "Tirumala, Andhra Pradesh",
          "One of the most sacred and visited Hindu temples, dedicated to Lord Venkateswara, an incarnation of Vishnu.",
-         "https://images.pexels.com/photos/36587847/pexels-photo-36587847.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200&w=200",
-         "https://images.pexels.com/photos/36609017/pexels-photo-36609017.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+         "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Tirumala_Tirupati_Balaji_Temple.jpg/400px-Tirumala_Tirupati_Balaji_Temple.jpg",
+         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Tirumala_temple_1.jpg/1024px-Tirumala_temple_1.jpg",
          "+91 877 227 7777", now)
     )
     await sql_execute(
@@ -571,8 +571,8 @@ async def _seed_demo_data():
         "VALUES (?,?,?,?,?,?,?,?,?)",
         (t2_id, "Sri Kanaka Durga Temple", "Goddess Durga", "Vijayawada, Andhra Pradesh",
          "Ancient temple of Goddess Kanaka Durga on Indrakeeladri Hill, overlooking the Krishna River.",
-         "https://images.pexels.com/photos/36587847/pexels-photo-36587847.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200&w=200",
-         "https://images.pexels.com/photos/30679068/pexels-photo-30679068.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Kanaka_Durga_Temple.jpg/400px-Kanaka_Durga_Temple.jpg",
+         "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Kanaka_durga_temple_vijayawada.jpg/1024px-Kanaka_durga_temple_vijayawada.jpg",
          "+91 866 257 1427", now)
     )
 
@@ -581,15 +581,15 @@ async def _seed_demo_data():
             ("Abhishekam", "pooja",
              "Sacred bathing ritual of the deity with milk, honey, ghee and sacred water.",
              501.0, "45 mins",
-             "https://images.unsplash.com/photo-1635778976124-f609898bafc2?crop=entropy&cs=srgb&fm=jpg&q=85&w=800", 2),
+             "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Abhishekam_ritual.jpg/640px-Abhishekam_ritual.jpg", 2),
             ("Sudarshana Homam", "homam",
              "Powerful fire ritual to invoke Lord Sudarshana for protection and removal of obstacles.",
              1501.0, "2 hours",
-             "https://images.unsplash.com/photo-1763610650650-31a72ddc77dd?crop=entropy&cs=srgb&fm=jpg&q=85&w=800", 5),
+             "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Yajna_Homa_fire.jpg/640px-Yajna_Homa_fire.jpg", 5),
             ("Archana", "pooja",
              "108 name chanting with flowers and offerings in your name and gotra.",
              251.0, "30 mins",
-             "https://images.unsplash.com/photo-1635778976124-f609898bafc2?crop=entropy&cs=srgb&fm=jpg&q=85&w=800", 1),
+             "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Hindu_temple_offerings.jpg/640px-Hindu_temple_offerings.jpg", 1),
         ]:
             await sql_execute(
                 "INSERT INTO dbo.poojas (id, temple_id, name, pooja_type, description, price, "

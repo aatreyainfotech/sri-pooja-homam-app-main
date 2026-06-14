@@ -39,7 +39,7 @@ export default function ManagePoojas() {
     setForm({
       ...EMPTY,
       temple_id: temples[0]?.id || '',
-      image: 'https://images.unsplash.com/photo-1635778976124-f609898bafc2?crop=entropy&cs=srgb&fm=jpg&q=85&w=800',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Yajna_Homa_fire.jpg/640px-Yajna_Homa_fire.jpg',
       duration: '1 hour',
       price: '501',
     });

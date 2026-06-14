@@ -45,7 +45,7 @@ export default function TempleDetail() {
     <View style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.bannerWrap}>
-          <Image source={{ uri: temple.banner }} style={styles.banner} />
+          {!!temple.banner && <Image source={{ uri: temple.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
           <LinearGradient colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(45,27,25,0.9)']} style={StyleSheet.absoluteFill} />
           <SafeAreaView style={styles.bannerSafe} edges={['top']}>
             <TouchableOpacity testID="temple-back-btn" onPress={() => safeBack('/(tabs)/temples')} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -53,7 +53,9 @@ export default function TempleDetail() {
             </TouchableOpacity>
           </SafeAreaView>
           <View style={styles.bannerContent}>
-            <Image source={{ uri: temple.logo }} style={styles.logoImg} />
+            <View style={styles.logoWrap}>
+              {!!temple.logo && <Image source={{ uri: temple.logo }} style={[StyleSheet.absoluteFill, { borderRadius: 30 }]} resizeMode="cover" />}
+            </View>
             <Text style={styles.templeName}>{temple.name}</Text>
             <View style={styles.row}>
               <Ionicons name="location" size={14} color={theme.colors.secondary} />
@@ -96,7 +98,9 @@ export default function TempleDetail() {
               onPress={() => router.push(`/book-pooja/${p.id}`)}
               style={styles.poojaCard}
             >
-              <Image source={{ uri: p.image }} style={styles.poojaImg} />
+              <View style={styles.poojaImgWrap}>
+                {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+              </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={styles.typeTag(p.type)}>
                   <Text style={styles.typeTagText}>{p.type === 'homam' ? '🔥 HOMAM' : '🌸 POOJA'}</Text>
@@ -122,17 +126,17 @@ export default function TempleDetail() {
 
 const styles: any = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  bannerWrap: { height: 320, position: 'relative' },
-  banner: { width: '100%', height: '100%' },
+  bannerWrap: { height: 320, position: 'relative', backgroundColor: '#3D1515' },
   bannerSafe: { position: 'absolute', top: 0, left: 0, right: 0, padding: 12 },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center',
   },
   bannerContent: { position: 'absolute', bottom: 20, left: 20, right: 20 },
-  logoImg: {
+  logoWrap: {
     width: 60, height: 60, borderRadius: 30,
     borderWidth: 3, borderColor: theme.colors.secondary,
+    backgroundColor: theme.colors.secondary, overflow: 'hidden',
     marginBottom: 10,
   },
   templeName: { color: '#fff', fontSize: 28, fontWeight: '800' },
@@ -160,7 +164,7 @@ const styles: any = StyleSheet.create({
     flexDirection: 'row', backgroundColor: '#fff', padding: 12, borderRadius: 18,
     borderWidth: 1, borderColor: theme.colors.border, marginBottom: 12,
   },
-  poojaImg: { width: 100, height: 130, borderRadius: 14 },
+  poojaImgWrap: { width: 100, height: 130, borderRadius: 14, backgroundColor: '#F5E6D0', overflow: 'hidden' },
   typeTag: (type: string) => ({
     alignSelf: 'flex-start',
     backgroundColor: type === 'homam' ? '#FFF3E0' : '#FFEBEE',

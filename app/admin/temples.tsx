@@ -36,8 +36,8 @@ export default function ManageTemples() {
     setEditing(null);
     setForm({
       ...EMPTY,
-      logo: 'https://images.pexels.com/photos/36587847/pexels-photo-36587847.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200&w=200',
-      banner: 'https://images.pexels.com/photos/36609017/pexels-photo-36609017.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Tirumala_Tirupati_Balaji_Temple.jpg/400px-Tirumala_Tirupati_Balaji_Temple.jpg',
+      banner: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Tirumala_temple_1.jpg/1024px-Tirumala_temple_1.jpg',
     });
     setModal(true);
   };
