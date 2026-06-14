@@ -1,3 +1,4 @@
+# Build: 2026-06-14-payout (touch to force Azure redeploy)
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -499,6 +500,22 @@ async def _startup_init():
                otp_expires DATETIME2 NOT NULL,
                pending_data NVARCHAR(MAX) NULL,
                CONSTRAINT PK_otp_store PRIMARY KEY (mobile, otp_type)
+           )""",
+        # --- PhonePe / UPI payout system ---
+        "IF COL_LENGTH('dbo.users','upi_id') IS NULL ALTER TABLE dbo.users ADD upi_id NVARCHAR(100) NULL",
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'wallet_payouts' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.wallet_payouts (
+               id NVARCHAR(36) NOT NULL,
+               pujari_id NVARCHAR(36) NOT NULL,
+               booking_id NVARCHAR(36) NULL,
+               amount FLOAT NOT NULL DEFAULT 0,
+               description NVARCHAR(200) NULL,
+               status NVARCHAR(20) NOT NULL DEFAULT 'pending',
+               payment_ref NVARCHAR(200) NULL,
+               admin_id NVARCHAR(36) NULL,
+               created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+               paid_at DATETIME2 NULL,
+               CONSTRAINT PK_wallet_payouts PRIMARY KEY (id)
            )""",
     ]
     for stmt in alters:
@@ -1738,20 +1755,103 @@ async def complete_booking(booking_id: str, data: CompleteBookingIn, user: dict 
             "UPDATE dbo.users SET wallet_balance = ISNULL(wallet_balance, 0) + ? WHERE id = ?",
             (pujari_amt, b["pujari_id"])
         )
+        payout_id = str(uuid.uuid4())
+        desc = f"Earnings: {b.get('pooja_name','Pooja')} — {b.get('devotee_name', '')}"
+        await sql_execute(
+            "INSERT INTO dbo.wallet_payouts (id, pujari_id, booking_id, amount, description, status, created_at) VALUES (?,?,?,?,?,'pending',?)",
+            (payout_id, b["pujari_id"], booking_id, pujari_amt, desc, now_naive())
+        )
     return {"ok": True, "credited": pujari_amt}
 
 @api.get("/pujari/wallet")
 async def pujari_wallet(user: dict = Depends(require_poojari_or_admin)):
     bal = await sql_scalar("SELECT ISNULL(wallet_balance, 0) AS bal FROM dbo.users WHERE id = ?", (user["id"],))
-    txns = await sql_fetch_all(
-        "SELECT TOP 100 id, pooja_name, devotee_name, pujari_amount, completed_at, completion_video_url "
-        "FROM dbo.bookings WHERE pujari_id = ? AND pujari_paid = 1 ORDER BY completed_at DESC",
+    payouts = await sql_fetch_all(
+        "SELECT TOP 100 id, booking_id, amount, description, status, payment_ref, created_at, paid_at "
+        "FROM dbo.wallet_payouts WHERE pujari_id = ? ORDER BY created_at DESC",
         (user["id"],)
     )
+    pending_amt = sum(float(p.get("amount") or 0) for p in payouts if p.get("status") == "pending")
+    paid_amt = sum(float(p.get("amount") or 0) for p in payouts if p.get("status") == "paid")
     return {
         "balance": float(bal) if isinstance(bal, Decimal) else float(bal or 0),
-        "transactions": txns,
+        "pending_payout": pending_amt,
+        "total_paid_out": paid_amt,
+        "transactions": payouts,
     }
+
+class UpiIn(BaseModel):
+    upi_id: str
+
+@api.put("/pujari/profile/upi")
+async def update_upi(data: UpiIn, user: dict = Depends(require_poojari_or_admin)):
+    upi = data.upi_id.strip()
+    if not upi:
+        raise HTTPException(400, "UPI ID required")
+    await sql_execute("UPDATE dbo.users SET upi_id = ? WHERE id = ?", (upi, user["id"]))
+    return {"ok": True}
+
+@api.get("/pujari/profile/upi")
+async def get_upi(user: dict = Depends(require_poojari_or_admin)):
+    rec = await sql_fetch_one("SELECT upi_id FROM dbo.users WHERE id = ?", (user["id"],))
+    return {"upi_id": rec.get("upi_id") if rec else None}
+
+# ----------------------------- Admin Pujari Payouts --------------------------
+@api.get("/admin/pujari-payouts")
+async def admin_pujari_payouts(user: dict = Depends(require_admin)):
+    rows = await sql_fetch_all(
+        """SELECT u.id AS pujari_id, u.full_name, u.mobile, u.upi_id,
+                  ISNULL(u.wallet_balance, 0) AS wallet_balance,
+                  COUNT(wp.id) AS pending_count,
+                  ISNULL(SUM(CASE WHEN wp.status='pending' THEN wp.amount ELSE 0 END), 0) AS pending_amount
+           FROM dbo.users u
+           LEFT JOIN dbo.wallet_payouts wp ON wp.pujari_id = u.id AND wp.status = 'pending'
+           WHERE u.role = 'poojari'
+           GROUP BY u.id, u.full_name, u.mobile, u.upi_id, u.wallet_balance
+           ORDER BY pending_amount DESC""",
+        ()
+    )
+    return rows
+
+@api.get("/admin/pujari-payouts/{pujari_id}/history")
+async def admin_payout_history(pujari_id: str, user: dict = Depends(require_admin)):
+    rows = await sql_fetch_all(
+        "SELECT id, booking_id, amount, description, status, payment_ref, created_at, paid_at "
+        "FROM dbo.wallet_payouts WHERE pujari_id = ? ORDER BY created_at DESC",
+        (pujari_id,)
+    )
+    return rows
+
+class PayoutMarkIn(BaseModel):
+    payment_ref: str
+    amount: Optional[float] = None
+
+@api.post("/admin/pujari-payouts/{pujari_id}/pay")
+async def admin_mark_payout(pujari_id: str, data: PayoutMarkIn, user: dict = Depends(require_admin)):
+    ref = data.payment_ref.strip()
+    if not ref:
+        raise HTTPException(400, "PhonePe/UPI reference required")
+    pending = await sql_fetch_all(
+        "SELECT id, amount FROM dbo.wallet_payouts WHERE pujari_id = ? AND status = 'pending'",
+        (pujari_id,)
+    )
+    if not pending:
+        raise HTTPException(400, "No pending payouts for this pujari")
+    total = sum(float(p.get("amount") or 0) for p in pending)
+    ids = [p["id"] for p in pending]
+    now = now_naive()
+    for pid in ids:
+        await sql_execute(
+            "UPDATE dbo.wallet_payouts SET status='paid', payment_ref=?, admin_id=?, paid_at=? WHERE id=?",
+            (ref, user["id"], now, pid)
+        )
+    await sql_execute(
+        "UPDATE dbo.users SET wallet_balance = ISNULL(wallet_balance,0) - ? WHERE id = ?",
+        (total, pujari_id)
+    )
+    pujari = await sql_fetch_one("SELECT full_name, mobile FROM dbo.users WHERE id = ?", (pujari_id,))
+    logger.info("[Payout] ₹%.2f → pujari %s by admin %s ref:%s", total, pujari_id[:8], user["id"][:8], ref)
+    return {"ok": True, "paid_amount": total, "pujari_name": pujari.get("full_name") if pujari else ""}
 
 # ----------------------------- Notification Prefs ----------------------------
 class NotifPrefsIn(BaseModel):

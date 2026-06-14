@@ -17,7 +17,7 @@ export default function PujariDashboard() {
   const [stats, setStats] = useState<any>({});
   const [bookings, setBookings] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [wallet, setWallet] = useState<{ balance: number; transactions: any[] }>({ balance: 0, transactions: [] });
+  const [wallet, setWallet] = useState<{ balance: number; pending_payout: number; total_paid_out: number; transactions: any[] }>({ balance: 0, pending_payout: 0, total_paid_out: 0, transactions: [] });
   const [completing, setCompleting] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [startingLive, setStartingLive] = useState(false);
@@ -91,8 +91,9 @@ export default function PujariDashboard() {
             <View style={{ flex: 1, marginLeft: 14 }}>
               <Text style={styles.earnLabel}>Wallet Balance</Text>
               <Text style={styles.earnValue}>₹{(wallet.balance || 0).toFixed(2)}</Text>
-              <Text style={[styles.earnLabel, { marginTop: 2 }]}>{wallet.transactions?.length || 0} payouts</Text>
+              <Text style={[styles.earnLabel, { marginTop: 2 }]}>Pending payout: ₹{(wallet.pending_payout || 0).toFixed(2)}</Text>
             </View>
+            <Ionicons name="information-circle-outline" size={20} color="#90CAF9" />
           </LinearGradient>
         </View>
 
@@ -101,11 +102,45 @@ export default function PujariDashboard() {
           <LinearGradient colors={['#1B5E20', '#2E7D32']} style={styles.earnGrad}>
             <Ionicons name="cash" size={28} color="#A5D6A7" />
             <View style={{ flex: 1, marginLeft: 14 }}>
-              <Text style={styles.earnLabel}>My Earnings (70% of total)</Text>
-              <Text style={styles.earnValue}>₹{(stats.total_earned || 0).toFixed(2)}</Text>
+              <Text style={styles.earnLabel}>Total Paid Out (PhonePe/UPI)</Text>
+              <Text style={styles.earnValue}>₹{(wallet.total_paid_out || 0).toFixed(2)}</Text>
+              <Text style={[styles.earnLabel, { marginTop: 2 }]}>My share 70% of bookings</Text>
             </View>
           </LinearGradient>
         </View>
+
+        {/* Transaction history */}
+        {wallet.transactions?.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Payment History</Text>
+            {wallet.transactions.map((t: any) => (
+              <View key={t.id} style={styles.txnCard}>
+                <View style={styles.txnRow}>
+                  <Ionicons
+                    name={t.status === 'paid' ? 'checkmark-circle' : 'time'}
+                    size={18}
+                    color={t.status === 'paid' ? '#2E7D32' : '#FF6F00'}
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={styles.txnDesc} numberOfLines={2}>{t.description || 'Pooja Earnings'}</Text>
+                    <Text style={styles.txnDate}>{t.created_at ? new Date(t.created_at).toLocaleDateString('en-IN') : ''}</Text>
+                    {t.status === 'paid' && t.payment_ref ? (
+                      <Text style={styles.txnRef}>Ref: {t.payment_ref}</Text>
+                    ) : null}
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.txnAmt}>₹{Number(t.amount || 0).toFixed(2)}</Text>
+                    <View style={[styles.txnBadge, { backgroundColor: t.status === 'paid' ? '#E8F5E9' : '#FFF3E0' }]}>
+                      <Text style={[styles.txnBadgeText, { color: t.status === 'paid' ? '#2E7D32' : '#E65100' }]}>
+                        {t.status === 'paid' ? 'PAID' : 'PENDING'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>Assigned Bookings</Text>
 
@@ -169,6 +204,9 @@ export default function PujariDashboard() {
             <View style={styles.mAmtBox}>
               <Text style={styles.mAmtLabel}>Your Earnings on Completion</Text>
               <Text style={styles.mAmtValue}>₹{Number(completing?.pujari_amount || 0).toFixed(2)}</Text>
+              <Text style={[styles.mAmtLabel, { marginTop: 6, color: '#FF6F00', fontSize: 11 }]}>
+                Payment via PhonePe/UPI will be released next business day
+              </Text>
             </View>
 
             {/* Go Live button */}
@@ -278,6 +316,18 @@ const styles = StyleSheet.create({
   completeBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   completedText: { color: '#2E7D32', fontSize: 12, fontWeight: '700' },
+
+  txnCard: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
+    borderWidth: 1, borderColor: theme.colors.border,
+  },
+  txnRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  txnDesc: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
+  txnDate: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
+  txnRef: { fontSize: 11, color: '#1565C0', marginTop: 2 },
+  txnAmt: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
+  txnBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
+  txnBadgeText: { fontSize: 10, fontWeight: '800' },
 
   mBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', padding: 20 },
   mCard: { backgroundColor: '#fff', borderRadius: 24, padding: 22, gap: 12 },
