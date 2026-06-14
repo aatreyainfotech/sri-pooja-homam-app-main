@@ -1202,8 +1202,8 @@ async def get_live_stream_token(stream_id: str, data: AgoraTokenIn, user: dict =
     if not stream:
         raise HTTPException(404, "Stream not found")
     role = (data.role or "subscriber").lower()
-    if role == "publisher" and user.get("role") not in ("admin", "super_admin"):
-        raise HTTPException(403, "Only admins can publish (broadcast)")
+    if role == "publisher" and user.get("role") not in ("admin", "super_admin", "poojari"):
+        raise HTTPException(403, "Only pujaris and admins can publish (broadcast)")
     channel = data.channel_name or stream.get("channel_name") or f"stream_{stream_id[:12]}"
     if not stream.get("channel_name"):
         await sql_execute("UPDATE dbo.live_streams SET channel_name = ? WHERE id = ?", (channel, stream_id))
