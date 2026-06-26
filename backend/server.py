@@ -211,6 +211,17 @@ def create_token(user_id: str, role: str, user: dict | None = None) -> str:
 def gen_otp() -> str:
     return "".join(random.choices(string.digits, k=6))
 
+def safe_parse_dt(value) -> Optional[str]:
+    """Return value only if it parses as a valid ISO datetime, else None."""
+    if not value:
+        return None
+    try:
+        s = str(value).strip()
+        datetime.fromisoformat(s.replace('Z', '+00:00'))
+        return s
+    except (ValueError, TypeError):
+        return None
+
 def clean_user(u: dict) -> dict:
     if not u:
         return u
@@ -351,6 +362,7 @@ class BookingIn(BaseModel):
     gotra: Optional[str] = ""
     nakshatra: Optional[str] = ""
     notes: Optional[str] = ""
+    scheduled_at: Optional[str] = None
 
 class VideoIn(BaseModel):
     temple_id: Optional[str] = None
@@ -523,6 +535,12 @@ async def _startup_init():
             await sql_execute(stmt)
         except Exception as e:
             logger.warning("ALTER TABLE: %s", e)
+
+    # Remove any stale super_admin accounts that are not the current ADMIN_MOBILE
+    await sql_execute(
+        "DELETE FROM dbo.users WHERE role = 'super_admin' AND mobile != ?", (ADMIN_MOBILE,)
+    )
+    logger.info("Removed stale super_admin accounts (if any)")
 
     # Seed super admin
     existing = await sql_fetch_one(
@@ -872,7 +890,7 @@ async def create_pooja(data: PoojaIn, user: dict = Depends(require_admin)):
         "INSERT INTO dbo.poojas (id, temple_id, name, pooja_type, description, price, "
         "duration, image_url, scheduled_at, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
         (p_id, data.temple_id, data.name, data.type, data.description,
-         data.price, data.duration, data.image, data.scheduled_at, now_naive())
+         data.price, data.duration, data.image, safe_parse_dt(data.scheduled_at), now_naive())
     )
     try:
         tokens = await _tokens_for_topic("pooja")
@@ -892,7 +910,7 @@ async def update_pooja(pooja_id: str, data: PoojaIn, user: dict = Depends(requir
         "UPDATE dbo.poojas SET temple_id=?, name=?, pooja_type=?, description=?, "
         "price=?, duration=?, image_url=?, scheduled_at=? WHERE id=?",
         (data.temple_id, data.name, data.type, data.description,
-         data.price, data.duration, data.image, data.scheduled_at, pooja_id)
+         data.price, data.duration, data.image, safe_parse_dt(data.scheduled_at), pooja_id)
     )
     if rc == 0:
         raise HTTPException(404, "Pooja not found")
@@ -945,7 +963,8 @@ async def create_booking(data: BookingIn, user: dict = Depends(get_current_user)
         (b_id, user["id"], user["full_name"], user["mobile"], data.pooja_id,
          pooja["name"], pooja["type"], pooja["temple_id"], pooja["price"],
          data.devotee_name, data.gotra, data.nakshatra, data.notes,
-         "pending_payment", "pending", order_id, pooja.get("scheduled_at"), now_naive())
+         "pending_payment", "pending", order_id,
+         data.scheduled_at or pooja.get("scheduled_at"), now_naive())
     )
     return await sql_fetch_one(f"SELECT {BOOKING_COLS} FROM dbo.bookings WHERE id = ?", (b_id,))
 
@@ -1559,6 +1578,32 @@ async def admin_whatsapp_test(data: WhatsAppTestIn, user: dict = Depends(require
 
 # ----------------------------- Pujari Endpoints ------------------------------
 
+class CreateDevoteeIn(BaseModel):
+    full_name: str
+    mobile: str
+    password: str
+    email: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+
+@api.post("/admin/create-devotee")
+async def create_devotee(data: CreateDevoteeIn, user: dict = Depends(require_admin)):
+    """Create a pre-verified devotee account (used for Google Play review test accounts)."""
+    mobile = data.mobile.strip()
+    existing = await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile = ?", (mobile,))
+    if existing:
+        raise HTTPException(400, "A user with this mobile already exists")
+    if len(data.password) < 6:
+        raise HTTPException(400, "Password must be at least 6 characters")
+    u_id = str(uuid.uuid4())
+    await sql_execute(
+        "INSERT INTO dbo.users (id, full_name, mobile, email, address, city, pincode, "
+        "password_hash, role, is_active, verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        (u_id, data.full_name, mobile, data.email or "", data.address or "", data.city or "", "",
+         hash_password(data.password), "devotee", 1, 1, now_naive())
+    )
+    return {"ok": True, "id": u_id, "role": "devotee", "full_name": data.full_name, "mobile": mobile}
+
 class CreatePujariIn(BaseModel):
     full_name: str
     mobile: str
@@ -1852,6 +1897,22 @@ async def admin_mark_payout(pujari_id: str, data: PayoutMarkIn, user: dict = Dep
     pujari = await sql_fetch_one("SELECT full_name, mobile FROM dbo.users WHERE id = ?", (pujari_id,))
     logger.info("[Payout] ₹%.2f → pujari %s by admin %s ref:%s", total, pujari_id[:8], user["id"][:8], ref)
     return {"ok": True, "paid_amount": total, "pujari_name": pujari.get("full_name") if pujari else ""}
+
+# ----------------------------- Admin broadcast notification ------------------
+class BroadcastNotifIn(BaseModel):
+    title: str
+    body: str
+    url: Optional[str] = "/(tabs)/index"
+
+@api.post("/admin/broadcast-notification")
+async def admin_broadcast_notification(data: BroadcastNotifIn, user: dict = Depends(require_admin)):
+    """Send a push notification to ALL registered devices."""
+    rows = await sql_fetch_all("SELECT TOP 5000 token FROM dbo.push_tokens")
+    tokens = [r["token"] for r in rows if r.get("token")]
+    if not tokens:
+        return {"ok": False, "sent": 0, "reason": "no tokens registered"}
+    result = await send_expo_push(tokens, title=data.title, body=data.body, data={"url": data.url or "/(tabs)/index"})
+    return {"ok": True, "total_tokens": len(tokens), **result}
 
 # ----------------------------- Notification Prefs ----------------------------
 class NotifPrefsIn(BaseModel):
