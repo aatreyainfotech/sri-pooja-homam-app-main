@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Image, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../src/context/AuthContext';
@@ -8,15 +8,23 @@ import { theme } from '../src/constants/theme';
 export default function Index() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isWebDesktop = Platform.OS === 'web' && width >= 768;
 
   useEffect(() => {
     if (loading) return;
     const t = setTimeout(() => {
-      if (user) router.replace('/(tabs)');
-      else router.replace('/(auth)/login');
-    }, 900);
+      if (isWebDesktop) {
+        // Desktop web: always go to homepage (public WebHome handles no-auth)
+        router.replace('/(tabs)');
+      } else {
+        // Mobile app or mobile web: login gate
+        if (user) router.replace('/(tabs)');
+        else router.replace('/(auth)/login');
+      }
+    }, isWebDesktop ? 0 : 900);
     return () => clearTimeout(t);
-  }, [loading, user]);
+  }, [loading, user, isWebDesktop]);
 
   return (
     <LinearGradient colors={['#8B1515', '#630B0B', '#2D1B19']} style={styles.container}>
