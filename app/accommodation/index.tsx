@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl,
-  TextInput, Platform,
+  TextInput, Platform, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,11 +15,8 @@ import WebFooter from '../../src/components/WebFooter';
 const IS_WEB = Platform.OS === 'web';
 const BLUE = '#0288D1';
 
-const PROPERTY_TYPE_ICONS: Record<string, string> = {
-  hotel: 'bed',
-  dharamshala: 'home',
-  guesthouse: 'business',
-  lodge: 'storefront',
+const TYPE_ICONS: Record<string, string> = {
+  hotel: 'bed', dharamshala: 'home', guesthouse: 'business', lodge: 'storefront',
 };
 
 export default function AccommodationBrowse() {
@@ -48,22 +45,32 @@ export default function AccommodationBrowse() {
   );
 
   const renderItem = ({ item }: any) => {
-    const iconName = PROPERTY_TYPE_ICONS[item.type || 'hotel'] || 'bed';
+    const iconName = TYPE_ICONS[item.type || 'hotel'] || 'bed';
+    const coverPhoto = item.images ? item.images.split(',')[0]?.trim() : null;
+    const minPrice = item.min_price ? parseFloat(item.min_price) : null;
+
     return (
       <TouchableOpacity
         style={[styles.card, IS_WEB && styles.cardWeb]}
         activeOpacity={0.88}
         onPress={() => router.push(`/accommodation/${item.id}` as any)}
       >
-        <LinearGradient
-          colors={['#E3F2FD', '#B3E5FC']}
-          style={styles.cardImage}
-        >
-          <Ionicons name={iconName as any} size={40} color={BLUE} />
-          <View style={styles.typeBadge}>
-            <Text style={styles.typeText}>{(item.type || 'hotel').toUpperCase()}</Text>
+        {/* Cover photo or gradient placeholder */}
+        {coverPhoto ? (
+          <Image source={{ uri: coverPhoto }} style={styles.cardImage} resizeMode="cover" />
+        ) : (
+          <LinearGradient colors={['#E3F2FD', '#B3E5FC']} style={styles.cardImage}>
+            <Ionicons name={iconName as any} size={44} color={BLUE} />
+          </LinearGradient>
+        )}
+        <View style={styles.typeBadge}>
+          <Text style={styles.typeText}>{(item.type || 'hotel').toUpperCase()}</Text>
+        </View>
+        {minPrice ? (
+          <View style={styles.priceBadge}>
+            <Text style={styles.priceText}>From ₹{minPrice.toFixed(0)}/night</Text>
           </View>
-        </LinearGradient>
+        ) : null}
 
         <View style={styles.cardBody}>
           <Text style={styles.propName} numberOfLines={1}>{item.name}</Text>
@@ -107,7 +114,6 @@ export default function AccommodationBrowse() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <LinearGradient
         colors={['#4A2C2A', '#0277BD', BLUE]}
         locations={[0, 0.5, 1]}
@@ -122,7 +128,7 @@ export default function AccommodationBrowse() {
             <Text style={styles.headerBadgeText}>TEMPLE ACCOMMODATION</Text>
           </View>
           <Text style={styles.headerTitle}>Stay Near Temples</Text>
-          <Text style={styles.headerSub}>Hotels, Dharamshalas & Guesthouses</Text>
+          <Text style={styles.headerSub}>Hotels, Dharamshalas &amp; Guesthouses</Text>
 
           <View style={styles.searchWrap}>
             <Ionicons name="search" size={16} color="rgba(255,255,255,0.5)" />
@@ -230,14 +236,19 @@ const styles = StyleSheet.create({
   cardWeb: { ...(IS_WEB ? { boxShadow: '0 4px 20px rgba(2,119,189,0.1)' } as any : {}) },
 
   cardImage: {
-    height: IS_WEB ? 160 : 120, alignItems: 'center', justifyContent: 'center',
-    position: 'relative',
+    height: IS_WEB ? 180 : 140, width: '100%',
+    alignItems: 'center', justifyContent: 'center',
   },
   typeBadge: {
-    position: 'absolute', top: 12, right: 12,
-    backgroundColor: 'rgba(2,136,209,0.85)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
+    position: 'absolute', top: 12, left: 12,
+    backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
   },
   typeText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  priceBadge: {
+    position: 'absolute', top: 12, right: 12,
+    backgroundColor: '#E67E22', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
+  },
+  priceText: { color: '#fff', fontSize: 11, fontWeight: '800' },
 
   cardBody: { padding: 14 },
   propName: { fontSize: 16, fontWeight: '800', color: theme.colors.text, marginBottom: 6 },
