@@ -14,83 +14,88 @@ import { theme } from '../../src/constants/theme';
 
 const IS_WEB = Platform.OS === 'web';
 const BLUE = '#0288D1';
-
-// ── Stepper component ──────────────────────────────────────────────────────────
-function Stepper({ value, min = 1, max = 20, onChange, label }: {
-  value: number; min?: number; max?: number; onChange: (v: number) => void; label: string;
-}) {
-  return (
-    <View style={stepStyles.wrap}>
-      <Text style={stepStyles.label}>{label}</Text>
-      <View style={stepStyles.row}>
-        <TouchableOpacity
-          style={[stepStyles.btn, value <= min && stepStyles.btnDisabled]}
-          onPress={() => value > min && onChange(value - 1)}
-          disabled={value <= min}
-        >
-          <Ionicons name="remove" size={18} color={value <= min ? '#ccc' : BLUE} />
-        </TouchableOpacity>
-        <Text style={stepStyles.value}>{value}</Text>
-        <TouchableOpacity
-          style={[stepStyles.btn, value >= max && stepStyles.btnDisabled]}
-          onPress={() => value < max && onChange(value + 1)}
-          disabled={value >= max}
-        >
-          <Ionicons name="add" size={18} color={value >= max ? '#ccc' : BLUE} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-const stepStyles = StyleSheet.create({
-  wrap: { flex: 1, marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.8 },
-  row: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, backgroundColor: '#FAFAFA', overflow: 'hidden' },
-  btn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0F8FF' },
-  btnDisabled: { backgroundColor: '#F5F5F5' },
-  value: { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '800', color: theme.colors.text },
-});
+const DARK_BLUE = '#01579B';
 
 // ── Date input ─────────────────────────────────────────────────────────────────
-function DateInput({ label, value, onChange, placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+function DateInput({ label, value, onChange, placeholder, icon }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; icon?: string;
 }) {
   return (
-    <View style={{ flex: 1, marginBottom: 14 }}>
-      <Text style={styles.inputLabel}>{label}</Text>
+    <View style={{ flex: 1 }}>
+      <View style={di.header}>
+        <Ionicons name={(icon || 'calendar-outline') as any} size={13} color={BLUE} />
+        <Text style={di.label}>{label}</Text>
+      </View>
       {IS_WEB ? (
         <input
           type="date"
           value={value}
           onChange={(e) => onChange((e.target as HTMLInputElement).value)}
-          style={{ border: '1.5px solid #E0D5C5', borderRadius: 12, padding: '11px 14px', fontSize: 15, color: '#3D1C02', backgroundColor: '#FAFAFA', width: '100%', boxSizing: 'border-box' } as any}
+          style={{
+            border: 'none', outline: 'none', background: 'transparent',
+            fontSize: 16, fontWeight: '700', color: value ? '#1A1A1A' : '#999',
+            width: '100%', padding: 0, cursor: 'pointer',
+          } as any}
         />
       ) : (
         <TextInput
-          style={styles.input}
+          style={di.input}
           value={value}
           onChangeText={onChange}
-          placeholder={placeholder || 'YYYY-MM-DD'}
-          placeholderTextColor={theme.colors.textMuted}
+          placeholder={placeholder || 'Select date'}
+          placeholderTextColor="#B0BEC5"
         />
       )}
+      {value ? <Text style={di.sub}>{new Date(value).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</Text> : null}
     </View>
   );
 }
+const di = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  label: { fontSize: 10, fontWeight: '800', color: BLUE, textTransform: 'uppercase', letterSpacing: 1 },
+  input: { fontSize: 16, fontWeight: '700', color: '#1A1A1A', padding: 0 },
+  sub: { fontSize: 11, color: '#90A4AE', marginTop: 2 },
+});
 
-function FormInput({ label, multiline, style, ...props }: TextInputProps & { label: string }) {
+// ── Counter stepper ────────────────────────────────────────────────────────────
+function Counter({ value, min = 1, max = 20, onChange, label, icon }: {
+  value: number; min?: number; max?: number; onChange: (v: number) => void; label: string; icon?: string;
+}) {
   return (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        style={[styles.input, multiline && { height: 72, textAlignVertical: 'top' }, style as any]}
-        placeholderTextColor={theme.colors.textMuted}
-        multiline={multiline}
-        {...props}
-      />
+    <View style={cs.wrap}>
+      <View style={cs.header}>
+        <Ionicons name={(icon || 'person-outline') as any} size={13} color="#546E7A" />
+        <Text style={cs.label}>{label}</Text>
+      </View>
+      <View style={cs.row}>
+        <TouchableOpacity
+          style={[cs.btn, value <= min && cs.btnOff]}
+          onPress={() => value > min && onChange(value - 1)}
+          disabled={value <= min}
+        >
+          <Ionicons name="remove" size={16} color={value <= min ? '#CFD8DC' : BLUE} />
+        </TouchableOpacity>
+        <Text style={cs.val}>{value}</Text>
+        <TouchableOpacity
+          style={[cs.btn, value >= max && cs.btnOff]}
+          onPress={() => value < max && onChange(value + 1)}
+          disabled={value >= max}
+        >
+          <Ionicons name="add" size={16} color={value >= max ? '#CFD8DC' : BLUE} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
+const cs = StyleSheet.create({
+  wrap: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
+  label: { fontSize: 10, fontWeight: '800', color: '#546E7A', textTransform: 'uppercase', letterSpacing: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F0F7FF', borderRadius: 12, overflow: 'hidden' },
+  btn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E3F2FD' },
+  btnOff: { backgroundColor: '#F5F5F5' },
+  val: { fontSize: 18, fontWeight: '900', color: '#1A1A1A', flex: 1, textAlign: 'center' },
+});
 
 function InfoItem({ icon, label, value }: any) {
   return (
@@ -104,6 +109,29 @@ function InfoItem({ icon, label, value }: any) {
   );
 }
 
+function GuestField({ label, icon, ...props }: TextInputProps & { label: string; icon?: string }) {
+  return (
+    <View style={gf.wrap}>
+      <View style={gf.row}>
+        <View style={gf.iconBox}>
+          <Ionicons name={(icon || 'person-outline') as any} size={16} color={BLUE} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={gf.label}>{label}</Text>
+          <TextInput style={gf.input} placeholderTextColor="#B0BEC5" {...props} />
+        </View>
+      </View>
+    </View>
+  );
+}
+const gf = StyleSheet.create({
+  wrap: { marginBottom: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: '#ECEFF1', paddingVertical: 14 },
+  iconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' },
+  label: { fontSize: 10, fontWeight: '800', color: '#90A4AE', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 },
+  input: { fontSize: 15, color: '#1A1A1A', fontWeight: '500', padding: 0 },
+});
+
 export default function PropertyDetailPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -112,9 +140,7 @@ export default function PropertyDetailPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [showBook, setShowBook] = useState(false);
   const [selectedCat, setSelectedCat] = useState<any>(null);
-  const [bookForm, setBookForm] = useState({
-    check_in: '', check_out: '', guest_name: '', guest_mobile: '', special_requests: '',
-  });
+  const [bookForm, setBookForm] = useState({ check_in: '', check_out: '', guest_name: '', guest_mobile: '', special_requests: '' });
   const [guests, setGuests] = useState(2);
   const [rooms, setRooms] = useState(1);
   const [bookError, setBookError] = useState('');
@@ -148,28 +174,17 @@ export default function PropertyDetailPage() {
 
   const handleBook = async () => {
     setBookError('');
-    if (!user) {
-      setBookError('Please log in to book accommodation.');
-      return;
-    }
+    if (!user) { setBookError('Please log in to book accommodation.'); return; }
     if (!bookForm.check_in || !bookForm.check_out || !bookForm.guest_name || !bookForm.guest_mobile) {
-      setBookError('Fill in all required fields: dates, name, mobile.');
-      return;
+      setBookError('Fill in all required fields: dates, name, and mobile.'); return;
     }
-    if (calcNights() <= 0) {
-      setBookError('Check-out date must be after check-in date.');
-      return;
-    }
+    if (calcNights() <= 0) { setBookError('Check-out must be after check-in.'); return; }
     try {
       const res = await api.post('/accommodation-bookings', {
-        property_id: id,
-        room_category_id: selectedCat.id,
-        check_in: bookForm.check_in,
-        check_out: bookForm.check_out,
-        guests,
-        rooms,
-        guest_name: bookForm.guest_name,
-        guest_mobile: bookForm.guest_mobile,
+        property_id: id, room_category_id: selectedCat.id,
+        check_in: bookForm.check_in, check_out: bookForm.check_out,
+        guests, rooms,
+        guest_name: bookForm.guest_name, guest_mobile: bookForm.guest_mobile,
         special_requests: bookForm.special_requests,
       });
       setBooking(res.data);
@@ -200,7 +215,7 @@ export default function PropertyDetailPage() {
             });
             setBookingDone(true);
           } catch {
-            setPayError('Payment was made but verification failed. Contact support with your booking ID.');
+            setPayError('Payment done but verification failed. Contact support with Booking ID.');
           }
         },
         prefill: { name: bookForm.guest_name, contact: bookForm.guest_mobile },
@@ -211,12 +226,11 @@ export default function PropertyDetailPage() {
         // @ts-ignore
         new window.Razorpay(options).open();
       } else {
-        setPayError('Razorpay not loaded. Please use UPI or contact via WhatsApp.');
+        setPayError('Razorpay not loaded. Use UPI or contact via WhatsApp.');
       }
     } else {
       const msg = encodeURIComponent(
-        `Hi, I want to pay ₹${booking.amount} for booking at ${prop?.name}.\n` +
-        `Booking ID: ${booking.id}\nDates: ${bookForm.check_in} to ${bookForm.check_out}`
+        `Hi, I want to pay ₹${booking.amount} for booking at ${prop?.name}.\nBooking ID: ${booking.id}\nDates: ${bookForm.check_in} to ${bookForm.check_out}`
       );
       Linking.openURL(`https://wa.me/918309067121?text=${msg}`);
     }
@@ -226,7 +240,7 @@ export default function PropertyDetailPage() {
     if (!booking) return;
     setPayError('');
     const utr = utrInput.trim();
-    if (!utr) { setPayError('Please enter your UPI Transaction Reference (UTR) number.'); return; }
+    if (!utr) { setPayError('Enter your UPI Transaction Reference (UTR) number.'); return; }
     try {
       await api.post('/accommodation-bookings/upi-payment', { booking_id: booking.id, utr_number: utr });
       setBookingDone(true);
@@ -242,27 +256,23 @@ export default function PropertyDetailPage() {
   );
 
   const photos = prop.images ? prop.images.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  const nights = calcNights();
+  const amount = calcAmount();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Hero / Photo Gallery */}
+        {/* ── Hero / Photo Gallery ─────────────────────────────── */}
         <View style={styles.hero}>
           {photos.length > 0 ? (
             <View style={styles.photoGallery}>
               <Image source={{ uri: photos[photoIdx] }} style={styles.heroPhoto} resizeMode="cover" />
               {photos.length > 1 && (
                 <>
-                  <TouchableOpacity
-                    style={[styles.photoNav, styles.photoNavLeft]}
-                    onPress={() => setPhotoIdx((i) => (i - 1 + photos.length) % photos.length)}
-                  >
+                  <TouchableOpacity style={[styles.photoNav, styles.photoNavLeft]} onPress={() => setPhotoIdx((i) => (i - 1 + photos.length) % photos.length)}>
                     <Ionicons name="chevron-back" size={20} color="#fff" />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.photoNav, styles.photoNavRight]}
-                    onPress={() => setPhotoIdx((i) => (i + 1) % photos.length)}
-                  >
+                  <TouchableOpacity style={[styles.photoNav, styles.photoNavRight]} onPress={() => setPhotoIdx((i) => (i + 1) % photos.length)}>
                     <Ionicons name="chevron-forward" size={20} color="#fff" />
                   </TouchableOpacity>
                   <View style={styles.photoDots}>
@@ -275,20 +285,16 @@ export default function PropertyDetailPage() {
                   </View>
                 </>
               )}
-              <LinearGradient
-                colors={['rgba(0,0,0,0.55)', 'transparent', 'transparent', 'rgba(0,0,0,0.6)']}
-                locations={[0, 0.3, 0.6, 1]}
-                style={styles.heroOverlay}
-              />
+              <LinearGradient colors={['rgba(0,0,0,0.5)', 'transparent', 'transparent', 'rgba(0,0,0,0.7)']} locations={[0, 0.25, 0.65, 1]} style={styles.heroOverlay} />
             </View>
           ) : (
-            <LinearGradient colors={['#4A2C2A', '#0277BD', BLUE]} style={styles.heroGradient} />
+            <LinearGradient colors={['#1A237E', '#0277BD', '#0288D1']} style={styles.heroGradient}>
+              <Ionicons name="bed" size={60} color="rgba(255,255,255,0.15)" />
+            </LinearGradient>
           )}
-
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={22} color="#fff" />
           </TouchableOpacity>
-
           <View style={styles.heroContent}>
             <View style={styles.typeBadge}>
               <Text style={styles.typeText}>{(prop.type || 'hotel').toUpperCase()}</Text>
@@ -301,26 +307,50 @@ export default function PropertyDetailPage() {
               </View>
             ) : null}
             <View style={styles.heroRow}>
-              <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.7)" />
+              <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.75)" />
               <Text style={styles.heroLocation}>{prop.address}{prop.city ? `, ${prop.city}` : ''}</Text>
             </View>
           </View>
         </View>
 
         <View style={[styles.body, IS_WEB && { maxWidth: 960, alignSelf: 'center', width: '100%' } as any]}>
-          {/* Property Info */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About this Property</Text>
-            {prop.description ? <Text style={styles.desc}>{prop.description}</Text> : null}
-            <View style={styles.infoGrid}>
-              <InfoItem icon="log-in-outline" label="Check-in" value={prop.check_in_time || '12:00'} />
-              <InfoItem icon="log-out-outline" label="Check-out" value={prop.check_out_time || '11:00'} />
-              {prop.phone ? <InfoItem icon="call-outline" label="Contact" value={prop.phone} /> : null}
-              {prop.total_rooms ? <InfoItem icon="bed-outline" label="Total Rooms" value={`${prop.total_rooms}`} /> : null}
+          {/* ── Quick Info Strip ─────────────────────────────── */}
+          <View style={styles.quickStrip}>
+            <View style={styles.quickItem}>
+              <Ionicons name="log-in-outline" size={16} color={BLUE} />
+              <View>
+                <Text style={styles.quickLabel}>Check-in</Text>
+                <Text style={styles.quickVal}>{prop.check_in_time || '12:00'}</Text>
+              </View>
             </View>
-            {prop.amenities ? (
-              <View style={styles.amenitiesWrap}>
-                <Text style={styles.amenitiesLabel}>Amenities</Text>
+            <View style={styles.quickDivider} />
+            <View style={styles.quickItem}>
+              <Ionicons name="log-out-outline" size={16} color={BLUE} />
+              <View>
+                <Text style={styles.quickLabel}>Check-out</Text>
+                <Text style={styles.quickVal}>{prop.check_out_time || '11:00'}</Text>
+              </View>
+            </View>
+            {prop.phone ? (
+              <>
+                <View style={styles.quickDivider} />
+                <View style={styles.quickItem}>
+                  <Ionicons name="call-outline" size={16} color={BLUE} />
+                  <View>
+                    <Text style={styles.quickLabel}>Contact</Text>
+                    <Text style={styles.quickVal}>{prop.phone}</Text>
+                  </View>
+                </View>
+              </>
+            ) : null}
+          </View>
+
+          {/* ── About ─────────────────────────────────────────── */}
+          {(prop.description || prop.amenities) ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>About this Property</Text>
+              {prop.description ? <Text style={styles.desc}>{prop.description}</Text> : null}
+              {prop.amenities ? (
                 <View style={styles.amenitiesChips}>
                   {prop.amenities.split(',').map((a: string, i: number) => (
                     <View key={i} style={styles.amenityChip}>
@@ -329,11 +359,11 @@ export default function PropertyDetailPage() {
                     </View>
                   ))}
                 </View>
-              </View>
-            ) : null}
-          </View>
+              ) : null}
+            </View>
+          ) : null}
 
-          {/* Room Categories */}
+          {/* ── Room Types ────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Available Room Types</Text>
             {categories.length === 0 ? (
@@ -341,50 +371,45 @@ export default function PropertyDetailPage() {
             ) : (
               categories.map((cat) => {
                 const catPhoto = cat.images ? cat.images.split(',')[0]?.trim() : null;
+                const isSelected = selectedCat?.id === cat.id;
                 return (
-                  <View key={cat.id} style={[styles.catCard, selectedCat?.id === cat.id && styles.catCardSelected]}>
+                  <View key={cat.id} style={[styles.catCard, isSelected && styles.catCardSelected]}>
                     <View style={styles.catTop}>
                       {catPhoto ? (
                         <Image source={{ uri: catPhoto }} style={styles.catPhoto} resizeMode="cover" />
                       ) : (
-                        <View style={[styles.catPhoto, styles.catPhotoPlaceholder]}>
+                        <LinearGradient colors={['#E3F2FD', '#B3E5FC']} style={[styles.catPhoto, { alignItems: 'center', justifyContent: 'center' }]}>
                           <Ionicons name="bed-outline" size={28} color={BLUE} />
-                        </View>
+                        </LinearGradient>
                       )}
                       <View style={{ flex: 1 }}>
                         <Text style={styles.catName}>{cat.name}</Text>
                         <View style={styles.catMetaRow}>
                           <View style={styles.catMetaChip}>
-                            <Ionicons name="people-outline" size={12} color={theme.colors.textMuted} />
+                            <Ionicons name="people-outline" size={11} color={theme.colors.textMuted} />
                             <Text style={styles.catMetaText}>{cat.capacity} guests</Text>
                           </View>
                           <View style={styles.catMetaChip}>
-                            <Ionicons name="bed-outline" size={12} color={theme.colors.textMuted} />
+                            <Ionicons name="bed-outline" size={11} color={theme.colors.textMuted} />
                             <Text style={styles.catMetaText}>{cat.total_rooms} rooms</Text>
                           </View>
                         </View>
                         {cat.description ? <Text style={styles.catDesc} numberOfLines={2}>{cat.description}</Text> : null}
-                        {cat.amenities ? (
-                          <Text style={styles.catAmenities} numberOfLines={1}>✓ {cat.amenities}</Text>
-                        ) : null}
+                        {cat.amenities ? <Text style={styles.catAmenities} numberOfLines={1}>✓ {cat.amenities}</Text> : null}
                       </View>
                       <View style={styles.catPriceCol}>
                         <Text style={styles.catPrice}>₹{parseFloat(cat.price_per_night).toFixed(0)}</Text>
-                        <Text style={styles.catPerNight}>per night</Text>
+                        <Text style={styles.catPerNight}>/night</Text>
                       </View>
                     </View>
                     <TouchableOpacity
-                      style={[styles.selectBtn, selectedCat?.id === cat.id && styles.selectBtnActive]}
-                      onPress={() => {
-                        setSelectedCat(cat);
-                        setBookError('');
-                        setShowBook(true);
-                      }}
+                      style={[styles.selectBtn, isSelected && styles.selectBtnActive]}
+                      onPress={() => { setSelectedCat(cat); setBookError(''); setShowBook(true); }}
                     >
-                      <Text style={[styles.selectBtnText, selectedCat?.id === cat.id && styles.selectBtnTextActive]}>
-                        {selectedCat?.id === cat.id ? '✓ Selected — Book Now' : 'Select & Book'}
+                      <Ionicons name={isSelected ? 'checkmark-circle' : 'calendar-outline'} size={16} color={isSelected ? '#fff' : BLUE} />
+                      <Text style={[styles.selectBtnText, isSelected && styles.selectBtnTextActive]}>
+                        {isSelected ? 'Selected — Book Now' : 'Select & Book'}
                       </Text>
-                      <Ionicons name="arrow-forward" size={14} color={selectedCat?.id === cat.id ? '#fff' : BLUE} />
                     </TouchableOpacity>
                   </View>
                 );
@@ -394,206 +419,221 @@ export default function PropertyDetailPage() {
         </View>
       </ScrollView>
 
-      {/* ── Booking Sheet ─────────────────────────────────────────── */}
+      {/* ══════════════════ BOOKING MODAL ══════════════════════ */}
       <Modal visible={showBook} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
+            {/* Header */}
+            <LinearGradient colors={[DARK_BLUE, BLUE]} style={styles.bookHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>{selectedCat?.name}</Text>
-                <Text style={styles.modalSub}>₹{parseFloat(selectedCat?.price_per_night || 0).toFixed(0)}/night · {prop?.name}</Text>
+                <Text style={styles.bookHeaderRoom}>{selectedCat?.name}</Text>
+                <Text style={styles.bookHeaderProp}>{prop?.name}</Text>
               </View>
-              <TouchableOpacity onPress={() => setShowBook(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.text} />
+              <View style={styles.bookHeaderPrice}>
+                <Text style={styles.bookHeaderPriceVal}>₹{parseFloat(selectedCat?.price_per_night || 0).toFixed(0)}</Text>
+                <Text style={styles.bookHeaderPriceSub}>/night</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowBook(false)} style={styles.bookCloseBtn}>
+                <Ionicons name="close" size={20} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 20 }} keyboardShouldPersistTaps="handled">
-              {!!bookError && (
-                <View style={styles.inlineError}>
-                  <Ionicons name="alert-circle-outline" size={18} color="#C62828" />
-                  <Text style={styles.inlineErrorText}>{bookError}</Text>
+            </LinearGradient>
+
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <View style={styles.bookBody}>
+                {/* Error banner */}
+                {!!bookError && (
+                  <View style={styles.inlineError}>
+                    <Ionicons name="alert-circle-outline" size={16} color="#C62828" />
+                    <Text style={styles.inlineErrorText}>{bookError}</Text>
+                  </View>
+                )}
+
+                {/* ── Date range card ── */}
+                <View style={styles.dateCard}>
+                  <DateInput label="Check-in" value={bookForm.check_in} onChange={(v) => setBookForm({ ...bookForm, check_in: v })} icon="log-in-outline" />
+                  <View style={styles.dateDivider}>
+                    {nights > 0 ? (
+                      <View style={styles.nightsBadge}>
+                        <Text style={styles.nightsNum}>{nights}</Text>
+                        <Text style={styles.nightsLabel}>night{nights !== 1 ? 's' : ''}</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.dateSep}>
+                        <Ionicons name="arrow-forward" size={16} color="#CFD8DC" />
+                      </View>
+                    )}
+                  </View>
+                  <DateInput label="Check-out" value={bookForm.check_out} onChange={(v) => setBookForm({ ...bookForm, check_out: v })} icon="log-out-outline" />
                 </View>
-              )}
 
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <DateInput label="Check-in *" value={bookForm.check_in} onChange={(v) => setBookForm({ ...bookForm, check_in: v })} placeholder="2026-07-15" />
-                <DateInput label="Check-out *" value={bookForm.check_out} onChange={(v) => setBookForm({ ...bookForm, check_out: v })} placeholder="2026-07-18" />
-              </View>
-
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <Stepper label="Guests" value={guests} min={1} max={selectedCat?.capacity || 10} onChange={setGuests} />
-                <Stepper label="Rooms" value={rooms} min={1} max={selectedCat?.total_rooms || 20} onChange={setRooms} />
-              </View>
-
-              <FormInput label="Guest Name *" value={bookForm.guest_name} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_name: v })} placeholder="Rama Rao" />
-              <FormInput label="Mobile Number *" value={bookForm.guest_mobile} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_mobile: v })} placeholder="+91 98765 43210" keyboardType="phone-pad" />
-              <FormInput label="Special Requests (optional)" value={bookForm.special_requests} onChangeText={(v: string) => setBookForm({ ...bookForm, special_requests: v })} placeholder="Vegetarian meals, ground floor, early check-in…" multiline />
-
-              {calcNights() > 0 && (
-                <View style={styles.priceSummary}>
-                  <View style={styles.priceLine}>
-                    <Text style={styles.priceLabel}>Room type</Text>
-                    <Text style={styles.priceValue}>{selectedCat?.name}</Text>
-                  </View>
-                  <View style={styles.priceLine}>
-                    <Text style={styles.priceLabel}>₹{parseFloat(selectedCat?.price_per_night || 0).toFixed(0)} × {calcNights()} nights × {rooms} room(s)</Text>
-                    <Text style={styles.priceValue}>₹{calcAmount().toFixed(0)}</Text>
-                  </View>
-                  <View style={[styles.priceLine, styles.priceTotal]}>
-                    <Text style={styles.priceTotalLabel}>Total</Text>
-                    <Text style={styles.priceTotalValue}>₹{calcAmount().toFixed(0)}</Text>
-                  </View>
+                {/* ── Guests & Rooms ── */}
+                <View style={styles.counterRow}>
+                  <Counter label="Guests" value={guests} min={1} max={selectedCat?.capacity || 10} onChange={setGuests} icon="people-outline" />
+                  <View style={{ width: 16 }} />
+                  <Counter label="Rooms" value={rooms} min={1} max={selectedCat?.total_rooms || 20} onChange={setRooms} icon="bed-outline" />
                 </View>
-              )}
 
-              <TouchableOpacity style={styles.bookBtn} onPress={handleBook}>
-                <Ionicons name="calendar-outline" size={18} color="#fff" />
-                <Text style={styles.bookBtnText}>Confirm Booking</Text>
-              </TouchableOpacity>
+                {/* ── Guest Details ── */}
+                <View style={styles.guestSection}>
+                  <Text style={styles.sectionHead}>Guest Details</Text>
+                  <GuestField label="Full Name *" value={bookForm.guest_name} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_name: v })} placeholder="Rama Rao" icon="person-outline" />
+                  <GuestField label="Mobile Number *" value={bookForm.guest_mobile} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_mobile: v })} placeholder="+91 98765 43210" keyboardType="phone-pad" icon="call-outline" />
+                  <GuestField label="Special Requests" value={bookForm.special_requests} onChangeText={(v: string) => setBookForm({ ...bookForm, special_requests: v })} placeholder="Vegetarian meals, early check-in…" icon="chatbubble-ellipses-outline" multiline />
+                </View>
+
+                {/* ── Price Summary ── */}
+                {nights > 0 && (
+                  <View style={styles.priceSummary}>
+                    <View style={styles.priceRow}>
+                      <Text style={styles.priceLabel}>₹{parseFloat(selectedCat?.price_per_night || 0).toFixed(0)} × {nights} nights × {rooms} room(s)</Text>
+                      <Text style={styles.priceVal}>₹{amount.toFixed(0)}</Text>
+                    </View>
+                    <View style={styles.priceTotal}>
+                      <Text style={styles.priceTotalLabel}>Total Amount</Text>
+                      <Text style={styles.priceTotalVal}>₹{amount.toFixed(0)}</Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* ── CTA ── */}
+                <TouchableOpacity style={styles.bookCta} onPress={handleBook} activeOpacity={0.88}>
+                  <LinearGradient colors={[DARK_BLUE, BLUE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
+                    <Ionicons name="calendar-check-outline" size={20} color="#fff" />
+                    <Text style={styles.bookCtaText}>
+                      {nights > 0 ? `Confirm Booking — ₹${amount.toFixed(0)}` : 'Confirm Booking'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
         </View>
       </Modal>
 
-      {/* ── Payment Sheet ─────────────────────────────────────────── */}
+      {/* ══════════════════ PAYMENT MODAL ══════════════════════ */}
       {booking && (
         <Modal visible={!!booking} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
               {bookingDone ? (
-                /* Success screen */
                 <View style={styles.successBox}>
-                  <Ionicons name="checkmark-circle" size={64} color="#2E7D32" />
+                  <View style={styles.successIcon}>
+                    <Ionicons name="checkmark" size={40} color="#fff" />
+                  </View>
                   <Text style={styles.successTitle}>Booking Confirmed!</Text>
-                  <Text style={styles.successSub}>Your stay at {prop?.name} is booked. We'll WhatsApp you the details.</Text>
-                  <View style={styles.priceSummary}>
-                    <View style={styles.priceLine}>
-                      <Text style={styles.priceLabel}>Booking ID</Text>
-                      <Text style={styles.priceValue}>{booking.id?.slice(0, 8).toUpperCase()}</Text>
-                    </View>
-                    <View style={styles.priceLine}>
-                      <Text style={styles.priceLabel}>Check-in</Text>
-                      <Text style={styles.priceValue}>{bookForm.check_in}</Text>
-                    </View>
-                    <View style={styles.priceLine}>
-                      <Text style={styles.priceLabel}>Check-out</Text>
-                      <Text style={styles.priceValue}>{bookForm.check_out}</Text>
-                    </View>
-                    <View style={[styles.priceLine, styles.priceTotal]}>
-                      <Text style={styles.priceTotalLabel}>Amount Paid</Text>
-                      <Text style={styles.priceTotalValue}>₹{parseFloat(booking.amount || 0).toFixed(0)}</Text>
+                  <Text style={styles.successSub}>Your stay at {prop?.name} is booked. We'll WhatsApp the details to you.</Text>
+                  <View style={styles.successCard}>
+                    <View style={styles.successRow}><Text style={styles.successKey}>Booking ID</Text><Text style={styles.successVal}>{booking.id?.slice(0, 8).toUpperCase()}</Text></View>
+                    <View style={styles.successRow}><Text style={styles.successKey}>Room</Text><Text style={styles.successVal}>{selectedCat?.name}</Text></View>
+                    <View style={styles.successRow}><Text style={styles.successKey}>Check-in</Text><Text style={styles.successVal}>{bookForm.check_in}</Text></View>
+                    <View style={styles.successRow}><Text style={styles.successKey}>Check-out</Text><Text style={styles.successVal}>{bookForm.check_out}</Text></View>
+                    <View style={[styles.successRow, { borderTopWidth: 1, borderTopColor: '#ECEFF1', paddingTop: 10, marginTop: 4 }]}>
+                      <Text style={[styles.successKey, { fontWeight: '800', color: '#1A1A1A' }]}>Total Paid</Text>
+                      <Text style={[styles.successVal, { fontSize: 20, color: BLUE, fontWeight: '900' }]}>₹{parseFloat(booking.amount || 0).toFixed(0)}</Text>
                     </View>
                   </View>
-                  <TouchableOpacity style={styles.bookBtn} onPress={() => {
-                    setBooking(null); setBookingDone(false); setUtrInput(''); setPayError('');
-                    router.push('/(tabs)' as any);
-                  }}>
-                    <Text style={styles.bookBtnText}>Back to Home</Text>
+                  <TouchableOpacity style={styles.bookCta} onPress={() => { setBooking(null); setBookingDone(false); setUtrInput(''); setPayError(''); router.push('/(tabs)' as any); }}>
+                    <LinearGradient colors={[DARK_BLUE, BLUE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
+                      <Ionicons name="home-outline" size={20} color="#fff" />
+                      <Text style={styles.bookCtaText}>Back to Home</Text>
+                    </LinearGradient>
                   </TouchableOpacity>
                 </View>
               ) : (
                 <>
-                  <LinearGradient colors={['#E3F2FD', '#fff']} style={styles.paymentHeader}>
-                    <Ionicons name="checkmark-circle" size={40} color="#2E7D32" />
-                    <Text style={styles.paymentTitle}>Booking Created!</Text>
-                    <Text style={styles.paymentSub}>Booking ID: {booking.id?.slice(0, 8).toUpperCase()}</Text>
+                  {/* Payment header */}
+                  <LinearGradient colors={[DARK_BLUE, BLUE]} style={styles.payHeader}>
+                    <View style={styles.payCheckIcon}>
+                      <Ionicons name="checkmark" size={22} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.payHeaderTitle}>Booking Created!</Text>
+                      <Text style={styles.payHeaderSub}>ID: {booking.id?.slice(0, 8).toUpperCase()} · ₹{parseFloat(booking.amount || 0).toFixed(0)}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => { setBooking(null); router.push('/(tabs)' as any); }}>
+                      <Ionicons name="close" size={20} color="rgba(255,255,255,0.7)" />
+                    </TouchableOpacity>
                   </LinearGradient>
-                  <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-                    <View style={styles.priceSummary}>
-                      <View style={styles.priceLine}>
-                        <Text style={styles.priceLabel}>Property</Text>
-                        <Text style={[styles.priceValue, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>{prop?.name}</Text>
-                      </View>
-                      <View style={styles.priceLine}>
-                        <Text style={styles.priceLabel}>Room</Text>
-                        <Text style={styles.priceValue}>{selectedCat?.name}</Text>
-                      </View>
-                      <View style={styles.priceLine}>
-                        <Text style={styles.priceLabel}>Dates</Text>
-                        <Text style={styles.priceValue}>{bookForm.check_in} → {bookForm.check_out}</Text>
-                      </View>
-                      <View style={styles.priceLine}>
-                        <Text style={styles.priceLabel}>{guests} guest(s) · {rooms} room(s)</Text>
-                        <Text style={styles.priceValue}>{calcNights()} night(s)</Text>
-                      </View>
-                      <View style={[styles.priceLine, styles.priceTotal]}>
-                        <Text style={styles.priceTotalLabel}>Amount to Pay</Text>
-                        <Text style={styles.priceTotalValue}>₹{parseFloat(booking.amount || 0).toFixed(0)}</Text>
+
+                  <ScrollView style={styles.bookBody} showsVerticalScrollIndicator={false}>
+                    {/* Booking summary */}
+                    <View style={styles.payBookingSummary}>
+                      <View style={styles.successRow}><Text style={styles.successKey}>Property</Text><Text style={[styles.successVal, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>{prop?.name}</Text></View>
+                      <View style={styles.successRow}><Text style={styles.successKey}>Room</Text><Text style={styles.successVal}>{selectedCat?.name}</Text></View>
+                      <View style={styles.successRow}><Text style={styles.successKey}>Dates</Text><Text style={styles.successVal}>{bookForm.check_in} → {bookForm.check_out} ({nights}N)</Text></View>
+                      <View style={[styles.successRow, { borderTopWidth: 1, borderTopColor: '#ECEFF1', marginTop: 6, paddingTop: 10 }]}>
+                        <Text style={[styles.successKey, { fontWeight: '800', color: '#1A1A1A' }]}>Amount Due</Text>
+                        <Text style={[styles.successVal, { fontSize: 20, color: BLUE, fontWeight: '900' }]}>₹{parseFloat(booking.amount || 0).toFixed(0)}</Text>
                       </View>
                     </View>
 
                     {!!payError && (
                       <View style={styles.inlineError}>
-                        <Ionicons name="alert-circle-outline" size={18} color="#C62828" />
+                        <Ionicons name="alert-circle-outline" size={16} color="#C62828" />
                         <Text style={styles.inlineErrorText}>{payError}</Text>
                       </View>
                     )}
 
-                    <Text style={styles.payMethodLabel}>Choose Payment Method</Text>
-                    <View style={styles.payMethodRow}>
-                      <TouchableOpacity
-                        style={[styles.payMethodBtn, payMethod === 'razorpay' && styles.payMethodBtnActive]}
-                        onPress={() => setPayMethod('razorpay')}
-                      >
-                        <Ionicons name="card-outline" size={20} color={payMethod === 'razorpay' ? '#fff' : BLUE} />
-                        <Text style={[styles.payMethodText, payMethod === 'razorpay' && styles.payMethodTextActive]}>Card / Net Banking</Text>
+                    {/* Payment method tabs */}
+                    <Text style={styles.sectionHead}>Payment Method</Text>
+                    <View style={styles.payTabs}>
+                      <TouchableOpacity style={[styles.payTab, payMethod === 'razorpay' && styles.payTabActive]} onPress={() => setPayMethod('razorpay')}>
+                        <Ionicons name="card-outline" size={18} color={payMethod === 'razorpay' ? '#fff' : BLUE} />
+                        <Text style={[styles.payTabText, payMethod === 'razorpay' && styles.payTabTextActive]}>Card / Net Banking</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.payMethodBtn, payMethod === 'upi' && styles.payMethodBtnActive]}
-                        onPress={() => setPayMethod('upi')}
-                      >
-                        <Ionicons name="phone-portrait-outline" size={20} color={payMethod === 'upi' ? '#fff' : '#5C6BC0'} />
-                        <Text style={[styles.payMethodText, payMethod === 'upi' && styles.payMethodTextActive]}>UPI</Text>
+                      <TouchableOpacity style={[styles.payTab, payMethod === 'upi' && styles.payTabActive]} onPress={() => setPayMethod('upi')}>
+                        <Ionicons name="phone-portrait-outline" size={18} color={payMethod === 'upi' ? '#fff' : '#5C6BC0'} />
+                        <Text style={[styles.payTabText, payMethod === 'upi' && styles.payTabTextActive]}>UPI Transfer</Text>
                       </TouchableOpacity>
                     </View>
 
                     {payMethod === 'razorpay' ? (
-                      <TouchableOpacity style={styles.bookBtn} onPress={handleRazorpayPayment}>
-                        <Ionicons name="card-outline" size={18} color="#fff" />
-                        <Text style={styles.bookBtnText}>Pay ₹{parseFloat(booking.amount || 0).toFixed(0)} via Card / Net Banking</Text>
+                      <TouchableOpacity style={styles.bookCta} onPress={handleRazorpayPayment} activeOpacity={0.88}>
+                        <LinearGradient colors={[DARK_BLUE, BLUE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
+                          <Ionicons name="card-outline" size={20} color="#fff" />
+                          <Text style={styles.bookCtaText}>Pay ₹{parseFloat(booking.amount || 0).toFixed(0)} Securely</Text>
+                        </LinearGradient>
                       </TouchableOpacity>
                     ) : (
                       <View>
                         {prop?.upi_id ? (
-                          <View style={styles.upiBox}>
-                            <Ionicons name="phone-portrait-outline" size={22} color="#5C6BC0" />
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.upiLabel}>Pay to UPI ID</Text>
-                              <Text style={styles.upiId} selectable>{prop.upi_id}</Text>
-                            </View>
+                          <View style={styles.upiCard}>
+                            <LinearGradient colors={['#4527A0', '#5C6BC0']} style={styles.upiCardGrad}>
+                              <Ionicons name="phone-portrait-outline" size={24} color="rgba(255,255,255,0.7)" />
+                              <View style={{ flex: 1 }}>
+                                <Text style={styles.upiCardLabel}>Pay to UPI ID</Text>
+                                <Text style={styles.upiCardId} selectable>{prop.upi_id}</Text>
+                              </View>
+                            </LinearGradient>
                           </View>
                         ) : (
-                          <View style={[styles.upiBox, { backgroundColor: '#FFF8E7' }]}>
-                            <Ionicons name="information-circle-outline" size={22} color="#E67E22" />
-                            <Text style={{ fontSize: 13, color: '#E67E22', flex: 1 }}>Contact property for UPI details: {prop?.phone}</Text>
+                          <View style={styles.inlineWarn}>
+                            <Ionicons name="information-circle-outline" size={18} color="#E65100" />
+                            <Text style={styles.inlineWarnText}>Contact property for UPI: {prop?.phone}</Text>
                           </View>
                         )}
-                        <View style={{ marginBottom: 4 }}>
-                          <Text style={styles.inputLabel}>UTR / Transaction Reference *</Text>
+                        <View style={styles.utrSection}>
+                          <Text style={styles.sectionHead}>Enter UTR Reference</Text>
                           <TextInput
-                            style={styles.input}
+                            style={styles.utrInput}
                             placeholder="e.g. 316812345678"
-                            placeholderTextColor={theme.colors.textMuted}
+                            placeholderTextColor="#B0BEC5"
                             value={utrInput}
                             onChangeText={setUtrInput}
                             autoCapitalize="characters"
                           />
-                          <Text style={{ fontSize: 11, color: theme.colors.textMuted, marginTop: 4 }}>
-                            After paying via UPI app, enter the 12-digit UTR from your payment confirmation
-                          </Text>
+                          <Text style={styles.utrHint}>12-digit UTR from your UPI payment confirmation</Text>
                         </View>
-                        <TouchableOpacity style={[styles.bookBtn, { backgroundColor: '#5C6BC0' }]} onPress={handleUpiPayment}>
-                          <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-                          <Text style={styles.bookBtnText}>Submit UPI Payment</Text>
+                        <TouchableOpacity style={styles.bookCta} onPress={handleUpiPayment} activeOpacity={0.88}>
+                          <LinearGradient colors={['#4527A0', '#5C6BC0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
+                            <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                            <Text style={styles.bookCtaText}>Submit UPI Payment</Text>
+                          </LinearGradient>
                         </TouchableOpacity>
                       </View>
                     )}
-
-                    <TouchableOpacity style={styles.laterBtn} onPress={() => {
-                      setBooking(null); setBookingDone(false);
-                      router.push('/(tabs)' as any);
-                    }}>
-                      <Text style={styles.laterBtnText}>Pay Later (contact via WhatsApp)</Text>
+                    <TouchableOpacity style={styles.laterBtn} onPress={() => { setBooking(null); router.push('/(tabs)' as any); }}>
+                      <Text style={styles.laterBtnText}>Pay Later · Contact via WhatsApp</Text>
                     </TouchableOpacity>
                   </ScrollView>
                 </>
@@ -607,126 +647,149 @@ export default function PropertyDetailPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.bg },
+  container: { flex: 1, backgroundColor: '#F5F7FA' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: theme.colors.textMuted, fontSize: 15 },
 
-  // Hero / Photos
+  // Hero
   hero: { position: 'relative' },
-  photoGallery: { height: IS_WEB ? 340 : 240 },
+  photoGallery: { height: IS_WEB ? 360 : 260 },
   heroPhoto: { width: '100%', height: '100%' },
-  heroGradient: { height: IS_WEB ? 280 : 200 },
+  heroGradient: { height: IS_WEB ? 280 : 200, alignItems: 'center', justifyContent: 'center' },
   heroOverlay: { ...StyleSheet.absoluteFillObject },
-  backBtn: { position: 'absolute', top: IS_WEB ? 20 : 12, left: IS_WEB ? 24 : 12, zIndex: 10, width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
-  heroContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: IS_WEB ? 32 : 16, paddingBottom: IS_WEB ? 20 : 14 },
-  typeBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, marginBottom: 8 },
+  backBtn: { position: 'absolute', top: IS_WEB ? 20 : 14, left: IS_WEB ? 24 : 14, zIndex: 10, width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  heroContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: IS_WEB ? 32 : 16, paddingBottom: IS_WEB ? 24 : 16 },
+  typeBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   typeText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
-  heroTitle: { color: '#fff', fontSize: IS_WEB ? 34 : 22, fontWeight: '900', marginBottom: 6, textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } },
+  heroTitle: { color: '#fff', fontSize: IS_WEB ? 36 : 24, fontWeight: '900', marginBottom: 8, textShadowColor: 'rgba(0,0,0,0.4)', textShadowRadius: 8, textShadowOffset: { width: 0, height: 2 } },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
   heroTemple: { color: '#FFD54F', fontSize: 13, fontWeight: '600' },
   heroLocation: { color: 'rgba(255,255,255,0.85)', fontSize: 13, flex: 1 },
-  photoNav: { position: 'absolute', top: '50%', width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', zIndex: 5 },
+  photoNav: { position: 'absolute', top: '50%', width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', zIndex: 5 },
   photoNavLeft: { left: 12 },
   photoNavRight: { right: 12 },
-  photoDots: { position: 'absolute', bottom: 60, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
-  dotActive: { backgroundColor: '#fff', width: 18 },
-  photoCounter: { position: 'absolute', top: 12, right: 14, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  photoDots: { position: 'absolute', bottom: 64, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.45)' },
+  dotActive: { backgroundColor: '#fff', width: 20, borderRadius: 3 },
+  photoCounter: { position: 'absolute', top: 14, right: 14, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   photoCounterText: { color: '#fff', fontSize: 11, fontWeight: '700' },
 
-  body: { padding: IS_WEB ? 32 : 16 },
+  body: { padding: IS_WEB ? 28 : 14 },
 
-  section: { backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: theme.colors.border },
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: theme.colors.text, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.8 },
-  desc: { fontSize: 14, color: theme.colors.textMuted, lineHeight: 22, marginBottom: 14 },
+  // Quick strip
+  quickStrip: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#E8EEF4' },
+  quickItem: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  quickLabel: { fontSize: 10, fontWeight: '700', color: '#90A4AE', textTransform: 'uppercase', letterSpacing: 0.8 },
+  quickVal: { fontSize: 15, fontWeight: '800', color: '#1A1A1A', marginTop: 2 },
+  quickDivider: { width: 1, backgroundColor: '#ECEFF1', marginHorizontal: 12 },
+
+  section: { backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#E8EEF4' },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#546E7A', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  desc: { fontSize: 14, color: '#546E7A', lineHeight: 22, marginBottom: 12 },
   noCats: { color: theme.colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 20 },
-
-  infoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  infoItem: { flexDirection: 'row', alignItems: 'center', gap: 10, width: '45%' },
-  infoLabel: { fontSize: 10, color: theme.colors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
-  infoValue: { fontSize: 14, color: theme.colors.text, fontWeight: '600' },
-  amenitiesWrap: { marginTop: 14 },
-  amenitiesLabel: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  amenitiesChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  amenitiesChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   amenityChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   amenityText: { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
 
-  catCard: { backgroundColor: '#F8FBFF', borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1.5, borderColor: `${BLUE}22` },
-  catCardSelected: { borderColor: BLUE, backgroundColor: '#E3F2FD' },
+  // Room cards
+  catCard: { backgroundColor: '#F8FBFF', borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1.5, borderColor: '#E3EFF8' },
+  catCardSelected: { borderColor: BLUE, backgroundColor: '#EBF5FF' },
   catTop: { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  catPhoto: { width: 90, height: 90, borderRadius: 10 },
-  catPhotoPlaceholder: { backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' },
-  catName: { fontSize: 15, fontWeight: '800', color: theme.colors.text, marginBottom: 5 },
+  catPhoto: { width: 88, height: 88, borderRadius: 12 },
+  catName: { fontSize: 15, fontWeight: '800', color: '#1A1A1A', marginBottom: 5 },
   catMetaRow: { flexDirection: 'row', gap: 6, marginBottom: 5 },
-  catMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F0F0F0', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
-  catMetaText: { fontSize: 11, color: theme.colors.textMuted },
-  catDesc: { fontSize: 12, color: theme.colors.textMuted, lineHeight: 18 },
+  catMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EEF2F5', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
+  catMetaText: { fontSize: 11, color: '#607D8B' },
+  catDesc: { fontSize: 12, color: '#78909C', lineHeight: 17 },
   catAmenities: { fontSize: 11, color: '#2E7D32', marginTop: 4 },
   catPriceCol: { alignItems: 'flex-end', justifyContent: 'flex-start', minWidth: 70 },
   catPrice: { fontSize: 22, fontWeight: '900', color: BLUE },
-  catPerNight: { fontSize: 11, color: theme.colors.textMuted },
-  selectBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    borderWidth: 1.5, borderColor: BLUE, borderRadius: 10, paddingVertical: 10,
-  },
+  catPerNight: { fontSize: 11, color: '#90A4AE' },
+  selectBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: BLUE, borderRadius: 12, paddingVertical: 11 },
   selectBtnActive: { backgroundColor: BLUE, borderColor: BLUE },
   selectBtnText: { fontSize: 14, fontWeight: '700', color: BLUE },
   selectBtnTextActive: { color: '#fff' },
 
-  // Modals
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '92%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 20, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
-  modalTitle: { fontSize: 17, fontWeight: '800', color: theme.colors.text },
-  modalSub: { fontSize: 12, color: BLUE, fontWeight: '600', marginTop: 2 },
+  // Modal shell
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%', overflow: 'hidden' },
 
-  inlineError: { backgroundColor: '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 14, flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
-  inlineErrorText: { color: '#C62828', fontSize: 13, flex: 1 },
+  // Booking modal
+  bookHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 24, gap: 12 },
+  bookHeaderRoom: { color: '#fff', fontSize: 18, fontWeight: '900' },
+  bookHeaderProp: { color: 'rgba(255,255,255,0.65)', fontSize: 12, marginTop: 2 },
+  bookHeaderPrice: { alignItems: 'flex-end' },
+  bookHeaderPriceVal: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  bookHeaderPriceSub: { color: 'rgba(255,255,255,0.65)', fontSize: 11 },
+  bookCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
 
-  priceSummary: { backgroundColor: '#F8FBFF', borderRadius: 12, padding: 14, marginBottom: 16 },
-  priceLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
-  priceLabel: { fontSize: 13, color: theme.colors.textMuted, flex: 1 },
-  priceValue: { fontSize: 13, fontWeight: '700', color: theme.colors.text },
-  priceTotal: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 10, marginTop: 4 },
-  priceTotalLabel: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
-  priceTotalValue: { fontSize: 20, fontWeight: '900', color: BLUE },
+  bookBody: { padding: 20 },
 
-  bookBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, marginBottom: 10,
-  },
-  bookBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  laterBtn: { alignItems: 'center', paddingVertical: 10, marginBottom: 16 },
-  laterBtnText: { fontSize: 14, color: theme.colors.textMuted },
+  inlineError: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12, marginBottom: 16 },
+  inlineErrorText: { color: '#C62828', fontSize: 13, flex: 1, lineHeight: 18 },
+  inlineWarn: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: '#FFF3E0', borderRadius: 12, padding: 12, marginBottom: 14 },
+  inlineWarnText: { color: '#E65100', fontSize: 13, flex: 1 },
 
-  inputLabel: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
-  input: {
-    borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: theme.colors.text, backgroundColor: '#FAFAFA',
-  },
+  // Date card
+  dateCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#F0F7FF', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#BBDEFB' },
+  dateDivider: { alignItems: 'center', justifyContent: 'center', paddingTop: 18, paddingHorizontal: 8 },
+  nightsBadge: { backgroundColor: BLUE, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center' },
+  nightsNum: { color: '#fff', fontSize: 16, fontWeight: '900', lineHeight: 18 },
+  nightsLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
+  dateSep: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' },
 
-  paymentHeader: { alignItems: 'center', padding: 24, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
-  paymentTitle: { fontSize: 22, fontWeight: '900', color: theme.colors.text, marginTop: 10 },
-  paymentSub: { fontSize: 13, color: theme.colors.textMuted, marginTop: 4 },
+  counterRow: { flexDirection: 'row', marginBottom: 16 },
 
-  payMethodLabel: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
-  payMethodRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  payMethodBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingVertical: 12, backgroundColor: '#FAFAFA',
-  },
-  payMethodBtnActive: { backgroundColor: BLUE, borderColor: BLUE },
-  payMethodText: { fontSize: 13, fontWeight: '700', color: theme.colors.textMuted },
-  payMethodTextActive: { color: '#fff' },
+  guestSection: { backgroundColor: '#F8FBFF', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#E3EFF8' },
+  sectionHead: { fontSize: 11, fontWeight: '800', color: '#78909C', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 },
 
-  upiBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#EDE7F6', borderRadius: 12, padding: 14, marginBottom: 14,
-  },
-  upiLabel: { fontSize: 10, fontWeight: '800', color: '#5C6BC0', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 },
-  upiId: { fontSize: 16, fontWeight: '800', color: '#311B92', letterSpacing: 0.5 },
+  priceSummary: { backgroundColor: '#E3F2FD', borderRadius: 14, padding: 14, marginBottom: 16 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  priceLabel: { fontSize: 13, color: '#546E7A', flex: 1 },
+  priceVal: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
+  priceTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#90CAF9', paddingTop: 10 },
+  priceTotalLabel: { fontSize: 14, fontWeight: '800', color: '#1A1A1A' },
+  priceTotalVal: { fontSize: 22, fontWeight: '900', color: BLUE },
 
+  bookCta: { borderRadius: 16, overflow: 'hidden', marginBottom: 10 },
+  bookCtaGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
+  bookCtaText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+
+  // Payment modal
+  payHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, paddingTop: 24 },
+  payCheckIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#2E7D32', alignItems: 'center', justifyContent: 'center' },
+  payHeaderTitle: { color: '#fff', fontSize: 17, fontWeight: '900' },
+  payHeaderSub: { color: 'rgba(255,255,255,0.65)', fontSize: 12, marginTop: 2 },
+  payBookingSummary: { backgroundColor: '#F0F7FF', borderRadius: 16, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: '#BBDEFB' },
+
+  payTabs: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  payTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: '#CFD8DC', borderRadius: 14, paddingVertical: 13, backgroundColor: '#F5F7FA' },
+  payTabActive: { backgroundColor: BLUE, borderColor: BLUE },
+  payTabText: { fontSize: 13, fontWeight: '700', color: '#607D8B' },
+  payTabTextActive: { color: '#fff' },
+
+  upiCard: { borderRadius: 14, overflow: 'hidden', marginBottom: 16 },
+  upiCardGrad: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
+  upiCardLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  upiCardId: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
+  utrSection: { marginBottom: 16 },
+  utrInput: { borderWidth: 1.5, borderColor: '#CFD8DC', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, fontWeight: '700', color: '#1A1A1A', backgroundColor: '#F8FBFF', marginBottom: 6 },
+  utrHint: { fontSize: 11, color: '#90A4AE' },
+
+  laterBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: 8 },
+  laterBtnText: { fontSize: 13, color: '#90A4AE', fontWeight: '500' },
+
+  // Success
   successBox: { padding: 28, alignItems: 'center' },
-  successTitle: { fontSize: 24, fontWeight: '900', color: '#2E7D32', marginTop: 14, marginBottom: 6 },
-  successSub: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 20 },
+  successIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#2E7D32', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  successTitle: { fontSize: 24, fontWeight: '900', color: '#1A1A1A', marginBottom: 6 },
+  successSub: { fontSize: 14, color: '#78909C', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
+  successCard: { width: '100%', backgroundColor: '#F0F7FF', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#BBDEFB' },
+  successRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 7 },
+  successKey: { fontSize: 13, color: '#78909C', fontWeight: '500' },
+  successVal: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
+
+  infoItem: { flexDirection: 'row', alignItems: 'center', gap: 10, width: '45%' },
+  infoLabel: { fontSize: 10, color: theme.colors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
+  infoValue: { fontSize: 14, color: theme.colors.text, fontWeight: '600' },
 });
