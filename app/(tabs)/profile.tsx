@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator,
-  Modal, Pressable, Platform,
+  Modal, Pressable, Platform, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,6 +18,37 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [upiId, setUpiId] = useState('');
+  const [upiEdit, setUpiEdit] = useState('');
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [savingUpi, setSavingUpi] = useState(false);
+
+  const isPujari = user?.role === 'poojari';
+
+  const loadUpi = async () => {
+    if (!isPujari) return;
+    try {
+      const { data } = await api.get('/pujari/profile/upi');
+      setUpiId(data.upi_id || '');
+    } catch {}
+  };
+
+  useEffect(() => { loadUpi(); }, [isPujari]);
+
+  const saveUpi = async () => {
+    if (!upiEdit.trim()) { Alert.alert('Required', 'Enter your PhonePe number or UPI ID'); return; }
+    setSavingUpi(true);
+    try {
+      await api.put('/pujari/profile/upi', { upi_id: upiEdit.trim() });
+      setUpiId(upiEdit.trim());
+      setShowUpiModal(false);
+      Alert.alert('Saved', 'Your UPI ID has been updated');
+    } catch (e) {
+      Alert.alert('Error', apiError(e));
+    } finally {
+      setSavingUpi(false);
+    }
+  };
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
@@ -166,12 +197,50 @@ export default function Profile() {
           </TouchableOpacity>
         )}
 
+        {user?.role === 'hotel_manager' && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/hotel-manager' as any)}
+            style={styles.adminCard}
+          >
+            <LinearGradient colors={['#0277BD', '#0288D1']} style={styles.adminGrad}>
+              <Ionicons name="bed" size={32} color="#fff" />
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Text style={styles.adminTitle}>Hotel Manager</Text>
+                <Text style={styles.adminSub}>Manage your property & bookings</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={22} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Details</Text>
           <InfoRow icon="mail-outline" label="Email" value={user?.email} />
           <InfoRow icon="home-outline" label="Address" value={user?.address} />
           <InfoRow icon="location-outline" label="City" value={`${user?.city}, ${user?.pincode}`} />
         </View>
+
+        {isPujari && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>PhonePe / UPI Payment</Text>
+            <TouchableOpacity
+              style={styles.upiRow}
+              onPress={() => { setUpiEdit(upiId); setShowUpiModal(true); }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="phone-portrait-outline" size={20} color="#1565C0" />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.infoLabel}>Your PhonePe/UPI ID</Text>
+                <Text style={[styles.infoVal, !upiId && { color: '#B71C1C' }]}>
+                  {upiId || 'Not set — tap to add'}
+                </Text>
+              </View>
+              <Ionicons name="pencil-outline" size={18} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+            <Text style={styles.upiHint}>Admin will send your earnings to this ID after pooja completion</Text>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Links</Text>
@@ -221,6 +290,36 @@ export default function Profile() {
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.sheetCancel} onPress={() => setShowPicker(false)}>
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* UPI ID modal */}
+      <Modal visible={showUpiModal} transparent animationType="slide" onRequestClose={() => setShowUpiModal(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setShowUpiModal(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>PhonePe / UPI ID</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 16 }}>
+              Enter your PhonePe mobile number or UPI ID (e.g. 9876543210@ybl)
+            </Text>
+            <TextInput
+              value={upiEdit}
+              onChangeText={setUpiEdit}
+              placeholder="e.g. 9876543210 or name@upi"
+              placeholderTextColor={theme.colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.upiInput}
+            />
+            <TouchableOpacity style={styles.upiSaveBtn} onPress={saveUpi} disabled={savingUpi}>
+              {savingUpi ? <ActivityIndicator color="#fff" size="small" /> : (
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Save UPI ID</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sheetCancel} onPress={() => setShowUpiModal(false)}>
               <Text style={styles.sheetCancelText}>Cancel</Text>
             </TouchableOpacity>
           </Pressable>
@@ -292,7 +391,7 @@ const styles = StyleSheet.create({
     width: 96, height: 96, borderRadius: 48,
     borderWidth: 3, borderColor: '#fff', backgroundColor: '#eee',
   },
-  avatarText: { color: theme.colors.primary, fontSize: 40, fontWeight: '800' },
+  avatarText: { fontFamily: 'Cinzel-Bold', color: theme.colors.primary, fontSize: 40 },
   editBadge: {
     position: 'absolute', bottom: 0, right: 0,
     width: 32, height: 32, borderRadius: 16,
@@ -307,22 +406,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: '#fff',
   },
-  name: { color: '#fff', fontSize: 22, fontWeight: '700', marginTop: 12 },
-  mobile: { color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
+  name: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 20, marginTop: 12 },
+  mobile: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
   roleBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10,
     backgroundColor: 'rgba(212,175,55,0.2)', borderWidth: 1, borderColor: theme.colors.secondary,
     paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999,
   },
-  roleText: { color: theme.colors.secondary, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  roleText: { fontFamily: 'Cinzel-Bold', color: theme.colors.secondary, fontSize: 10, letterSpacing: 1.5 },
 
   adminCard: { marginHorizontal: 20, marginTop: 18, borderRadius: 20, overflow: 'hidden' },
   adminGrad: { flexDirection: 'row', alignItems: 'center', padding: 18 },
-  adminTitle: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  adminSub: { color: 'rgba(255,255,255,0.9)', fontSize: 12, marginTop: 2 },
+  adminTitle: { fontFamily: 'Cinzel-Bold', color: '#fff', fontSize: 17 },
+  adminSub: { fontFamily: 'DMSans-Regular', color: 'rgba(255,255,255,0.9)', fontSize: 12, marginTop: 2 },
 
   section: { marginTop: 22, paddingHorizontal: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginBottom: 10 },
+  sectionTitle: { fontFamily: 'Cinzel-Bold', fontSize: 11, color: theme.colors.textMuted, letterSpacing: 2, marginBottom: 10 },
 
   infoRow: {
     flexDirection: 'row', alignItems: 'center',
@@ -362,6 +461,23 @@ const styles = StyleSheet.create({
   sheetBtnText: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
   sheetCancel: { marginTop: 6, paddingVertical: 12, alignItems: 'center' },
   sheetCancelText: { color: theme.colors.primary, fontWeight: '700', fontSize: 15 },
+
+  // UPI ID
+  upiRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', padding: 14, borderRadius: 14,
+    borderWidth: 1, borderColor: theme.colors.border, marginBottom: 8,
+  },
+  upiHint: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2, marginBottom: 4, lineHeight: 16 },
+  upiInput: {
+    borderWidth: 1, borderColor: theme.colors.border, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: theme.colors.text,
+    backgroundColor: '#fff', marginBottom: 14,
+  },
+  upiSaveBtn: {
+    backgroundColor: '#1565C0', borderRadius: 12, paddingVertical: 14,
+    alignItems: 'center', marginBottom: 8,
+  },
 
   // Logout modal
   logoutModal: {

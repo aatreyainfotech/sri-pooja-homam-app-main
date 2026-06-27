@@ -2,7 +2,7 @@ import {
   useEffect, useState, useCallback, useRef,
 } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Image, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated,
   RefreshControl, FlatList, Dimensions, NativeSyntheticEvent,
   NativeScrollEvent, useWindowDimensions, Linking, Platform,
 } from 'react-native';
@@ -13,17 +13,220 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import WebFooter from '../../src/components/WebFooter';
+import WelcomePopup from '../../src/components/WelcomePopup';
 
-const GOLD = '#D4AF37';
-const MAROON = '#8B1515';
-const BG = '#0D0302';
+const GOLD    = '#D4AF37';
+const SAFFRON = '#E67E22';
+const BG      = '#FFF8E7';
+const IS_WEB  = Platform.OS === 'web';
 
 const SERVICES = [
-  { title: 'Book Pooja',         desc: 'Perform sacred poojas at home or at the temple with verified pujaris.',   icon: 'flower-outline',    color: MAROON,   bg: '#FFF0F0', route: '/(tabs)/temples' },
-  { title: 'Perform Homam',      desc: 'Fire rituals for prosperity, health and removal of obstacles.',            icon: 'flame-outline',     color: '#E65100', bg: '#FFF3E0', route: '/(tabs)/temples' },
-  { title: 'Live Darshan',       desc: 'Watch sacred rituals streaming live from temples across India.',           icon: 'videocam-outline',  color: '#1565C0', bg: '#E3F2FD', route: '/(tabs)/live' },
-  { title: 'Pujari at Home',     desc: 'Invite a qualified pujari to your home for all auspicious occasions.',    icon: 'home-outline',      color: '#2E7D32', bg: '#E8F5E9', route: '/(tabs)/temples' },
+  { title: 'Book Pooja',     desc: 'Perform sacred poojas at home or at the temple with verified Vedic pujaris.', icon: 'flower-outline',   color: '#FF8C00', bg: 'rgba(255,140,0,0.14)', route: '/(tabs)/temples' },
+  { title: 'Perform Homam', desc: 'Sacred fire rituals for prosperity, health and removal of obstacles.',          icon: 'flame-outline',    color: '#FF5722', bg: 'rgba(255,87,34,0.14)',  route: '/(tabs)/temples' },
+  { title: 'Live Darshan',  desc: 'Watch sacred rituals streaming live from temples across India.',                icon: 'videocam-outline', color: '#29B6F6', bg: 'rgba(41,182,246,0.13)', route: '/(tabs)/live' },
+  { title: 'Pujari at Home',desc: 'Invite a qualified pujari to your home for all auspicious occasions.',         icon: 'home-outline',     color: '#66BB6A', bg: 'rgba(102,187,106,0.13)',route: '/(tabs)/temples' },
 ];
+
+// ── Temple Multi-Card Carousel (4 visible, auto-scroll) ──────────────────
+const ssArrow = {
+  width: 44, height: 44, borderRadius: 22,
+  backgroundColor: 'rgba(255,248,231,0.95)', alignItems: 'center' as const,
+  justifyContent: 'center' as const, borderWidth: 1, borderColor: 'rgba(230,126,34,0.35)',
+};
+
+function TempleMultiCarousel({ temples, innerW }: { temples: any[]; innerW: number }) {
+  const router = useRouter();
+  const [idx, setIdx] = useState(0);
+  const anim = useRef(new Animated.Value(0)).current;
+
+  const VISIBLE = 4;
+  const GAP = 20;
+  const cardW = Math.floor((innerW - GAP * (VISIBLE - 1)) / VISIBLE);
+  const step = cardW + GAP;
+  const maxIdx = Math.max(0, temples.length - VISIBLE);
+
+  const goTo = useCallback((next: number) => {
+    const n = ((next % (maxIdx + 1)) + (maxIdx + 1)) % (maxIdx + 1);
+    setIdx(n);
+    Animated.timing(anim, { toValue: -n * step, duration: 600, useNativeDriver: false }).start();
+  }, [maxIdx, step, anim]);
+
+  useEffect(() => {
+    if (temples.length <= VISIBLE) return;
+    const t = setInterval(() => goTo(idx + 1), 3500);
+    return () => clearInterval(t);
+  }, [idx, temples.length, goTo]);
+
+  if (temples.length === 0) return null;
+
+  return (
+    <View>
+      <View style={{ overflow: 'hidden' } as any}>
+        <Animated.View style={{
+          flexDirection: 'row', gap: GAP,
+          transform: [{ translateX: anim }],
+          width: (cardW + GAP) * temples.length,
+        }}>
+          {temples.map((t: any) => (
+            <TouchableOpacity
+              key={t.id} activeOpacity={0.88}
+              onPress={() => router.push(`/temple/${t.id}` as any)}
+              style={{ width: cardW, height: 260, borderRadius: 20, overflow: 'hidden', backgroundColor: '#1C0606', borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)', flexShrink: 0 } as any}
+            >
+              {!!t.banner && <Image source={{ uri: t.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+              <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(10,2,2,0.93)']} style={StyleSheet.absoluteFill} />
+              <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)' }}>
+                <Text style={{ color: GOLD, fontSize: 10, fontWeight: '700' }}>Explore →</Text>
+              </View>
+              <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 }}>
+                <Text style={{ color: 'rgba(212,175,55,0.75)', fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 5 }}>
+                  {(t.deity || '').toUpperCase()}
+                </Text>
+                <Text style={{ color: '#FFF8F0', fontSize: 17, fontWeight: '900', marginBottom: 4 }}>{t.name}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="location" size={11} color={GOLD} />
+                  <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{t.location}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
+      </View>
+
+      {/* Controls */}
+      {temples.length > VISIBLE && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 24 }}>
+          <TouchableOpacity onPress={() => goTo(idx - 1)} style={ssArrow}>
+            <Ionicons name="chevron-back" size={20} color="#4A2C2A" />
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {Array.from({ length: maxIdx + 1 }).map((_, i) => (
+              <TouchableOpacity key={i} onPress={() => goTo(i)}>
+                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(74,44,42,0.2)' }} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity onPress={() => goTo(idx + 1)} style={ssArrow}>
+            <Ionicons name="chevron-forward" size={20} color="#4A2C2A" />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── Pooja 3-Card Auto Carousel ────────────────────────────────────────────
+function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
+  const router = useRouter();
+  const [idx, setIdx] = useState(0);
+  const anim = useRef(new Animated.Value(0)).current;
+
+  const VISIBLE = 3;
+  const GAP = 22;
+  const cardW = Math.floor((innerW - GAP * (VISIBLE - 1)) / VISIBLE);
+  const step = cardW + GAP;
+  const maxIdx = Math.max(0, poojas.length - VISIBLE);
+
+  const goTo = useCallback((next: number) => {
+    const n = ((next % (maxIdx + 1)) + (maxIdx + 1)) % (maxIdx + 1);
+    setIdx(n);
+    Animated.timing(anim, { toValue: -n * step, duration: 600, useNativeDriver: false }).start();
+  }, [maxIdx, step, anim]);
+
+  useEffect(() => {
+    if (poojas.length <= VISIBLE) return;
+    const t = setInterval(() => goTo(idx + 1), 3500);
+    return () => clearInterval(t);
+  }, [idx, poojas.length, goTo]);
+
+  if (poojas.length === 0) return null;
+
+  return (
+    <View>
+      <View style={{ overflow: 'hidden' } as any}>
+        <Animated.View style={{
+          flexDirection: 'row', gap: GAP,
+          transform: [{ translateX: anim }],
+          width: (cardW + GAP) * poojas.length,
+        }}>
+          {poojas.map((p: any) => (
+            <TouchableOpacity
+              key={p.id} activeOpacity={0.88}
+              onPress={() => router.push(`/book-pooja/${p.id}` as any)}
+              style={{
+                width: cardW, borderRadius: 20, overflow: 'hidden', flexShrink: 0,
+                backgroundColor: '#fff',
+                borderWidth: 1, borderColor: 'rgba(230,126,34,0.2)',
+                ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(74,44,42,0.12)' } : {}),
+              } as any}
+            >
+              {/* Image */}
+              <View style={{ height: 210, position: 'relative', backgroundColor: '#FFF0D0' }}>
+                {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+              </View>
+              {/* Card body */}
+              <View style={{ padding: 18, borderTopWidth: 1, borderTopColor: 'rgba(230,126,34,0.1)' }}>
+                <View style={{
+                  alignSelf: 'flex-start', marginBottom: 10,
+                  backgroundColor: p.type === 'homam' ? 'rgba(230,126,34,0.12)' : 'rgba(178,34,34,0.1)',
+                  borderWidth: 1,
+                  borderColor: p.type === 'homam' ? 'rgba(230,126,34,0.4)' : 'rgba(178,34,34,0.35)',
+                  paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
+                }}>
+                  <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: '#4A2C2A' }}>
+                    {p.type?.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 6, lineHeight: 22 }} numberOfLines={2}>
+                  {p.name}
+                </Text>
+                <Text style={{ color: '#5A5A5A', fontSize: 12, lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
+                  {p.description}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <Text style={{ fontSize: 20, fontWeight: '900', color: SAFFRON }}>₹{p.price}</Text>
+                  {!!p.duration && <Text style={{ fontSize: 11, color: '#8A7A6A' }}>{p.duration}</Text>}
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.push(`/book-pooja/${p.id}` as any)}
+                  style={{
+                    borderRadius: 12, paddingVertical: 11, alignItems: 'center',
+                    ...(Platform.OS === 'web' ? {
+                      background: 'linear-gradient(135deg, #B22222 0%, #8B1515 100%)',
+                      boxShadow: '0 4px 16px rgba(178,34,34,0.4)',
+                    } : { backgroundColor: '#B22222' }),
+                  } as any}
+                >
+                  <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 }}>Book Now →</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
+      </View>
+
+      {/* Controls */}
+      {poojas.length > VISIBLE && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 24 }}>
+          <TouchableOpacity onPress={() => goTo(idx - 1)} style={ssArrow}>
+            <Ionicons name="chevron-back" size={20} color="#4A2C2A" />
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {Array.from({ length: maxIdx + 1 }).map((_, i) => (
+              <TouchableOpacity key={i} onPress={() => goTo(i)}>
+                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(74,44,42,0.2)' }} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity onPress={() => goTo(idx + 1)} style={ssArrow}>
+            <Ionicons name="chevron-forward" size={20} color="#4A2C2A" />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
 
 // ── Web Desktop Homepage ───────────────────────────────────────────────────
 function WebHome() {
@@ -34,7 +237,6 @@ function WebHome() {
   const [poojas, setPoojas] = useState<any[]>([]);
   const [live, setLive] = useState<any[]>([]);
 
-  const cols = W > 1280 ? 4 : W > 960 ? 3 : 2;
   const innerW = Math.min(W, 1280);
 
   useEffect(() => {
@@ -50,14 +252,17 @@ function WebHome() {
   }, []);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: BG }} showsVerticalScrollIndicator={false}>
+    <View style={[
+      { backgroundColor: BG },
+      Platform.OS === 'web' ? { flex: 1, overflowY: 'auto' } as any : {},
+    ]}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <View style={wh.hero}>
         {/* Background gradient */}
         <LinearGradient
-          colors={['#4A0000', '#8B1515', '#3D0A0A', '#0D0302']}
-          locations={[0, 0.3, 0.7, 1]}
+          colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
+          locations={[0, 0.3, 0.65, 1]}
           style={StyleSheet.absoluteFill}
         />
         {/* Decorative OM */}
@@ -113,7 +318,7 @@ function WebHome() {
 
       {/* ── LIVE DARSHAN ─────────────────────────────────────────────────── */}
       {live.length > 0 && (
-        <View style={wh.sectionBg}>
+        <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
           <View style={[wh.section, { maxWidth: innerW }]}>
             <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} />
             <View style={wh.liveGrid}>
@@ -121,22 +326,41 @@ function WebHome() {
                 <TouchableOpacity
                   key={item.id}
                   onPress={() => router.push(`/live-stream/${item.id}` as any)}
-                  style={wh.liveCard}
+                  style={{ flex: 1, minWidth: 260 }}
+                  activeOpacity={0.88}
                 >
-                  <Image
-                    source={{ uri: 'https://images.pexels.com/photos/30679068/pexels-photo-30679068.jpeg?auto=compress&cs=tinysrgb&w=600' }}
-                    style={wh.liveCardImg}
-                  />
-                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.88)']} style={StyleSheet.absoluteFill}>
-                    <View style={{ flex: 1, justifyContent: 'flex-end', padding: 16 }}>
-                      <View style={wh.liveBadge}>
-                        <View style={wh.liveDotRed} />
-                        <Text style={wh.liveBadgeText}>LIVE NOW</Text>
-                      </View>
-                      <Text style={wh.liveCardTitle} numberOfLines={2}>{item.title}</Text>
-                      <Text style={wh.liveCardSub}>Tap to watch →</Text>
+                  {/* Image card */}
+                  <View style={{
+                    height: 300, borderRadius: 16, overflow: 'hidden',
+                    backgroundColor: '#1A0505', position: 'relative',
+                    ...(Platform.OS === 'web' ? { boxShadow: '0 8px 32px rgba(0,0,0,0.6)' } : {}),
+                  } as any}>
+                    <Image
+                      source={{ uri: item.thumbnail || 'https://images.pexels.com/photos/30679068/pexels-photo-30679068.jpeg?auto=compress&cs=tinysrgb&w=600' }}
+                      style={StyleSheet.absoluteFill}
+                      resizeMode="cover"
+                    />
+                    {/* Dark vignette at bottom */}
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.5)']}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    {/* LIVE NOW badge */}
+                    <View style={{
+                      position: 'absolute', bottom: 14, left: 14,
+                      flexDirection: 'row', alignItems: 'center', gap: 6,
+                      backgroundColor: '#E53935',
+                      paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999,
+                    }}>
+                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#fff' }} />
+                      <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
                     </View>
-                  </LinearGradient>
+                  </View>
+                  {/* Title & link below card */}
+                  <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginTop: 14, lineHeight: 23 }} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={{ color: SAFFRON, fontSize: 13, fontWeight: '600', marginTop: 6 }}>Tap to watch →</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -145,7 +369,7 @@ function WebHome() {
       )}
 
       {/* ── SERVICES ─────────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#140808' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Our Services" sub="Everything you need for sacred rituals" />
           <View style={wh.servGrid}>
@@ -163,78 +387,111 @@ function WebHome() {
         </View>
       </View>
 
-      {/* ── TEMPLES GRID ─────────────────────────────────────────────────── */}
+      {/* ── TEMPLES CAROUSEL ─────────────────────────────────────────────── */}
       {temples.length > 0 && (
-        <View style={wh.sectionBg}>
-          <View style={[wh.section, { maxWidth: innerW }]}>
+        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#FFF8E7' }}>
+          <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
             <SecHead title="Featured Temples" sub="Sacred shrines across India" onAll={() => router.push('/(tabs)/temples' as any)} />
-            <View style={[wh.grid, { gap: 20 }]}>
-              {temples.slice(0, cols * 2).map((t: any) => (
-                <TouchableOpacity
-                  key={t.id}
-                  onPress={() => router.push(`/temple/${t.id}` as any)}
-                  style={[wh.templeCard, { width: `${Math.floor(100 / cols) - 2}%` as any }]}
-                >
-                  <Image source={{ uri: t.banner }} style={wh.templeImg} />
-                  <LinearGradient colors={['transparent', 'rgba(45,7,7,0.97)']} style={StyleSheet.absoluteFill}>
-                    <View style={{ flex: 1, justifyContent: 'flex-end', padding: 14 }}>
-                      <Text style={wh.templeDeity}>{t.deity}</Text>
-                      <Text style={wh.templeName} numberOfLines={1}>{t.name}</Text>
-                      <View style={wh.templeLoc}>
-                        <Ionicons name="location" size={12} color={GOLD} />
-                        <Text style={wh.templeLocText} numberOfLines={1}>{t.location}</Text>
+          </View>
+          <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%' }}>
+            <TempleMultiCarousel temples={temples} innerW={Math.min(W, 1280) - 96} />
+          </View>
+        </View>
+      )}
+
+      {/* ── POOJAS CAROUSEL ──────────────────────────────────────────────── */}
+      {poojas.length > 0 && (
+        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#FDF5E6' }}>
+          <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
+            <SecHead title="Book a Pooja or Homam" sub="Performed by verified Vedic pujaris" onAll={() => router.push('/(tabs)/temples' as any)} />
+          </View>
+          <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%' }}>
+            <PoojaCarousel poojas={poojas} innerW={Math.min(W, 1280) - 96} />
+          </View>
+        </View>
+      )}
+
+      {/* ── ACCOMMODATION TEASER ─────────────────────────────────────────── */}
+      <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6' }]}>
+        <View style={[wh.section, { maxWidth: innerW }]}>
+          <SecHead title="Temple Accommodation" sub="Stay near the divine — hotels & dharamshalas near temples" />
+          <View style={{
+            borderRadius: 24, overflow: 'hidden', position: 'relative',
+            ...(Platform.OS === 'web' ? { boxShadow: '0 8px 40px rgba(74,44,42,0.12)' } as any : {}),
+          } as any}>
+            <LinearGradient
+              colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
+              start={[0, 0]} end={[1, 1]}
+              style={{ padding: IS_WEB ? 56 : 32 }}
+            >
+              <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 160, position: 'absolute', top: -20, right: 20, fontWeight: '400' } as any}>🏨</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 24, alignItems: 'center' }}>
+                <View style={{ flex: 1, minWidth: 280 }}>
+                  <View style={{
+                    flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start',
+                    backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 14, paddingVertical: 5,
+                    borderRadius: 999, marginBottom: 16,
+                  }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#4CAF50' }} />
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 2 }}>NOW AVAILABLE</Text>
+                  </View>
+                  <Text style={{ color: '#fff', fontSize: IS_WEB ? 36 : 26, fontWeight: '900', lineHeight: IS_WEB ? 44 : 34, marginBottom: 14 }}>
+                    Book Your Stay{'\n'}Near Sacred Temples
+                  </Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.72)', fontSize: IS_WEB ? 16 : 14, lineHeight: 26, marginBottom: 24 }}>
+                    Dharamshalas, hotels & guesthouses near your chosen temple — all in one booking with your pooja.
+                  </Text>
+                  <View style={{ gap: 10, marginBottom: 28 }}>
+                    {[
+                      '🛏️  Room categories — Standard, Deluxe, Suite',
+                      '📅  Dates synced with your pooja booking',
+                      '🍽️  Prasadam & satvik food options',
+                      '👨‍👩‍👧  Family rooms & pilgrim group packages',
+                    ].map((f) => (
+                      <Text key={f} style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>{f}</Text>
+                    ))}
+                  </View>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'flex-start',
+                      backgroundColor: '#fff', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 999,
+                      ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(0,0,0,0.2)' } as any : {}),
+                    } as any}
+                    onPress={() => router.push('/accommodation' as any)}
+                  >
+                    <Ionicons name="bed-outline" size={18} color="#D35400" />
+                    <Text style={{ color: '#D35400', fontWeight: '800', fontSize: 15 }}>Browse & Book Stays</Text>
+                  </TouchableOpacity>
+                </View>
+                {/* Feature boxes */}
+                <View style={{ gap: 12, minWidth: 200 }}>
+                  {[
+                    { icon: 'bed',           label: '500+',   sub: 'Properties listed' },
+                    { icon: 'people',        label: '50+',    sub: 'Temple locations' },
+                    { icon: 'star',          label: '4.8★',   sub: 'Average rating' },
+                    { icon: 'shield-checkmark', label: '100%', sub: 'Verified properties' },
+                  ].map((stat) => (
+                    <View key={stat.label} style={{
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 14,
+                      borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+                    }}>
+                      <Ionicons name={stat.icon as any} size={22} color="#FFE0B2" />
+                      <View>
+                        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{stat.label}</Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{stat.sub}</Text>
                       </View>
                     </View>
-                  </LinearGradient>
-                  <View style={wh.templeHover}>
-                    <Text style={wh.templeHoverText}>View Poojas →</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  ))}
+                </View>
+              </View>
+            </LinearGradient>
           </View>
         </View>
-      )}
-
-      {/* ── POOJAS GRID ──────────────────────────────────────────────────── */}
-      {poojas.length > 0 && (
-        <View style={[wh.sectionBg, { backgroundColor: '#140808' }]}>
-          <View style={[wh.section, { maxWidth: innerW }]}>
-            <SecHead title="Book a Pooja or Homam" sub="Performed by verified Vedic pujaris" onAll={() => router.push('/(tabs)/temples' as any)} />
-            <View style={[wh.grid, { gap: 20 }]}>
-              {poojas.slice(0, cols * 2).map((p: any) => (
-                <TouchableOpacity
-                  key={p.id}
-                  onPress={() => router.push(`/book-pooja/${p.id}` as any)}
-                  style={[wh.poojaCard, { width: `${Math.floor(100 / cols) - 2}%` as any }]}
-                >
-                  <Image source={{ uri: p.image }} style={wh.poojaImg} />
-                  <View style={wh.poojaBody}>
-                    <View style={wh.poojaTypeBadge(p.type)}>
-                      <Text style={wh.poojaTypeBadgeText}>{p.type?.toUpperCase()}</Text>
-                    </View>
-                    <Text style={wh.poojaName} numberOfLines={2}>{p.name}</Text>
-                    <Text style={wh.poojaDesc} numberOfLines={2}>{p.description}</Text>
-                    <View style={wh.poojaFoot}>
-                      <Text style={wh.poojaPrice}>₹{p.price}</Text>
-                      <Text style={wh.poojaDur}>{p.duration}</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/book-pooja/${p.id}` as any)}
-                      style={wh.bookBtn}
-                    >
-                      <Text style={wh.bookBtnText}>Book Now</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-      )}
+      </View>
 
       {/* ── WHY CHOOSE US ────────────────────────────────────────────────── */}
-      <View style={wh.sectionBg}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Why Choose Sri Pooja Homam?" sub="Trusted by thousands of devotees across India" />
           <View style={wh.whyGrid}>
@@ -260,7 +517,7 @@ function WebHome() {
 
       {/* ── CTA / REGISTER ───────────────────────────────────────────────── */}
       <View style={wh.ctaSection}>
-        <LinearGradient colors={['#8B1515', '#4A0000']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['#C42B0A', '#8B1515', '#3A0000']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
         <Text style={wh.ctaOm}>ॐ</Text>
         <View style={[wh.ctaInner, { maxWidth: innerW }]}>
           <Text style={wh.ctaTitle}>Begin Your Spiritual Journey</Text>
@@ -291,7 +548,10 @@ function WebHome() {
         </View>
       </View>
 
-    </ScrollView>
+      {/* Footer — scrolls with homepage content */}
+      <WebFooter />
+
+    </View>
   );
 }
 
@@ -317,17 +577,17 @@ function SecHead({ title, sub, onAll }: { title: string; sub: string; onAll?: ()
 const wh: any = {
   // Hero
   hero: {
-    minHeight: 520,
+    minHeight: '85vh',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    paddingVertical: 60,
+    paddingVertical: 80,
     paddingHorizontal: 24,
   },
   heroOm: {
-    position: 'absolute', right: 0, top: 0,
-    fontSize: 320, color: 'rgba(212,175,55,0.06)',
-    fontWeight: '400', lineHeight: 380,
+    position: 'absolute', right: -20, top: -20,
+    fontSize: 360, color: 'rgba(255,140,0,0.07)',
+    fontWeight: '400', lineHeight: 400,
   },
   heroInner: { width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
   heroBadge: {
@@ -367,15 +627,15 @@ const wh: any = {
 
   statsBar: {
     flexDirection: 'row', gap: 0, marginTop: 48, flexWrap: 'wrap',
-    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.15)', paddingTop: 28,
+    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.2)', paddingTop: 28,
   },
   statItem: {
     paddingRight: 40, paddingBottom: 16,
-    borderRightWidth: 1, borderRightColor: 'rgba(212,175,55,0.12)',
+    borderRightWidth: 1, borderRightColor: 'rgba(212,175,55,0.15)',
     marginRight: 40,
   },
-  statValue: { color: GOLD, fontSize: 34, fontWeight: '900' },
-  statLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 2 },
+  statValue: { color: GOLD, fontSize: 36, fontWeight: '900' },
+  statLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 13, marginTop: 3, letterSpacing: 0.5 },
 
   // Section helpers
   sectionBg: { paddingVertical: 56, paddingHorizontal: 24 },
@@ -385,16 +645,16 @@ const wh: any = {
     marginBottom: 28, flexWrap: 'wrap', gap: 12,
   },
   secTitle: {
-    color: '#fff', fontSize: 30, fontWeight: '800',
-    paddingLeft: 14, borderLeftWidth: 3, borderLeftColor: GOLD,
+    color: '#4A2C2A', fontSize: 32, fontWeight: '900',
+    paddingLeft: 16, borderLeftWidth: 4, borderLeftColor: SAFFRON,
   },
-  secSub: { color: 'rgba(255,255,255,0.45)', fontSize: 14, marginTop: 4, paddingLeft: 14 },
+  secSub: { color: '#5A5A5A', fontSize: 14, marginTop: 5, paddingLeft: 16 },
   secAllBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)',
+    borderWidth: 1, borderColor: 'rgba(230,126,34,0.35)',
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999,
   },
-  secAllText: { color: GOLD, fontSize: 13, fontWeight: '600' },
+  secAllText: { color: SAFFRON, fontSize: 13, fontWeight: '600' },
 
   // Grid
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
@@ -417,17 +677,22 @@ const wh: any = {
   liveCardSub: { color: GOLD, fontSize: 12, marginTop: 4 },
 
   // Services
-  servGrid: { flexDirection: 'row', gap: 16, flexWrap: 'wrap' },
+  servGrid: { flexDirection: 'row', gap: 20, flexWrap: 'wrap' },
   servCard: {
-    flex: 1, minWidth: 200, backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 20, padding: 24,
-    ...(Platform.OS === 'web' ? { transition: 'all 0.2s' } as any : {}),
+    flex: 1, minWidth: 200,
+    backgroundColor: '#fff',
+    borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+    borderRadius: 20, padding: 26,
+    ...(Platform.OS === 'web' ? { transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 24px rgba(74,44,42,0.08)' } as any : {}),
   },
-  servIcon: { width: 58, height: 58, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  servTitle: { color: '#fff', fontSize: 17, fontWeight: '800', marginBottom: 8 },
-  servDesc: { color: 'rgba(255,255,255,0.52)', fontSize: 13, lineHeight: 20 },
-  servLink: { color: GOLD, fontSize: 13, fontWeight: '700', marginTop: 16 },
+  servIcon: {
+    width: 62, height: 62, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+    borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+  },
+  servTitle: { color: '#4A2C2A', fontSize: 17, fontWeight: '800', marginBottom: 8 },
+  servDesc: { color: '#5A5A5A', fontSize: 13, lineHeight: 21 },
+  servLink: { color: SAFFRON, fontSize: 13, fontWeight: '700', marginTop: 18 },
 
   // Temples
   templeCard: {
@@ -448,43 +713,56 @@ const wh: any = {
 
   // Poojas
   poojaCard: {
-    backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 24px rgba(0,0,0,0.15)' } as any : {}),
+    backgroundColor: '#1C0606', borderRadius: 20, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.06)' } as any : {}),
   },
-  poojaImg: { width: '100%', height: 180 },
-  poojaBody: { padding: 16 },
+  poojaImg: { width: '100%', height: 190 },
+  poojaBody: {
+    padding: 18,
+    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.08)',
+  },
   poojaTypeBadge: (type: string) => ({
     alignSelf: 'flex-start',
-    backgroundColor: type === 'homam' ? '#FFF3E0' : '#FFEBEE',
-    paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6, marginBottom: 8,
+    backgroundColor: type === 'homam' ? 'rgba(255,140,0,0.15)' : 'rgba(198,40,40,0.18)',
+    borderWidth: 1,
+    borderColor: type === 'homam' ? 'rgba(255,140,0,0.4)' : 'rgba(198,40,40,0.4)',
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: 10,
   }),
-  poojaTypeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: MAROON },
-  poojaName: { fontSize: 16, fontWeight: '800', color: '#1A0505', marginBottom: 4 },
-  poojaDesc: { fontSize: 13, color: '#666', lineHeight: 18 },
-  poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
-  poojaPrice: { fontSize: 20, fontWeight: '900', color: MAROON },
-  poojaDur: { fontSize: 12, color: '#888' },
+  poojaTypeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: '#FFF8F0' },
+  poojaName: { fontSize: 16, fontWeight: '800', color: '#F5E8D0', marginBottom: 5 },
+  poojaDesc: { fontSize: 13, color: 'rgba(245,232,208,0.5)', lineHeight: 19 },
+  poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  poojaPrice: { fontSize: 22, fontWeight: '900', color: GOLD },
+  poojaDur: { fontSize: 12, color: 'rgba(255,248,240,0.35)' },
   bookBtn: {
-    marginTop: 12, backgroundColor: MAROON, paddingVertical: 11,
-    borderRadius: 12, alignItems: 'center',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 16px rgba(139,21,21,0.3)' } as any : {}),
+    marginTop: 14,
+    paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+    ...(Platform.OS === 'web' ? {
+      background: 'linear-gradient(135deg, #A01818 0%, #7B1010 100%)',
+      boxShadow: '0 4px 16px rgba(139,21,21,0.45)',
+    } as any : { backgroundColor: '#C62828' }),
   },
-  bookBtnText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  bookBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 },
 
   // Why us
   whyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   whyCard: {
-    flex: 1, minWidth: 240, backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 16, padding: 22,
+    flex: 1, minWidth: 240,
+    backgroundColor: '#fff',
+    borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+    borderTopWidth: 3, borderTopColor: SAFFRON,
+    borderRadius: 16, padding: 24,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(74,44,42,0.08)' } as any : {}),
   },
   whyIcon: {
-    width: 52, height: 52, borderRadius: 14, backgroundColor: 'rgba(212,175,55,0.1)',
-    borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)',
+    width: 54, height: 54, borderRadius: 15,
+    backgroundColor: 'rgba(230,126,34,0.08)',
+    borderWidth: 1, borderColor: 'rgba(230,126,34,0.2)',
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
-  whyTitle: { color: '#fff', fontSize: 15, fontWeight: '700', marginBottom: 6 },
-  whyDesc: { color: 'rgba(255,255,255,0.45)', fontSize: 13, lineHeight: 20 },
+  whyTitle: { color: '#4A2C2A', fontSize: 15, fontWeight: '800', marginBottom: 6 },
+  whyDesc: { color: '#5A5A5A', fontSize: 13, lineHeight: 21 },
 
   // CTA section
   ctaSection: {
@@ -585,7 +863,7 @@ function MobileHome() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       >
-        <LinearGradient colors={['#5C0A0A', '#8B1515', '#630B0B']} style={mob.headerBg}>
+        <LinearGradient colors={['#4A2C2A', '#B22222', '#E67E22']} style={mob.headerBg}>
           <Text style={mob.omSymbol}>ॐ</Text>
           <View style={mob.headerRow}>
             <View style={{ flex: 1 }}>
@@ -750,8 +1028,12 @@ function CategoryCard({ icon, title, subtitle, gradColors, onPress }: any) {
 export default function Home() {
   const { width: W } = useWindowDimensions();
   const isWebDesktop = Platform.OS === 'web' && W >= 768;
-  if (isWebDesktop) return <WebHome />;
-  return <MobileHome />;
+  return (
+    <>
+      <WelcomePopup />
+      {isWebDesktop ? <WebHome /> : <MobileHome />}
+    </>
+  );
 }
 
 const mob: any = {
@@ -787,12 +1069,12 @@ const mob: any = {
   liveTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
   liveSub: { color: theme.colors.secondary, fontSize: 13, marginTop: 2 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.border },
-  dotActive: { width: 20, backgroundColor: theme.colors.primary },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(230,126,34,0.25)' },
+  dotActive: { width: 20, backgroundColor: '#E67E22' },
   section: { marginTop: 26 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 14 },
-  sectionTitle: { fontSize: 15, color: theme.colors.text, paddingHorizontal: 20, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: theme.colors.secondary, paddingLeft: 12, fontWeight: '700' },
-  seeAll: { color: theme.colors.primary, fontWeight: '600', fontSize: 13 },
+  sectionTitle: { fontSize: 15, color: '#4A2C2A', paddingHorizontal: 20, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: '#E67E22', paddingLeft: 12, fontWeight: '700' },
+  seeAll: { color: '#E67E22', fontWeight: '600', fontSize: 13 },
   catRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10 },
   catCard: { flex: 1, borderRadius: 18, overflow: 'hidden' },
   catGrad: { padding: 16, alignItems: 'flex-start', borderRadius: 18, minHeight: 110 },
@@ -806,18 +1088,20 @@ const mob: any = {
   templeLoc: { color: theme.colors.secondary, fontSize: 12 },
   poojaRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderRadius: 18, padding: 10, borderWidth: 1, borderColor: theme.colors.border,
+    borderRadius: 18, padding: 10, borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
   },
-  poojaImgWrap: { width: 70, height: 70, borderRadius: 14, backgroundColor: '#F5E6D0', overflow: 'hidden' },
+  poojaImgWrap: { width: 70, height: 70, borderRadius: 14, backgroundColor: '#FFF0D0', overflow: 'hidden' },
   typeBadge: (type: string) => ({
     alignSelf: 'flex-start',
-    backgroundColor: type === 'homam' ? '#FFF3E0' : '#FFEBEE',
+    backgroundColor: type === 'homam' ? 'rgba(255,140,0,0.15)' : 'rgba(198,40,40,0.18)',
+    borderWidth: 1,
+    borderColor: type === 'homam' ? 'rgba(255,140,0,0.4)' : 'rgba(198,40,40,0.4)',
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4,
   }),
-  typeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: theme.colors.primary },
-  poojaName: { fontSize: 14, color: theme.colors.text, fontWeight: '700' },
-  poojaDesc: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
+  typeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: '#4A2C2A' },
+  poojaName: { fontSize: 14, color: '#4A2C2A', fontWeight: '700' },
+  poojaDesc: { fontSize: 12, color: '#5A5A5A', marginTop: 2 },
   poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  poojaPrice: { fontSize: 15, color: theme.colors.primary, fontWeight: '700' },
-  poojaDur: { fontSize: 12, color: theme.colors.textMuted },
+  poojaPrice: { fontSize: 15, color: '#E67E22', fontWeight: '700' },
+  poojaDur: { fontSize: 12, color: '#8A7A6A' },
 };

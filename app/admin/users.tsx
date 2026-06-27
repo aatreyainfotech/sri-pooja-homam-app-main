@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
@@ -15,7 +15,7 @@ export default function ManageUsers() {
   const safeBack = useSafeBack();
   const [items, setItems] = useState<any[]>([]);
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<'all' | 'devotee' | 'admin'>('all');
+  const [filter, setFilter] = useState<'all' | 'devotee' | 'admin' | 'super_admin' | 'poojari'>('all');
 
   const load = useCallback(async () => {
     try {
@@ -68,6 +68,14 @@ export default function ManageUsers() {
     return matchQ && matchR;
   });
 
+  const roleCounts = {
+    all: items.length,
+    devotee: items.filter((u) => u.role === 'devotee').length,
+    admin: items.filter((u) => u.role === 'admin').length,
+    super_admin: items.filter((u) => u.role === 'super_admin').length,
+    poojari: items.filter((u) => u.role === 'poojari').length,
+  };
+
   const roleColors: any = {
     super_admin: { bg: '#FFF3E0', fg: '#E65100' },
     admin: { bg: '#E3F2FD', fg: '#1565C0' },
@@ -96,13 +104,23 @@ export default function ManageUsers() {
             style={styles.search}
           />
         </View>
-        <View style={styles.chipRow}>
-          {(['all', 'devotee', 'admin'] as const).map((f) => (
-            <TouchableOpacity key={f} testID={`umg-filter-${f}`} onPress={() => setFilter(f)} style={[styles.chip, filter === f && styles.chipActive]}>
-              <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>{f.toUpperCase()}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.chipRow}>
+            {([
+              { key: 'all', label: 'ALL' },
+              { key: 'devotee', label: 'DEVOTEE' },
+              { key: 'poojari', label: 'PUJARI' },
+              { key: 'admin', label: 'ADMIN' },
+              { key: 'super_admin', label: 'SUPER ADMIN' },
+            ] as const).map(({ key, label }) => (
+              <TouchableOpacity key={key} testID={`umg-filter-${key}`} onPress={() => setFilter(key)} style={[styles.chip, filter === key && styles.chipActive]}>
+                <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>
+                  {label} ({roleCounts[key]})
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       </View>
 
       <FlatList
