@@ -2085,7 +2085,8 @@ _PROP_COLS = (
     "p.id, p.temple_id, p.name, p.type, p.address, p.city, p.phone, "
     "p.description, p.images, p.amenities, p.check_in_time, p.check_out_time, "
     "p.rating, p.total_rooms, p.is_active, p.manager_id, p.upi_id, p.created_at, "
-    "t.name AS temple_name, t.location AS temple_location"
+    "t.name AS temple_name, t.location AS temple_location, "
+    "(SELECT MIN(rc.price_per_night) FROM dbo.room_categories rc WHERE rc.property_id=p.id AND rc.is_active=1) AS min_price"
 )
 
 _ABOOKING_COLS = (
