@@ -119,6 +119,7 @@ const NAV_ITEMS = [
   { label: 'Add Pujari',   icon: 'person-add-outline',   route: '/admin/create-pujari' },
   { label: 'Pujari Stats', icon: 'bar-chart-outline',    route: '/admin/pujari-stats' },
   { label: 'Payouts',      icon: 'send-outline',         route: '/admin/payouts' },
+  { label: 'Accommodation', icon: 'bed-outline',          route: '/admin/properties' },
 ];
 const SUPER_ITEMS = [
   { label: 'Users',        icon: 'people-outline',       route: '/admin/users' },
