@@ -2221,7 +2221,16 @@ async def update_room_category(cat_id: str, data: RoomCategoryIn, user: dict = D
     return {"ok": True}
 
 @api.delete("/room-categories/{cat_id}")
-async def delete_room_category(cat_id: str, user: dict = Depends(require_admin)):
+async def delete_room_category(cat_id: str, user: dict = Depends(require_hotel_manager_or_admin)):
+    if user["role"] == "hotel_manager":
+        cat = await sql_fetch_one(
+            "SELECT rc.id FROM dbo.room_categories rc "
+            "JOIN dbo.accommodation_properties p ON p.id = rc.property_id "
+            "WHERE rc.id = ? AND p.manager_id = ?",
+            (cat_id, user["id"])
+        )
+        if not cat:
+            raise HTTPException(403, "Room category not in your property")
     await sql_execute("DELETE FROM dbo.room_quotas WHERE room_category_id = ?", (cat_id,))
     await sql_execute("DELETE FROM dbo.room_categories WHERE id = ?", (cat_id,))
     return {"ok": True}
@@ -2240,6 +2249,15 @@ async def get_quotas(cat_id: str, from_date: str, to_date: str):
 
 @api.post("/quotas/set")
 async def set_quotas(data: QuotaSetIn, user: dict = Depends(require_hotel_manager_or_admin)):
+    if user["role"] == "hotel_manager":
+        cat = await sql_fetch_one(
+            "SELECT rc.id FROM dbo.room_categories rc "
+            "JOIN dbo.accommodation_properties p ON p.id = rc.property_id "
+            "WHERE rc.id = ? AND p.manager_id = ?",
+            (data.room_category_id, user["id"])
+        )
+        if not cat:
+            raise HTTPException(403, "Room category not in your property")
     for d in data.dates:
         existing = await sql_fetch_one(
             "SELECT id FROM dbo.room_quotas WHERE room_category_id = ? AND quota_date = ?",
