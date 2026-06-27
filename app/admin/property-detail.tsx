@@ -153,6 +153,8 @@ export default function PropertyDetail() {
   const [catForm, setCatForm] = useState({ name: '', description: '', price_per_night: '', capacity: '2', total_rooms: '10', amenities: '' });
   const [roomImages, setRoomImages] = useState<string[]>([]);
   const [quotaForm, setQuotaForm] = useState({ from_date: '', to_date: '', quota: '10' });
+  const [quotaMsg, setQuotaMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
   const [managerId, setManagerId] = useState('');
 
   const load = useCallback(async () => {
@@ -202,8 +204,9 @@ export default function PropertyDetail() {
   };
 
   const handleSetQuota = async () => {
+    setQuotaMsg(null);
     if (!selectedCat || !quotaForm.from_date || !quotaForm.to_date) {
-      Alert.alert('Missing Fields', 'Select a date range.');
+      setQuotaMsg({ type: 'error', text: 'Select a date range.' });
       return;
     }
     const dates: string[] = [];
@@ -213,17 +216,19 @@ export default function PropertyDetail() {
       dates.push(cur.toISOString().split('T')[0]);
       cur.setDate(cur.getDate() + 1);
     }
-    if (dates.length > 90) { Alert.alert('Too many dates', 'Max 90 days at once.'); return; }
+    if (dates.length > 90) { setQuotaMsg({ type: 'error', text: 'Max 90 days at once.' }); return; }
+    setQuotaLoading(true);
     try {
       await api.post('/quotas/set', {
         room_category_id: selectedCat.id,
         dates,
         quota: parseInt(quotaForm.quota) || 0,
       });
-      Alert.alert('Done', `Quota set for ${dates.length} days`);
-      setShowQuota(false);
+      setQuotaMsg({ type: 'success', text: `Quota set for ${dates.length} day(s) — ${parseInt(quotaForm.quota)} rooms/night` });
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail || 'Failed to set quota');
+      setQuotaMsg({ type: 'error', text: e?.response?.data?.detail || 'Failed to set quota' });
+    } finally {
+      setQuotaLoading(false);
     }
   };
 
@@ -427,19 +432,59 @@ export default function PropertyDetail() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View>
-                <Text style={styles.modalTitle}>Set Quota</Text>
+                <Text style={styles.modalTitle}>Set Room Quota</Text>
                 <Text style={{ fontSize: 13, color: BLUE, fontWeight: '600' }}>{selectedCat?.name}</Text>
               </View>
-              <TouchableOpacity onPress={() => setShowQuota(false)}>
+              <TouchableOpacity onPress={() => { setShowQuota(false); setQuotaMsg(null); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
-            <FormInput label="From Date (YYYY-MM-DD)" value={quotaForm.from_date} onChangeText={(v) => setQuotaForm({ ...quotaForm, from_date: v })} placeholder="2026-07-01" />
-            <FormInput label="To Date (YYYY-MM-DD)" value={quotaForm.to_date} onChangeText={(v) => setQuotaForm({ ...quotaForm, to_date: v })} placeholder="2026-07-31" />
+            {!!quotaMsg && (
+              <View style={{
+                backgroundColor: quotaMsg.type === 'success' ? '#E8F5E9' : '#FFEBEE',
+                borderRadius: 10, padding: 12, marginBottom: 14,
+                flexDirection: 'row', gap: 8, alignItems: 'flex-start',
+              }}>
+                <Ionicons
+                  name={quotaMsg.type === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline'}
+                  size={18}
+                  color={quotaMsg.type === 'success' ? '#2E7D32' : '#C62828'}
+                />
+                <Text style={{ color: quotaMsg.type === 'success' ? '#2E7D32' : '#C62828', fontSize: 13, flex: 1 }}>
+                  {quotaMsg.text}
+                </Text>
+              </View>
+            )}
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.inputLabel}>From Date</Text>
+              {IS_WEB ? (
+                <input
+                  type="date"
+                  value={quotaForm.from_date}
+                  onChange={(e) => setQuotaForm({ ...quotaForm, from_date: e.target.value })}
+                  style={{ border: '1.5px solid #E0D5C5', borderRadius: 12, padding: '11px 14px', fontSize: 15, color: '#3D1C02', backgroundColor: '#FAFAFA', width: '100%', boxSizing: 'border-box' } as any}
+                />
+              ) : (
+                <TextInput style={styles.input} value={quotaForm.from_date} onChangeText={(v) => setQuotaForm({ ...quotaForm, from_date: v })} placeholder="YYYY-MM-DD" placeholderTextColor={theme.colors.textMuted} />
+              )}
+            </View>
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.inputLabel}>To Date</Text>
+              {IS_WEB ? (
+                <input
+                  type="date"
+                  value={quotaForm.to_date}
+                  onChange={(e) => setQuotaForm({ ...quotaForm, to_date: e.target.value })}
+                  style={{ border: '1.5px solid #E0D5C5', borderRadius: 12, padding: '11px 14px', fontSize: 15, color: '#3D1C02', backgroundColor: '#FAFAFA', width: '100%', boxSizing: 'border-box' } as any}
+                />
+              ) : (
+                <TextInput style={styles.input} value={quotaForm.to_date} onChangeText={(v) => setQuotaForm({ ...quotaForm, to_date: v })} placeholder="YYYY-MM-DD" placeholderTextColor={theme.colors.textMuted} />
+              )}
+            </View>
             <FormInput label="Rooms Available per Night" value={quotaForm.quota} onChangeText={(v) => setQuotaForm({ ...quotaForm, quota: v })} placeholder="10" keyboardType="numeric" />
-            <TouchableOpacity style={styles.submitBtn} onPress={handleSetQuota}>
+            <TouchableOpacity style={[styles.submitBtn, quotaLoading && { opacity: 0.6 }]} onPress={handleSetQuota} disabled={quotaLoading}>
               <Ionicons name="calendar-outline" size={18} color="#fff" />
-              <Text style={styles.submitText}>Apply Quota</Text>
+              <Text style={styles.submitText}>{quotaLoading ? 'Saving...' : 'Apply Quota'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -514,6 +559,7 @@ const styles = StyleSheet.create({
   addCatText: { fontSize: 13, fontWeight: '600', color: BLUE },
 
   label: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, marginBottom: 7, textTransform: 'uppercase', letterSpacing: 1 },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
   input: { borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: theme.colors.text, backgroundColor: '#FAFAFA' },
 
   // Dropdown
