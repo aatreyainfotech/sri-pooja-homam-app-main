@@ -1,27 +1,28 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
+  Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
-import { theme } from '../../src/constants/theme';
+
+const GOLD   = '#D4AF37';
+const IS_WEB = Platform.OS === 'web';
 
 export default function ResetPasswordOtp() {
   const router = useRouter();
   const { mobile, otp_mock } = useLocalSearchParams<{ mobile: string; otp_mock: string }>();
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [newPw, setNewPw] = useState('');
-  const [showPw, setShowPw] = useState(false);
+  const [otp, setOtp]         = useState(['', '', '', '', '', '']);
+  const [newPw, setNewPw]     = useState('');
+  const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
+  const [cooldown, setCooldown]   = useState(0);
+  const [pwFocused, setPwFocused] = useState(false);
   const refs = useRef<(TextInput | null)[]>([]);
 
-  // Auto-fill mocked OTP in dev/staging (WhatsApp not configured)
   useEffect(() => {
     if (otp_mock && typeof otp_mock === 'string' && otp_mock.length === 6) {
       const t = setTimeout(() => setOtp(otp_mock.split('')), 400);
@@ -65,14 +66,8 @@ export default function ResetPasswordOtp() {
 
   const reset = async () => {
     const code = otp.join('');
-    if (code.length !== 6) {
-      Alert.alert('Invalid OTP', 'Enter all 6 digits');
-      return;
-    }
-    if (!newPw || newPw.length < 6) {
-      Alert.alert('Required', 'Password must be at least 6 characters');
-      return;
-    }
+    if (code.length !== 6) { Alert.alert('Invalid OTP', 'Enter all 6 digits'); return; }
+    if (!newPw || newPw.length < 6) { Alert.alert('Required', 'Password must be at least 6 characters'); return; }
     setLoading(true);
     try {
       await api.post('/auth/reset-password-otp', { mobile, otp: code, new_password: newPw });
@@ -87,113 +82,201 @@ export default function ResetPasswordOtp() {
   };
 
   return (
-    <LinearGradient colors={['#8B1515', '#630B0B', '#2D1B19']} style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.container}>
-            <Ionicons name="shield-checkmark-outline" size={56} color={theme.colors.secondary} style={{ marginBottom: 16 }} />
-            <Text style={styles.title}>Verify & Reset</Text>
-            <Text style={styles.sub}>Enter the 6-digit OTP sent to +91 {mobile} and your new password.</Text>
+    <LinearGradient
+      colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
+      locations={[0, 0.3, 0.6, 1]}
+      start={[0, 0]} end={[1, 1]}
+      style={IS_WEB ? w.rootWeb : w.rootMobile}
+    >
+      {IS_WEB && (
+        <View style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(220,80,15,0.2) 0%, transparent 60%)',
+        } as any} />
+      )}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
 
-            <View style={styles.card}>
-              {/* OTP boxes */}
-              <View style={styles.otpRow}>
-                {otp.map((d, i) => (
-                  <TextInput
-                    key={i}
-                    ref={(r) => { refs.current[i] = r; }}
-                    value={d}
-                    onChangeText={(v) => setDigit(i, v)}
-                    keyboardType="number-pad"
-                    maxLength={1}
-                    style={[styles.otpBox, d ? styles.otpBoxFilled : null]}
-                  />
-                ))}
-              </View>
+        {/* Back button */}
+        <TouchableOpacity onPress={() => router.back()} style={w.backBtn}>
+          <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.7)" />
+          <Text style={w.backTxt}>Back</Text>
+        </TouchableOpacity>
 
-              {/* New password */}
-              <Text style={styles.label}>NEW PASSWORD</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={20} color={theme.colors.primary} />
+        <View style={w.center}>
+          {/* Icon ring */}
+          <View style={w.iconWrap}>
+            <Ionicons name="shield-checkmark-outline" size={32} color={GOLD} />
+          </View>
+
+          <Text style={w.title}>Verify & Reset</Text>
+          <Text style={w.sub}>
+            Enter the 6-digit OTP sent to +91 {mobile}{'\n'}and set your new password.
+          </Text>
+
+          {/* Dark form card */}
+          <View style={w.formCard}>
+            {/* OTP boxes */}
+            <Text style={w.label}>ENTER OTP</Text>
+            <View style={w.otpRow}>
+              {otp.map((d, i) => (
                 <TextInput
-                  value={newPw}
-                  onChangeText={setNewPw}
-                  placeholder="Min. 6 characters"
-                  placeholderTextColor={theme.colors.textMuted}
-                  secureTextEntry={!showPw}
-                  style={styles.input}
-                  autoCapitalize="none"
+                  key={i}
+                  ref={(r) => { refs.current[i] = r; }}
+                  value={d}
+                  onChangeText={(v) => setDigit(i, v)}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  style={[w.otpBox, d ? w.otpBoxFilled : null]}
                 />
-                <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-                  <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={20} color={theme.colors.textMuted} />
-                </TouchableOpacity>
-              </View>
+              ))}
+            </View>
 
-              <TouchableOpacity style={styles.btn} onPress={reset} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : (
-                  <>
-                    <Text style={styles.btnText}>Reset Password</Text>
-                    <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={resend}
-                disabled={cooldown > 0 || resending}
-                style={styles.resendBtn}
-              >
-                {resending ? (
-                  <ActivityIndicator color={theme.colors.primary} size="small" />
-                ) : (
-                  <Text style={[styles.resendText, cooldown > 0 && styles.resendDisabled]}>
-                    {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP via WhatsApp'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-                <Text style={styles.backLinkText}>← Back</Text>
+            {/* New password */}
+            <Text style={[w.label, { marginTop: 20 }]}>NEW PASSWORD</Text>
+            <View style={[w.inputWrap, pwFocused && w.inputWrapFocused]}>
+              <Ionicons name="lock-closed-outline" size={19} color={pwFocused ? GOLD : 'rgba(212,175,55,0.5)'} />
+              <TextInput
+                value={newPw}
+                onChangeText={setNewPw}
+                placeholder="Min. 6 characters"
+                placeholderTextColor="rgba(255,248,240,0.3)"
+                secureTextEntry={!showPw}
+                style={w.input}
+                autoCapitalize="none"
+                onFocus={() => setPwFocused(true)}
+                onBlur={() => setPwFocused(false)}
+              />
+              <TouchableOpacity onPress={() => setShowPw(!showPw)}>
+                <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={19} color="rgba(255,248,240,0.35)" />
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              style={[w.btn, loading && { opacity: 0.7 }]}
+              onPress={reset}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <Text style={w.btnTxt}>Reset Password</Text>
+                  <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={resend}
+              disabled={cooldown > 0 || resending}
+              style={w.resendBtn}
+            >
+              {resending ? (
+                <ActivityIndicator color={GOLD} size="small" />
+              ) : (
+                <Text style={[w.resendTxt, cooldown > 0 && w.resendDisabled]}>
+                  {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP via WhatsApp'}
+                </Text>
+              )}
+            </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+
+          <Text style={w.copy}>© 2026 Aatreya Infotech Systems LLP</Text>
+        </View>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  back: { padding: 16 },
-  container: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center', marginTop: -60 },
-  title: { fontSize: 26, fontWeight: '700', color: '#fff', marginBottom: 8 },
-  sub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 28, lineHeight: 20 },
-  card: { width: '100%', backgroundColor: theme.colors.bgPaper, borderRadius: 20, padding: 20, gap: 14 },
-  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
+const w = StyleSheet.create({
+  rootWeb:    { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as any,
+  rootMobile: { flex: 1 },
+
+  backBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    padding: 20, paddingTop: IS_WEB ? 28 : 16,
+  },
+  backTxt: { color: 'rgba(255,255,255,0.65)', fontSize: 15 },
+
+  center: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: 24, marginTop: -60,
+  },
+
+  iconWrap: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: 'rgba(212,175,55,0.1)',
+    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.3)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 24,
+  },
+
+  title: {
+    fontSize: IS_WEB ? 32 : 26, fontWeight: '900', color: '#FFF8F0',
+    textAlign: 'center', marginBottom: 10,
+    ...(IS_WEB ? { textShadow: '0 2px 16px rgba(0,0,0,0.5)' } as any : {}),
+  },
+  sub: {
+    fontSize: IS_WEB ? 15 : 13, color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center', lineHeight: 22, marginBottom: 32,
+  },
+
+  formCard: {
+    width: '100%', maxWidth: IS_WEB ? 440 : undefined,
+    backgroundColor: 'rgba(20,3,3,0.7)',
+    borderWidth: 1, borderColor: 'rgba(212,175,55,0.14)',
+    borderRadius: 20, padding: 28,
+    ...(IS_WEB ? { backdropFilter: 'blur(10px)', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' } as any : {}),
+  },
+
+  label: { fontSize: 10, fontWeight: '800', color: 'rgba(212,175,55,0.5)', letterSpacing: 1.5, marginBottom: 10 },
+
+  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: IS_WEB ? 10 : 8 },
   otpBox: {
-    width: 44, height: 52, borderRadius: 10, borderWidth: 1.5,
-    borderColor: theme.colors.border, textAlign: 'center',
-    fontSize: 22, fontWeight: '700', color: theme.colors.text, backgroundColor: '#fff',
+    width: IS_WEB ? 48 : 44, height: IS_WEB ? 56 : 52,
+    borderRadius: 12, borderWidth: 1.5,
+    borderColor: 'rgba(212,175,55,0.2)',
+    textAlign: 'center', fontSize: 22, fontWeight: '800',
+    color: '#FFF8F0', backgroundColor: 'rgba(255,255,255,0.04)',
+    ...(IS_WEB ? { outline: 'none' } as any : {}),
+  } as any,
+  otpBoxFilled: {
+    borderColor: 'rgba(212,175,55,0.65)',
+    backgroundColor: 'rgba(212,175,55,0.07)',
+    ...(IS_WEB ? { boxShadow: '0 0 0 3px rgba(212,175,55,0.08)' } as any : {}),
   },
-  otpBoxFilled: { borderColor: theme.colors.primary, backgroundColor: '#FFF8F0' },
-  label: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 0.8 },
+
   inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderColor: theme.colors.border,
-    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: '#fff',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.18)',
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 2, marginBottom: 16,
+    ...(IS_WEB ? { transition: 'border-color 0.2s, background 0.2s' } as any : {}),
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: theme.colors.text },
+  inputWrapFocused: IS_WEB ? {
+    borderColor: 'rgba(212,175,55,0.7)',
+    backgroundColor: 'rgba(212,175,55,0.06)',
+    boxShadow: '0 0 0 3px rgba(212,175,55,0.08)',
+  } as any : { borderColor: '#D4AF37' },
+  input: {
+    flex: 1, paddingVertical: 14, fontSize: 15, color: '#FFF8F0',
+    ...(IS_WEB ? { outline: 'none' } as any : {}),
+  } as any,
+
   btn: {
-    backgroundColor: theme.colors.primary, borderRadius: 999, paddingVertical: 15,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderRadius: 14, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14,
+    ...(IS_WEB ? {
+      background: 'linear-gradient(135deg, #A01818 0%, #7B1010 100%)',
+      boxShadow: '0 6px 28px rgba(139,21,21,0.55)',
+    } as any : { backgroundColor: '#A01818' }),
   },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  resendBtn: { alignItems: 'center', paddingVertical: 8 },
-  resendText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
-  resendDisabled: { color: 'rgba(139,21,21,0.35)' },
-  backLink: { alignItems: 'center', paddingVertical: 4 },
-  backLinkText: { color: theme.colors.primary, fontSize: 14, fontWeight: '600' },
+  btnTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  resendBtn: { alignItems: 'center', paddingVertical: 6 },
+  resendTxt: { color: GOLD, fontSize: 13, fontWeight: '600' },
+  resendDisabled: { color: 'rgba(212,175,55,0.3)' },
+
+  copy: {
+    color: 'rgba(212,175,55,0.25)', fontSize: 11,
+    marginTop: 28, textAlign: 'center',
+  },
 });

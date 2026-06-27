@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -29,6 +29,24 @@ export default function BookPooja() {
     nakshatra: '',
     notes: '',
   });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string>('');
+
+  const dateOptions = useMemo(() => {
+    const days: Date[] = [];
+    const today = new Date();
+    for (let i = 1; i <= 30; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }, []);
+
+  const timeSlots = [
+    '5:00 AM', '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
+    '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM',
+  ];
 
   useEffect(() => {
     (async () => {
@@ -41,14 +59,35 @@ export default function BookPooja() {
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const buildScheduledAt = (): string | null => {
+    if (!selectedDate || !selectedTime) return null;
+    const [timePart, meridiem] = selectedTime.split(' ');
+    let [hours, minutes] = timePart.split(':').map(Number);
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+    const dt = new Date(selectedDate);
+    dt.setHours(hours, minutes, 0, 0);
+    return dt.toISOString();
+  };
+
   const createBooking = async () => {
     if (!form.devotee_name.trim()) {
       Alert.alert('Required', 'Please enter devotee name');
       return;
     }
+    if (!selectedDate) {
+      Alert.alert('Required', 'Please select a date for the pooja');
+      return;
+    }
+    if (!selectedTime) {
+      Alert.alert('Required', 'Please select a time slot for the pooja');
+      return;
+    }
     setLoading(true);
     try {
-      const { data } = await api.post('/bookings', { pooja_id: id, ...form });
+      const { data } = await api.post('/bookings', {
+        pooja_id: id, ...form, scheduled_at: buildScheduledAt(),
+      });
       setBooking(data);
       setStep('payment');
     } catch (e) {
@@ -117,6 +156,54 @@ export default function BookPooja() {
 
           {step === 'details' && (
             <>
+              <Text style={styles.formTitle}>Schedule Pooja</Text>
+              <Text style={styles.formSub}>Choose the date and time for your pooja</Text>
+
+              {/* Date picker */}
+              <Text style={styles.fieldLabel}>Select Date *</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginBottom: 18 }}
+                contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
+              >
+                {dateOptions.map((item, i) => {
+                  const isSel = selectedDate?.toDateString() === item.toDateString();
+                  const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
+                  const date = item.getDate();
+                  const month = item.toLocaleDateString('en-IN', { month: 'short' });
+                  return (
+                    <TouchableOpacity
+                      key={i}
+                      onPress={() => setSelectedDate(item)}
+                      style={[styles.dateChip, isSel && styles.dateChipSel]}
+                    >
+                      <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
+                      <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
+                      <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Time slot picker */}
+              <Text style={styles.fieldLabel}>Select Time *</Text>
+              <View style={styles.timeGrid}>
+                {timeSlots.map((slot) => {
+                  const isSel = selectedTime === slot;
+                  return (
+                    <TouchableOpacity
+                      key={slot}
+                      onPress={() => setSelectedTime(slot)}
+                      style={[styles.timeChip, isSel && styles.timeChipSel]}
+                    >
+                      <Text style={[styles.timeChipText, isSel && styles.timeChipTextSel]}>{slot}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.divider} />
               <Text style={styles.formTitle}>Devotee Details</Text>
               <Text style={styles.formSub}>Name, Gotra & Nakshatra will be chanted during the ritual</Text>
 
@@ -244,7 +331,13 @@ export default function BookPooja() {
                 <ReceiptRow label="Amount Paid" value={`₹${booking.amount.toFixed(0)}`} />
                 <ReceiptRow label="Devotee" value={booking.devotee_name} />
                 {booking.scheduled_at && (
-                  <ReceiptRow label="Scheduled" value={new Date(booking.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} />
+                  <ReceiptRow
+                    label="Scheduled"
+                    value={new Date(booking.scheduled_at).toLocaleString('en-IN', {
+                      day: 'numeric', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit', hour12: true,
+                    })}
+                  />
                 )}
               </View>
 
@@ -357,4 +450,27 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)',
   },
   unlockText: { color: theme.colors.secondaryDark, fontSize: 13, fontWeight: '600' },
+
+  divider: { height: 1, backgroundColor: theme.colors.border, marginVertical: 20 },
+
+  dateChip: {
+    alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 14, borderWidth: 1.5, borderColor: theme.colors.border,
+    backgroundColor: '#fff', minWidth: 58,
+  },
+  dateChipSel: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  dateChipDay: { fontSize: 10, fontWeight: '700', color: theme.colors.textMuted, textTransform: 'uppercase' },
+  dateChipNum: { fontSize: 20, fontWeight: '800', color: theme.colors.text, marginVertical: 2 },
+  dateChipMonth: { fontSize: 10, fontWeight: '600', color: theme.colors.textMuted },
+  dateChipTextSel: { color: '#fff' },
+
+  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
+  timeChip: {
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 20, borderWidth: 1.5, borderColor: theme.colors.border,
+    backgroundColor: '#fff',
+  },
+  timeChipSel: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  timeChipText: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
+  timeChipTextSel: { color: '#fff' },
 });

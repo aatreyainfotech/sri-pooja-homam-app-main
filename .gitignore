@@ -20,6 +20,13 @@ expo-env.d.ts
 
 # Metro
 .metro-health-check*
+.metro-cache/
+
+# Android build artifacts (not needed for EAS upload)
+android/build/
+android/.gradle/
+android/app/build/
+android/.kotlin/
 
 # debug
 npm-debug.*

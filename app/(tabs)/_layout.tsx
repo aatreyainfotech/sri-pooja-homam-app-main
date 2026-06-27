@@ -1,12 +1,50 @@
-import { Tabs, Redirect } from 'expo-router';
+import { Tabs, Redirect, Slot } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
-import { theme } from '../../src/constants/theme';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+
+const BRAND = '#8B1515';
+const GOLD = '#D4AF37';
+const MUTED = '#B0B0B0';
+const PILL_BG = '#FFEBEE';
+
+type TabIconProps = {
+  iconFocused: string;
+  iconBlur: string;
+  label: string;
+  focused: boolean;
+  badge?: boolean;
+};
+
+function TabIcon({ iconFocused, iconBlur, label, focused, badge }: TabIconProps) {
+  return (
+    <View style={styles.tabWrap}>
+      <View style={[styles.pill, focused && styles.pillActive]}>
+        <View style={{ position: 'relative' }}>
+          <Ionicons
+            name={(focused ? iconFocused : iconBlur) as any}
+            size={21}
+            color={focused ? BRAND : MUTED}
+          />
+          {badge && <View style={styles.badgeDot} />}
+        </View>
+      </View>
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
+    </View>
+  );
+}
 
 export default function TabsLayout() {
   const { user, loading } = useAuth();
+  const { width } = useWindowDimensions();
+  const isWebDesktop = Platform.OS === 'web' && width >= 768;
+
   if (loading) return null;
+
+  // Desktop web: no auth gate, no tab bar — website navbar handles navigation
+  if (isWebDesktop) return <Slot />;
+
+  // Mobile app / mobile web: require login
   if (!user) return <Redirect href="/(auth)/login" />;
 
   const isPujari = user?.role === 'poojari';
@@ -16,57 +54,50 @@ export default function TabsLayout() {
       initialRouteName={isPujari ? 'pujari' : 'index'}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopColor: theme.colors.border,
-          height: 68,
-          paddingTop: 6,
-          paddingBottom: 10,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: BRAND,
+        tabBarInactiveTintColor: MUTED,
+        tabBarStyle: styles.tabBar,
       }}
     >
-      {/* Pujari-only dashboard — shown first for pujari users; hidden for others */}
       <Tabs.Screen
         name="pujari"
         options={{
           href: isPujari ? undefined : null,
-          title: 'My Poojas',
-          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'grid' : 'grid-outline'} size={24} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="grid" iconBlur="grid-outline" label="My Poojas" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="home" iconBlur="home-outline" label="Home" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="temples"
         options={{
-          title: 'Temples',
-          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'business' : 'business-outline'} size={24} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="business" iconBlur="business-outline" label="Temples" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Calendar',
-          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="calendar" iconBlur="calendar-outline" label="Calendar" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="live"
         options={{
-          title: 'Live',
-          tabBarIcon: ({ color, focused }) => (
-            <View>
-              <Ionicons name={focused ? 'radio' : 'radio-outline'} size={26} color={color} />
-              <View style={styles.liveDot} />
-            </View>
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="radio" iconBlur="radio-outline" label="Live" focused={focused} badge />
           ),
         }}
       />
@@ -74,25 +105,71 @@ export default function TabsLayout() {
         name="bookings"
         options={{
           href: isPujari ? null : undefined,
-          title: 'Bookings',
-          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={24} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="receipt" iconBlur="receipt-outline" label="Bookings" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconFocused="person-circle" iconBlur="person-circle-outline" label="Profile" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen name="notifications" options={{ href: null }} />
-      </Tabs>
+    </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  liveDot: {
-    position: 'absolute', top: -1, right: -3, width: 8, height: 8,
-    borderRadius: 4, backgroundColor: '#E53935', borderWidth: 1.5, borderColor: '#fff',
+  tabBar: {
+    backgroundColor: '#FFFFFF',
+    height: 78,
+    borderTopWidth: 0,
+    paddingBottom: 0,
+    elevation: 32,
+    shadowColor: '#8B1515',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 20,
+  },
+  tabWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    paddingTop: 8,
+  },
+  pill: {
+    width: 44,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillActive: {
+    backgroundColor: PILL_BG,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: MUTED,
+    letterSpacing: 0.2,
+  },
+  tabLabelActive: {
+    color: BRAND,
+    fontWeight: '800',
+  },
+  badgeDot: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E53935',
+    borderWidth: 1.5,
+    borderColor: '#fff',
   },
 });

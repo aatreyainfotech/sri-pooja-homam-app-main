@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sri Pooja Homam",
     "slug": "sri-pooja-homam",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sripoojahomam",
@@ -67,7 +67,7 @@
       }
     },
     "owner": "aatreya2022",
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "1.1.0",
     "updates": {
       "url": "https://u.expo.dev/e657b261-57b0-4060-a6ca-cd25afcb25d0"
     }

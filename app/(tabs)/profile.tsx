@@ -197,6 +197,23 @@ export default function Profile() {
           </TouchableOpacity>
         )}
 
+        {user?.role === 'hotel_manager' && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/hotel-manager' as any)}
+            style={styles.adminCard}
+          >
+            <LinearGradient colors={['#0277BD', '#0288D1']} style={styles.adminGrad}>
+              <Ionicons name="bed" size={32} color="#fff" />
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Text style={styles.adminTitle}>Hotel Manager</Text>
+                <Text style={styles.adminSub}>Manage your property & bookings</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={22} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Details</Text>
           <InfoRow icon="mail-outline" label="Email" value={user?.email} />

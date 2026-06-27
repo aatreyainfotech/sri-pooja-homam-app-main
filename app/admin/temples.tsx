@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
-  Modal, Alert, ScrollView, KeyboardAvoidingView, Platform, Image,
+  Modal, Alert, ScrollView, KeyboardAvoidingView, Platform, Image, ActivityIndicator,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,7 +16,6 @@ import { theme } from '../../src/constants/theme';
 const EMPTY = { name: '', deity: '', location: '', description: '', logo: '', banner: '', phone: '' };
 
 export default function ManageTemples() {
-  const router = useRouter();
   const safeBack = useSafeBack();
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -143,10 +143,9 @@ export default function ManageTemples() {
               <FormField testID="tmg-deity-input" label="Presiding Deity" value={form.deity} onChangeText={(v: string) => setForm({ ...form, deity: v })} />
               <FormField testID="tmg-location-input" label="Location" value={form.location} onChangeText={(v: string) => setForm({ ...form, location: v })} />
               <FormField testID="tmg-desc-input" label="Description" value={form.description} onChangeText={(v: string) => setForm({ ...form, description: v })} multiline />
-              <FormField testID="tmg-logo-input" label="Logo URL" value={form.logo} onChangeText={(v: string) => setForm({ ...form, logo: v })} />
-              <FormField testID="tmg-banner-input" label="Banner URL" value={form.banner} onChangeText={(v: string) => setForm({ ...form, banner: v })} />
+              <ImagePickerField testID="tmg-logo-input" label="Logo Image" value={form.logo} onChangeValue={(v: string) => setForm({ ...form, logo: v })} />
+              <ImagePickerField testID="tmg-banner-input" label="Banner Image" value={form.banner} onChangeValue={(v: string) => setForm({ ...form, banner: v })} />
               <FormField testID="tmg-phone-input" label="Phone (optional)" value={form.phone} onChangeText={(v: string) => setForm({ ...form, phone: v })} />
-              {form.banner ? <Image source={{ uri: form.banner }} style={styles.preview} /> : null}
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -171,6 +170,58 @@ function FormField({ label, value, onChangeText, multiline, testID }: any) {
   );
 }
 
+function ImagePickerField({ label, value, onChangeValue, testID }: any) {
+  const [picking, setPicking] = useState(false);
+  const isUploaded = value?.startsWith('data:');
+
+  const pickImage = async () => {
+    setPicking(true);
+    try {
+      if (Platform.OS !== 'web') {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) { Alert.alert('Permission needed', 'Allow photo library access.'); return; }
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        base64: true,
+        quality: 0.65,
+        allowsEditing: true,
+      });
+      if (!result.canceled && result.assets[0]?.base64) {
+        const mime = result.assets[0].mimeType || 'image/jpeg';
+        onChangeValue(`data:${mime};base64,${result.assets[0].base64}`);
+      }
+    } catch { Alert.alert('Error', 'Could not open image picker'); }
+    finally { setPicking(false); }
+  };
+
+  return (
+    <View>
+      <Text style={styles.flabel}>{label}</Text>
+      <View style={styles.imgRow}>
+        <TextInput
+          testID={testID}
+          value={isUploaded ? '' : (value || '')}
+          onChangeText={onChangeValue}
+          placeholder={isUploaded ? 'Image uploaded from device' : 'Paste image URL'}
+          placeholderTextColor={isUploaded ? theme.colors.primary : theme.colors.textMuted}
+          style={[styles.finput, { flex: 1 }]}
+          editable={!isUploaded}
+        />
+        <TouchableOpacity onPress={pickImage} style={styles.pickBtn} disabled={picking}>
+          {picking ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="image-outline" size={20} color="#fff" />}
+        </TouchableOpacity>
+        {isUploaded && (
+          <TouchableOpacity onPress={() => onChangeValue('')} style={styles.clearBtn}>
+            <Ionicons name="close" size={18} color={theme.colors.danger} />
+          </TouchableOpacity>
+        )}
+      </View>
+      {value ? <Image source={{ uri: value }} style={styles.preview} resizeMode="cover" /> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -190,4 +241,7 @@ const styles = StyleSheet.create({
   flabel: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
   finput: { backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border, borderRadius: 12, padding: 12, fontSize: 14, color: theme.colors.text },
   preview: { width: '100%', height: 180, borderRadius: 14, marginTop: 10 },
+  imgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pickBtn: { backgroundColor: theme.colors.primary, padding: 13, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  clearBtn: { backgroundColor: '#FFEBEE', padding: 13, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

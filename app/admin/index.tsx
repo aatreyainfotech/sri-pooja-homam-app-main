@@ -38,6 +38,7 @@ export default function AdminDashboard() {
     { title: 'Add Pujari', icon: 'account-tie-hat', iconLib: 'mci', color: '#FF6F00', route: '/admin/create-pujari', testID: 'admin-create-pujari-tile' },
     { title: 'Pujari Stats', icon: 'chart-donut', iconLib: 'mci', color: '#1565C0', route: '/admin/pujari-stats', testID: 'admin-pujari-stats-tile' },
     { title: 'Pujari Payouts', icon: 'send', color: '#00897B', route: '/admin/payouts', testID: 'admin-payouts-tile' },
+    { title: 'Accommodation', icon: 'bed', color: '#0288D1', route: '/admin/properties', testID: 'admin-properties-tile' },
     ...(user?.role === 'super_admin' ? [
       { title: 'Manage Users', icon: 'people', color: '#5E35B1', route: '/admin/users', testID: 'admin-users-tile' },
       { title: 'Create Admin', icon: 'person-add', color: '#7B1FA2', route: '/admin/create-admin', testID: 'admin-create-admin-tile' },
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#2D1B19', '#630B0B', '#8B1515']} style={styles.header}>
+      <LinearGradient colors={['#4A2C2A', '#B22222', '#D35400']} style={styles.header}>
         <View style={styles.headerRow}>
           <TouchableOpacity testID="admin-back-btn" onPress={() => safeBack('/(tabs)/profile')} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
