@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
-  TextInput, Modal, RefreshControl,
+  TextInput, type TextInputProps, Modal, RefreshControl, Platform, Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,131 @@ import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 
 const BLUE = '#0288D1';
+const IS_WEB = Platform.OS === 'web';
+
+function pickMultipleImagesWeb(): Promise<string[]> {
+  return new Promise((resolve) => {
+    if (!IS_WEB) { resolve([]); return; }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = async (e: any) => {
+      const files: File[] = Array.from(e.target?.files || []);
+      const results: string[] = [];
+      for (const file of files) {
+        await new Promise<void>((res) => {
+          const reader = new FileReader();
+          reader.onload = () => { results.push(reader.result as string); res(); };
+          reader.readAsDataURL(file);
+        });
+      }
+      resolve(results);
+    };
+    input.click();
+  });
+}
+
+// ── Manager Dropdown ───────────────────────────────────────────────────────
+function ManagerDropdown({ managers, value, onChange }: { managers: any[]; value: string; onChange: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = managers.find((m) => m.id === value);
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={styles.label}>Select Manager</Text>
+      <TouchableOpacity style={styles.dropdownBtn} onPress={() => setOpen(!open)} activeOpacity={0.8}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+          <Ionicons name="person-outline" size={16} color={selected ? BLUE : theme.colors.textMuted} />
+          <Text style={[styles.dropdownBtnText, { color: selected ? theme.colors.text : theme.colors.textMuted }]}>
+            {selected ? selected.full_name : 'Choose a hotel manager…'}
+          </Text>
+        </View>
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={theme.colors.textMuted} />
+      </TouchableOpacity>
+      {open && (
+        <View style={styles.dropdownList}>
+          {managers.length === 0 ? (
+            <View style={{ padding: 16 }}>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>No hotel managers found. Assign hotel_manager role to a user first.</Text>
+            </View>
+          ) : managers.map((m) => (
+            <TouchableOpacity
+              key={m.id}
+              style={[styles.dropdownItem, value === m.id && styles.dropdownItemActive]}
+              onPress={() => { onChange(m.id); setOpen(false); }}
+            >
+              <Ionicons name="person" size={16} color={value === m.id ? '#fff' : BLUE} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.dropdownItemText, value === m.id && styles.dropdownItemTextActive]} numberOfLines={1}>
+                  {m.full_name}
+                </Text>
+                {m.email ? (
+                  <Text style={[styles.dropdownItemSub, value === m.id && { color: 'rgba(255,255,255,0.7)' }]} numberOfLines={1}>
+                    {m.email}
+                  </Text>
+                ) : null}
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── Image Picker Section ───────────────────────────────────────────────────
+function ImagePickerSection({
+  label, images, onAdd, onRemove, onUrlAdd,
+}: {
+  label: string;
+  images: string[];
+  onAdd: () => void;
+  onRemove: (idx: number) => void;
+  onUrlAdd: (url: string) => void;
+}) {
+  const [urlInput, setUrlInput] = useState('');
+  return (
+    <View style={{ marginBottom: 16 }}>
+      <Text style={styles.label}>{label}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          {images.map((img, idx) => (
+            <View key={idx} style={styles.imgPreview}>
+              <Image source={{ uri: img }} style={styles.imgPreviewImg} resizeMode="cover" />
+              <TouchableOpacity style={styles.imgRemoveBtn} onPress={() => onRemove(idx)}>
+                <Ionicons name="close-circle" size={20} color="#E53935" />
+              </TouchableOpacity>
+            </View>
+          ))}
+          {IS_WEB && (
+            <TouchableOpacity style={styles.imgAddBtn} onPress={onAdd}>
+              <Ionicons name="camera-outline" size={24} color={BLUE} />
+              <Text style={styles.imgAddText}>Upload</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
+      <View style={styles.urlRow}>
+        <TextInput
+          style={[styles.input, { flex: 1, marginBottom: 0 }]}
+          placeholder="Or paste image URL…"
+          placeholderTextColor={theme.colors.textMuted}
+          value={urlInput}
+          onChangeText={setUrlInput}
+        />
+        <TouchableOpacity
+          style={styles.urlAddBtn}
+          onPress={() => { if (urlInput.trim()) { onUrlAdd(urlInput.trim()); setUrlInput(''); } }}
+        >
+          <Ionicons name="add" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      {images.length > 0 && (
+        <Text style={{ fontSize: 11, color: theme.colors.textMuted, marginTop: 5 }}>{images.length} photo(s) added</Text>
+      )}
+    </View>
+  );
+}
 
 export default function PropertyDetail() {
   const router = useRouter();
@@ -26,6 +151,7 @@ export default function PropertyDetail() {
   const [showQuota, setShowQuota] = useState(false);
   const [selectedCat, setSelectedCat] = useState<any>(null);
   const [catForm, setCatForm] = useState({ name: '', description: '', price_per_night: '', capacity: '2', total_rooms: '10', amenities: '' });
+  const [roomImages, setRoomImages] = useState<string[]>([]);
   const [quotaForm, setQuotaForm] = useState({ from_date: '', to_date: '', quota: '10' });
   const [managerId, setManagerId] = useState('');
 
@@ -46,6 +172,11 @@ export default function PropertyDetail() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
+  const resetCatForm = () => {
+    setCatForm({ name: '', description: '', price_per_night: '', capacity: '2', total_rooms: '10', amenities: '' });
+    setRoomImages([]);
+  };
+
   const handleAddCategory = async () => {
     if (!catForm.name.trim() || !catForm.price_per_night) {
       Alert.alert('Missing Fields', 'Name and price are required.');
@@ -60,9 +191,10 @@ export default function PropertyDetail() {
         capacity: parseInt(catForm.capacity) || 2,
         total_rooms: parseInt(catForm.total_rooms) || 10,
         amenities: catForm.amenities,
+        images: roomImages.join(','),
       });
       setShowAddCat(false);
-      setCatForm({ name: '', description: '', price_per_night: '', capacity: '2', total_rooms: '10', amenities: '' });
+      resetCatForm();
       await load();
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.detail || 'Failed to add room category');
@@ -74,7 +206,6 @@ export default function PropertyDetail() {
       Alert.alert('Missing Fields', 'Select a date range.');
       return;
     }
-    // Build date list
     const dates: string[] = [];
     let cur = new Date(quotaForm.from_date);
     const end = new Date(quotaForm.to_date);
@@ -122,6 +253,8 @@ export default function PropertyDetail() {
     </SafeAreaView>
   );
 
+  const coverImg = prop.images ? prop.images.split(',')[0]?.trim() : null;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient colors={['#4A2C2A', '#0277BD', BLUE]} style={styles.header}>
@@ -143,131 +276,170 @@ export default function PropertyDetail() {
       </LinearGradient>
 
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BLUE} />}
       >
-        {/* Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Property Info</Text>
-          <InfoRow icon="location-outline" text={`${prop.address}${prop.city ? `, ${prop.city}` : ''}`} />
-          {prop.phone ? <InfoRow icon="call-outline" text={prop.phone} /> : null}
-          {prop.temple_name ? <InfoRow icon="business-outline" text={`Near ${prop.temple_name}`} /> : null}
-          <InfoRow icon="time-outline" text={`Check-in: ${prop.check_in_time} | Check-out: ${prop.check_out_time}`} />
-          {prop.description ? <Text style={styles.desc}>{prop.description}</Text> : null}
-        </View>
-
-        {/* Assign Manager */}
-        {user?.role === 'super_admin' && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Hotel Manager</Text>
-            <Text style={styles.currentManager}>
-              Current: {prop.manager_name || 'None assigned'}
-            </Text>
-            <Text style={styles.label}>Assign Manager</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {managers.map((m) => (
-                  <TouchableOpacity
-                    key={m.id}
-                    style={[styles.typeChip, managerId === m.id && styles.typeChipActive]}
-                    onPress={() => setManagerId(m.id)}
-                  >
-                    <Text style={[styles.typeChipText, managerId === m.id && styles.typeChipTextActive]}>
-                      {m.full_name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-            <TouchableOpacity style={styles.assignBtn} onPress={handleAssignManager}>
-              <Text style={styles.assignBtnText}>Assign Manager</Text>
-            </TouchableOpacity>
+        {/* Cover image */}
+        {coverImg ? (
+          <Image source={{ uri: coverImg }} style={styles.coverImg} resizeMode="cover" />
+        ) : (
+          <View style={[styles.coverImg, styles.coverImgPlaceholder]}>
+            <Ionicons name="bed-outline" size={40} color={BLUE + '50'} />
+            <Text style={{ color: BLUE + '80', fontSize: 12, marginTop: 6 }}>No photos added</Text>
           </View>
         )}
 
-        {/* Room Categories */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Room Categories</Text>
-            <TouchableOpacity style={styles.addCatBtn} onPress={() => setShowAddCat(true)}>
-              <Ionicons name="add" size={18} color={BLUE} />
-              <Text style={styles.addCatText}>Add</Text>
-            </TouchableOpacity>
+        <View style={{ padding: 16 }}>
+          {/* Info */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Property Info</Text>
+            <InfoRow icon="location-outline" text={`${prop.address}${prop.city ? `, ${prop.city}` : ''}`} />
+            {prop.phone ? <InfoRow icon="call-outline" text={prop.phone} /> : null}
+            {prop.temple_name ? <InfoRow icon="business-outline" text={`Near ${prop.temple_name}`} /> : null}
+            <InfoRow icon="time-outline" text={`Check-in: ${prop.check_in_time} | Check-out: ${prop.check_out_time}`} />
+            {prop.description ? <Text style={styles.desc}>{prop.description}</Text> : null}
           </View>
 
-          {categories.length === 0 ? (
-            <Text style={styles.emptyLabel}>No room categories yet. Add one to allow bookings.</Text>
-          ) : (
-            categories.map((cat) => (
-              <View key={cat.id} style={styles.catCard}>
-                <View style={styles.catTop}>
-                  <Text style={styles.catName}>{cat.name}</Text>
-                  <Text style={styles.catPrice}>₹{parseFloat(cat.price_per_night).toFixed(0)}/night</Text>
-                </View>
-                <View style={styles.catMeta}>
-                  <Text style={styles.catMetaText}>👥 {cat.capacity} guests · 🛏 {cat.total_rooms} rooms</Text>
-                </View>
-                {cat.description ? <Text style={styles.catDesc} numberOfLines={2}>{cat.description}</Text> : null}
-                <View style={styles.catActions}>
-                  <TouchableOpacity
-                    style={styles.quotaBtn}
-                    onPress={() => { setSelectedCat(cat); setShowQuota(true); }}
-                  >
-                    <Ionicons name="calendar-outline" size={14} color={BLUE} />
-                    <Text style={styles.quotaBtnText}>Set Quota</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteCatBtn} onPress={() => deleteCategory(cat)}>
-                    <Ionicons name="trash-outline" size={14} color="#E53935" />
-                  </TouchableOpacity>
-                </View>
+          {/* Assign Manager */}
+          {user?.role === 'super_admin' && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Hotel Manager</Text>
+              <View style={styles.currentManagerRow}>
+                <Ionicons name="person-circle-outline" size={20} color={prop.manager_name ? BLUE : theme.colors.textMuted} />
+                <Text style={styles.currentManager}>
+                  {prop.manager_name ? prop.manager_name : 'No manager assigned yet'}
+                </Text>
               </View>
-            ))
+              <ManagerDropdown
+                managers={managers}
+                value={managerId}
+                onChange={setManagerId}
+              />
+              <TouchableOpacity style={styles.assignBtn} onPress={handleAssignManager}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                <Text style={styles.assignBtnText}>Assign Manager</Text>
+              </TouchableOpacity>
+            </View>
           )}
+
+          {/* Room Categories */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Room Categories</Text>
+              <TouchableOpacity style={styles.addCatBtn} onPress={() => setShowAddCat(true)}>
+                <Ionicons name="add" size={18} color={BLUE} />
+                <Text style={styles.addCatText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            {categories.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <Ionicons name="bed-outline" size={36} color={theme.colors.border} />
+                <Text style={styles.emptyLabel}>No room categories yet</Text>
+                <Text style={styles.emptySub}>Add categories (Deluxe, Standard, etc.) to enable bookings</Text>
+              </View>
+            ) : (
+              categories.map((cat) => {
+                const catCover = cat.images ? cat.images.split(',')[0]?.trim() : null;
+                return (
+                  <View key={cat.id} style={styles.catCard}>
+                    {catCover ? (
+                      <Image source={{ uri: catCover }} style={styles.catCover} resizeMode="cover" />
+                    ) : null}
+                    <View style={styles.catBody}>
+                      <View style={styles.catTop}>
+                        <Text style={styles.catName}>{cat.name}</Text>
+                        <Text style={styles.catPrice}>₹{parseFloat(cat.price_per_night).toFixed(0)}/night</Text>
+                      </View>
+                      <Text style={styles.catMetaText}>
+                        <Ionicons name="people-outline" size={12} /> {cat.capacity} guests  ·  <Ionicons name="bed-outline" size={12} /> {cat.total_rooms} rooms
+                      </Text>
+                      {cat.description ? <Text style={styles.catDesc} numberOfLines={2}>{cat.description}</Text> : null}
+                      <View style={styles.catActions}>
+                        <TouchableOpacity
+                          style={styles.quotaBtn}
+                          onPress={() => { setSelectedCat(cat); setShowQuota(true); }}
+                        >
+                          <Ionicons name="calendar-outline" size={14} color={BLUE} />
+                          <Text style={styles.quotaBtnText}>Set Quota</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.deleteCatBtn} onPress={() => deleteCategory(cat)}>
+                          <Ionicons name="trash-outline" size={14} color="#E53935" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })
+            )}
+          </View>
         </View>
       </ScrollView>
 
-      {/* Add Category Modal */}
+      {/* ── Add Category Modal ── */}
       <Modal visible={showAddCat} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Room Category</Text>
-              <TouchableOpacity onPress={() => setShowAddCat(false)}>
+              <TouchableOpacity onPress={() => { setShowAddCat(false); resetCatForm(); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              <FormInput label="Category Name *" value={catForm.name} onChangeText={(v: string) => setCatForm({ ...catForm, name: v })} placeholder="Deluxe Room" />
-              <FormInput label="Price per Night (₹) *" value={catForm.price_per_night} onChangeText={(v: string) => setCatForm({ ...catForm, price_per_night: v })} placeholder="1500" keyboardType="numeric" />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <FormInput label="Category Name *" value={catForm.name} onChangeText={(v) => setCatForm({ ...catForm, name: v })} placeholder="Deluxe Room" />
+              <FormInput label="Price per Night (₹) *" value={catForm.price_per_night} onChangeText={(v) => setCatForm({ ...catForm, price_per_night: v })} placeholder="1500" keyboardType="numeric" />
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ flex: 1 }}><FormInput label="Capacity (guests)" value={catForm.capacity} onChangeText={(v: string) => setCatForm({ ...catForm, capacity: v })} keyboardType="numeric" /></View>
-                <View style={{ flex: 1 }}><FormInput label="Total Rooms" value={catForm.total_rooms} onChangeText={(v: string) => setCatForm({ ...catForm, total_rooms: v })} keyboardType="numeric" /></View>
+                <View style={{ flex: 1 }}>
+                  <FormInput label="Capacity (guests)" value={catForm.capacity} onChangeText={(v) => setCatForm({ ...catForm, capacity: v })} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FormInput label="Total Rooms" value={catForm.total_rooms} onChangeText={(v) => setCatForm({ ...catForm, total_rooms: v })} keyboardType="numeric" />
+                </View>
               </View>
-              <FormInput label="Description" value={catForm.description} onChangeText={(v: string) => setCatForm({ ...catForm, description: v })} placeholder="Spacious room with AC..." multiline />
-              <FormInput label="Amenities" value={catForm.amenities} onChangeText={(v: string) => setCatForm({ ...catForm, amenities: v })} placeholder="AC, TV, Hot Water, Parking" />
+              <FormInput label="Description" value={catForm.description} onChangeText={(v) => setCatForm({ ...catForm, description: v })} placeholder="Spacious room with AC, TV…" multiline />
+              <FormInput label="Amenities" value={catForm.amenities} onChangeText={(v) => setCatForm({ ...catForm, amenities: v })} placeholder="AC, TV, Hot Water, Parking" />
+
+              {/* Room Photos */}
+              <ImagePickerSection
+                label="Room Photos"
+                images={roomImages}
+                onAdd={async () => {
+                  const imgs = await pickMultipleImagesWeb();
+                  if (imgs.length) setRoomImages((prev) => [...prev, ...imgs]);
+                }}
+                onRemove={(idx) => setRoomImages((prev) => prev.filter((_, i) => i !== idx))}
+                onUrlAdd={(url) => setRoomImages((prev) => [...prev, url])}
+              />
+
               <TouchableOpacity style={styles.submitBtn} onPress={handleAddCategory}>
-                <Text style={styles.submitText}>Add Category</Text>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                <Text style={styles.submitText}>Add Room Category</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
       </Modal>
 
-      {/* Set Quota Modal */}
+      {/* ── Set Quota Modal ── */}
       <Modal visible={showQuota} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Set Quota — {selectedCat?.name}</Text>
+              <View>
+                <Text style={styles.modalTitle}>Set Quota</Text>
+                <Text style={{ fontSize: 13, color: BLUE, fontWeight: '600' }}>{selectedCat?.name}</Text>
+              </View>
               <TouchableOpacity onPress={() => setShowQuota(false)}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
-            <FormInput label="From Date (YYYY-MM-DD)" value={quotaForm.from_date} onChangeText={(v: string) => setQuotaForm({ ...quotaForm, from_date: v })} placeholder="2026-07-01" />
-            <FormInput label="To Date (YYYY-MM-DD)" value={quotaForm.to_date} onChangeText={(v: string) => setQuotaForm({ ...quotaForm, to_date: v })} placeholder="2026-07-31" />
-            <FormInput label="Rooms Available" value={quotaForm.quota} onChangeText={(v: string) => setQuotaForm({ ...quotaForm, quota: v })} placeholder="10" keyboardType="numeric" />
+            <FormInput label="From Date (YYYY-MM-DD)" value={quotaForm.from_date} onChangeText={(v) => setQuotaForm({ ...quotaForm, from_date: v })} placeholder="2026-07-01" />
+            <FormInput label="To Date (YYYY-MM-DD)" value={quotaForm.to_date} onChangeText={(v) => setQuotaForm({ ...quotaForm, to_date: v })} placeholder="2026-07-31" />
+            <FormInput label="Rooms Available per Night" value={quotaForm.quota} onChangeText={(v) => setQuotaForm({ ...quotaForm, quota: v })} placeholder="10" keyboardType="numeric" />
             <TouchableOpacity style={styles.submitBtn} onPress={handleSetQuota}>
-              <Text style={styles.submitText}>Set Quota</Text>
+              <Ionicons name="calendar-outline" size={18} color="#fff" />
+              <Text style={styles.submitText}>Apply Quota</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -276,7 +448,7 @@ export default function PropertyDetail() {
   );
 }
 
-function InfoRow({ icon, text }: any) {
+function InfoRow({ icon, text }: { icon: any; text: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
       <Ionicons name={icon} size={15} color={theme.colors.textMuted} />
@@ -285,13 +457,14 @@ function InfoRow({ icon, text }: any) {
   );
 }
 
-function FormInput({ label, ...props }: any) {
+function FormInput({ label, multiline, style, ...props }: TextInputProps & { label: string }) {
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={[styles.input, props.multiline && { height: 80, textAlignVertical: 'top' }]}
+        style={[styles.input, multiline && { height: 80, textAlignVertical: 'top' }, style as any]}
         placeholderTextColor={theme.colors.textMuted}
+        multiline={multiline}
         {...props}
       />
     </View>
@@ -309,19 +482,28 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   statusText: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1 },
 
+  coverImg: { width: '100%', height: 180 },
+  coverImgPlaceholder: { backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' },
+
   section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: theme.colors.border },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: theme.colors.text, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.text, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
   desc: { fontSize: 13, color: theme.colors.textMuted, lineHeight: 20, marginTop: 8 },
-  currentManager: { fontSize: 13, color: theme.colors.text, marginBottom: 10 },
-  emptyLabel: { color: theme.colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 20 },
 
-  catCard: { backgroundColor: '#F8FBFF', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: `${BLUE}22` },
+  currentManagerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  currentManager: { fontSize: 13, color: theme.colors.text, fontWeight: '600' },
+
+  emptyBox: { alignItems: 'center', paddingVertical: 24 },
+  emptyLabel: { color: theme.colors.text, fontWeight: '700', fontSize: 14, marginTop: 10 },
+  emptySub: { color: theme.colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'center' },
+
+  catCard: { backgroundColor: '#F8FBFF', borderRadius: 14, marginBottom: 12, borderWidth: 1, borderColor: `${BLUE}22`, overflow: 'hidden' },
+  catCover: { width: '100%', height: 120 },
+  catBody: { padding: 14 },
   catTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   catName: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
   catPrice: { fontSize: 14, fontWeight: '800', color: BLUE },
-  catMeta: { marginBottom: 4 },
-  catMetaText: { fontSize: 12, color: theme.colors.textMuted },
+  catMetaText: { fontSize: 12, color: theme.colors.textMuted, marginBottom: 4 },
   catDesc: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4 },
   catActions: { flexDirection: 'row', gap: 10, marginTop: 10, justifyContent: 'space-between', alignItems: 'center' },
   quotaBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: BLUE + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
@@ -331,19 +513,52 @@ const styles = StyleSheet.create({
   addCatBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: BLUE + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   addCatText: { fontSize: 13, fontWeight: '600', color: BLUE },
 
-  label: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
-  input: { borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: theme.colors.text, backgroundColor: '#FAFAFA' },
-  typeChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1.5, borderColor: theme.colors.border },
-  typeChipActive: { backgroundColor: BLUE, borderColor: BLUE },
-  typeChipText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted },
-  typeChipTextActive: { color: '#fff' },
-  assignBtn: { backgroundColor: BLUE, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  label: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, marginBottom: 7, textTransform: 'uppercase', letterSpacing: 1 },
+  input: { borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: theme.colors.text, backgroundColor: '#FAFAFA' },
+
+  // Dropdown
+  dropdownBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#FAFAFA', marginBottom: 4,
+  },
+  dropdownBtnText: { fontSize: 14, flex: 1 },
+  dropdownList: {
+    borderWidth: 1.5, borderColor: BLUE + '40', borderRadius: 12,
+    backgroundColor: '#fff', marginBottom: 14, overflow: 'hidden', maxHeight: 200,
+    ...(IS_WEB ? { boxShadow: '0 4px 20px rgba(2,136,209,0.15)' } as any : {
+      shadowColor: BLUE, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6,
+    }),
+  },
+  dropdownItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+  },
+  dropdownItemActive: { backgroundColor: BLUE },
+  dropdownItemText: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
+  dropdownItemTextActive: { color: '#fff' },
+  dropdownItemSub: { fontSize: 11, color: theme.colors.textMuted, marginTop: 1 },
+
+  // Images
+  imgPreview: { width: 90, height: 90, borderRadius: 12, overflow: 'hidden', position: 'relative', borderWidth: 1, borderColor: theme.colors.border },
+  imgPreviewImg: { width: 90, height: 90 },
+  imgRemoveBtn: { position: 'absolute', top: 4, right: 4, backgroundColor: '#fff', borderRadius: 10 },
+  imgAddBtn: {
+    width: 90, height: 90, borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: BLUE + '60',
+    alignItems: 'center', justifyContent: 'center', backgroundColor: BLUE + '08', gap: 4,
+  },
+  imgAddText: { color: BLUE, fontSize: 11, fontWeight: '700' },
+  urlRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  urlAddBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' },
+
+  assignBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: BLUE, borderRadius: 12, paddingVertical: 12 },
   assignBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: '85%' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
-  submitBtn: { backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 8, marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: theme.colors.text },
+  submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, marginTop: 4, marginBottom: 20 },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 });
