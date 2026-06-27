@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, RefreshControl,
-  TouchableOpacity, Modal, TextInput, Alert,
+  TouchableOpacity, Modal, Alert, ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,13 +13,14 @@ import { useAuth } from '../../src/context/AuthContext';
 
 export default function PujariDashboard() {
   const { user } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<any>({});
   const [bookings, setBookings] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [wallet, setWallet] = useState<{ balance: number; transactions: any[] }>({ balance: 0, transactions: [] });
+  const [wallet, setWallet] = useState<{ balance: number; pending_payout: number; total_paid_out: number; transactions: any[] }>({ balance: 0, pending_payout: 0, total_paid_out: 0, transactions: [] });
   const [completing, setCompleting] = useState<any | null>(null);
-  const [videoUrl, setVideoUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [startingLive, setStartingLive] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -37,14 +38,27 @@ export default function PujariDashboard() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
+  const startLive = async () => {
+    if (!completing) return;
+    setStartingLive(true);
+    try {
+      const { data: stream } = await api.post(`/pujari/start-live/${completing.id}`);
+      setCompleting(null);
+      router.push(`/live-broadcast/${stream.id}` as any);
+    } catch (e) {
+      Alert.alert('Cannot start live', apiError(e));
+    } finally {
+      setStartingLive(false);
+    }
+  };
+
   const submitComplete = async () => {
     if (!completing) return;
-    if (!videoUrl.trim()) { Alert.alert('Video URL required', 'Please paste the completion video URL'); return; }
     setSubmitting(true);
     try {
-      const { data } = await api.post(`/bookings/${completing.id}/complete`, { video_url: videoUrl.trim() });
-      Alert.alert('Pooja completed', `\u20b9${Number(data.credited || 0).toFixed(2)} credited to your wallet.`);
-      setCompleting(null); setVideoUrl('');
+      const { data } = await api.post(`/bookings/${completing.id}/complete`, { video_url: '' });
+      Alert.alert('\ud83d\ude4f Pooja Completed!', `\u20b9${Number(data.credited || 0).toFixed(2)} has been credited to your wallet.`);
+      setCompleting(null);
       load();
     } catch (e) {
       Alert.alert('Failed', apiError(e));
@@ -77,8 +91,9 @@ export default function PujariDashboard() {
             <View style={{ flex: 1, marginLeft: 14 }}>
               <Text style={styles.earnLabel}>Wallet Balance</Text>
               <Text style={styles.earnValue}>₹{(wallet.balance || 0).toFixed(2)}</Text>
-              <Text style={[styles.earnLabel, { marginTop: 2 }]}>{wallet.transactions?.length || 0} payouts</Text>
+              <Text style={[styles.earnLabel, { marginTop: 2 }]}>Pending payout: ₹{(wallet.pending_payout || 0).toFixed(2)}</Text>
             </View>
+            <Ionicons name="information-circle-outline" size={20} color="#90CAF9" />
           </LinearGradient>
         </View>
 
@@ -87,11 +102,45 @@ export default function PujariDashboard() {
           <LinearGradient colors={['#1B5E20', '#2E7D32']} style={styles.earnGrad}>
             <Ionicons name="cash" size={28} color="#A5D6A7" />
             <View style={{ flex: 1, marginLeft: 14 }}>
-              <Text style={styles.earnLabel}>My Earnings (70% of total)</Text>
-              <Text style={styles.earnValue}>₹{(stats.total_earned || 0).toFixed(2)}</Text>
+              <Text style={styles.earnLabel}>Total Paid Out (PhonePe/UPI)</Text>
+              <Text style={styles.earnValue}>₹{(wallet.total_paid_out || 0).toFixed(2)}</Text>
+              <Text style={[styles.earnLabel, { marginTop: 2 }]}>My share 70% of bookings</Text>
             </View>
           </LinearGradient>
         </View>
+
+        {/* Transaction history */}
+        {wallet.transactions?.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Payment History</Text>
+            {wallet.transactions.map((t: any) => (
+              <View key={t.id} style={styles.txnCard}>
+                <View style={styles.txnRow}>
+                  <Ionicons
+                    name={t.status === 'paid' ? 'checkmark-circle' : 'time'}
+                    size={18}
+                    color={t.status === 'paid' ? '#2E7D32' : '#FF6F00'}
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={styles.txnDesc} numberOfLines={2}>{t.description || 'Pooja Earnings'}</Text>
+                    <Text style={styles.txnDate}>{t.created_at ? new Date(t.created_at).toLocaleDateString('en-IN') : ''}</Text>
+                    {t.status === 'paid' && t.payment_ref ? (
+                      <Text style={styles.txnRef}>Ref: {t.payment_ref}</Text>
+                    ) : null}
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.txnAmt}>₹{Number(t.amount || 0).toFixed(2)}</Text>
+                    <View style={[styles.txnBadge, { backgroundColor: t.status === 'paid' ? '#E8F5E9' : '#FFF3E0' }]}>
+                      <Text style={[styles.txnBadgeText, { color: t.status === 'paid' ? '#2E7D32' : '#E65100' }]}>
+                        {t.status === 'paid' ? 'PAID' : 'PENDING'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>Assigned Bookings</Text>
 
@@ -127,7 +176,7 @@ export default function PujariDashboard() {
               <TouchableOpacity
                 testID={`complete-booking-${b.id}`}
                 style={styles.completeBtn}
-                onPress={() => { setCompleting(b); setVideoUrl(''); }}
+                onPress={() => setCompleting(b)}
               >
                 <Ionicons name="videocam" size={14} color="#fff" />
                 <Text style={styles.completeBtnText}>Mark Complete & Submit Video</Text>
@@ -146,35 +195,59 @@ export default function PujariDashboard() {
       <Modal visible={!!completing} transparent animationType="slide" onRequestClose={() => setCompleting(null)}>
         <View style={styles.mBackdrop}>
           <View style={styles.mCard}>
-            <Text style={styles.mTitle}>Complete Pooja</Text>
-            <Text style={styles.mSub}>{completing?.pooja_name}</Text>
-            <Text style={styles.mLabel}>Completion Video URL</Text>
-            <TextInput
-              testID="complete-video-url-input"
-              placeholder="https://..."
-              placeholderTextColor={theme.colors.textMuted}
-              value={videoUrl}
-              onChangeText={setVideoUrl}
-              autoCapitalize="none"
-              keyboardType="url"
-              style={styles.mInput}
-            />
-            <Text style={styles.mHint}>
-              Submitting will mark this booking complete and credit ₹{Number(completing?.pujari_amount || 0).toFixed(2)} to your wallet.
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-              <TouchableOpacity onPress={() => setCompleting(null)} style={[styles.mBtn, styles.mBtnGhost]}>
-                <Text style={styles.mBtnGhostText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="complete-submit-btn"
-                onPress={submitComplete}
-                disabled={submitting}
-                style={[styles.mBtn, styles.mBtnPrimary, submitting && { opacity: 0.6 }]}
-              >
-                <Text style={styles.mBtnPrimaryText}>{submitting ? 'Submitting...' : 'Submit'}</Text>
-              </TouchableOpacity>
+            <View style={styles.mIconRow}>
+              <Ionicons name="flower" size={32} color={theme.colors.primary} />
             </View>
+            <Text style={styles.mTitle}>{completing?.pooja_name}</Text>
+            <Text style={styles.mSub}>Devotee: {completing?.devotee_name || '—'}</Text>
+
+            <View style={styles.mAmtBox}>
+              <Text style={styles.mAmtLabel}>Your Earnings on Completion</Text>
+              <Text style={styles.mAmtValue}>₹{Number(completing?.pujari_amount || 0).toFixed(2)}</Text>
+              <Text style={[styles.mAmtLabel, { marginTop: 6, color: '#FF6F00', fontSize: 11 }]}>
+                Payment via PhonePe/UPI will be released next business day
+              </Text>
+            </View>
+
+            {/* Go Live button */}
+            <TouchableOpacity
+              testID="complete-go-live-btn"
+              onPress={startLive}
+              disabled={startingLive}
+              style={[styles.mLiveBtn, startingLive && { opacity: 0.6 }]}
+            >
+              {startingLive ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="videocam" size={18} color="#fff" />
+                  <Text style={styles.mLiveBtnText}>Start Mobile Live Pooja</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.mOrText}>— or —</Text>
+
+            {/* Mark complete without video */}
+            <TouchableOpacity
+              testID="complete-submit-btn"
+              onPress={submitComplete}
+              disabled={submitting}
+              style={[styles.mCompleteBtn, submitting && { opacity: 0.6 }]}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-done-circle" size={18} color="#fff" />
+                  <Text style={styles.mCompleteBtnText}>Pooja Completed — Submit</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setCompleting(null)} style={styles.mCancelBtn}>
+              <Text style={styles.mCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -244,16 +317,40 @@ const styles = StyleSheet.create({
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   completedText: { color: '#2E7D32', fontSize: 12, fontWeight: '700' },
 
-  mBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 20 },
-  mCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20 },
-  mTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
-  mSub: { fontSize: 13, color: theme.colors.primary, marginTop: 2, fontWeight: '600' },
-  mLabel: { fontSize: 12, color: theme.colors.textMuted, fontWeight: '600', marginTop: 14, marginBottom: 6 },
-  mInput: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: theme.colors.text },
-  mHint: { fontSize: 11, color: theme.colors.textMuted, marginTop: 8, lineHeight: 16 },
-  mBtn: { flex: 1, paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
-  mBtnGhost: { backgroundColor: '#F5F5F5' },
-  mBtnGhostText: { color: theme.colors.text, fontWeight: '700' },
-  mBtnPrimary: { backgroundColor: theme.colors.primary },
-  mBtnPrimaryText: { color: '#fff', fontWeight: '700' },
+  txnCard: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
+    borderWidth: 1, borderColor: theme.colors.border,
+  },
+  txnRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  txnDesc: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
+  txnDate: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
+  txnRef: { fontSize: 11, color: '#1565C0', marginTop: 2 },
+  txnAmt: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
+  txnBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
+  txnBadgeText: { fontSize: 10, fontWeight: '800' },
+
+  mBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', padding: 20 },
+  mCard: { backgroundColor: '#fff', borderRadius: 24, padding: 22, gap: 12 },
+  mIconRow: { alignItems: 'center', marginBottom: 2 },
+  mTitle: { fontSize: 17, fontWeight: '800', color: theme.colors.text, textAlign: 'center' },
+  mSub: { fontSize: 13, color: theme.colors.textSecondary, textAlign: 'center' },
+  mAmtBox: {
+    backgroundColor: '#F3F0E8', borderRadius: 14, padding: 14,
+    alignItems: 'center', borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)',
+  },
+  mAmtLabel: { fontSize: 11, color: theme.colors.textMuted, fontWeight: '600', letterSpacing: 0.5 },
+  mAmtValue: { fontSize: 26, fontWeight: '800', color: '#2E7D32', marginTop: 2 },
+  mLiveBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#C62828', borderRadius: 14, paddingVertical: 14,
+  },
+  mLiveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  mOrText: { textAlign: 'center', color: theme.colors.textMuted, fontSize: 12, fontWeight: '600' },
+  mCompleteBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#2E7D32', borderRadius: 14, paddingVertical: 14,
+  },
+  mCompleteBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  mCancelBtn: { alignItems: 'center', paddingVertical: 6 },
+  mCancelText: { color: theme.colors.textMuted, fontSize: 14, fontWeight: '600' },
 });

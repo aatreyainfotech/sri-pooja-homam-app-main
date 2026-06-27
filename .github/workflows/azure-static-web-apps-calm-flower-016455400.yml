@@ -22,7 +22,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps
 
       - name: Export Expo web build
         run: npx expo export --platform web --output-dir dist
@@ -32,22 +32,21 @@ jobs:
 
       - name: Add SWA routing config
         run: |
-          python3 -c "
-          import json
-          cfg = {
-            'navigationFallback': {
-              'rewrite': '/index.html',
-              'exclude': ['/_expo/*','/assets/*','/*.js','/*.css','/*.json','/*.ico','/*.png','/*.svg','/*.webp','/*.ttf','/*.woff2']
+          cat > dist/staticwebapp.config.json << 'EOF'
+          {
+            "navigationFallback": {
+              "rewrite": "/index.html",
+              "exclude": ["/_expo/*", "/assets/*", "/*.js", "/*.css", "/*.json", "/*.ico", "/*.png", "/*.svg", "/*.webp", "/*.ttf", "/*.woff2"]
             },
-            'globalHeaders': {'Cache-Control': 'no-store'},
-            'mimeTypes': {'.json': 'application/json'}
+            "globalHeaders": { "Cache-Control": "no-store" },
+            "mimeTypes": { ".json": "application/json" }
           }
-          open('dist/staticwebapp.config.json','w').write(json.dumps(cfg, indent=2))
-          print('staticwebapp.config.json written')
-          "
+          EOF
 
       - name: Deploy to Azure Static Web Apps
-        run: npx --yes @azure/static-web-apps-cli deploy dist --deployment-token "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_RIVER_017D11400 }}" --env production
+        env:
+          DEPLOYMENT_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_RIVER_017D11400 }}
+        run: npx --yes @azure/static-web-apps-cli deploy dist --deployment-token "$DEPLOYMENT_TOKEN" --env production
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -59,3 +58,4 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_RIVER_017D11400 }}
           action: "close"
+          app_location: "/"

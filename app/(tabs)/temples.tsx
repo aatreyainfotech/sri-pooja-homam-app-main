@@ -3,9 +3,9 @@ import {
   View, Text, StyleSheet, FlatList, Image, TouchableOpacity,
   TextInput, RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
@@ -61,10 +61,15 @@ export default function Temples() {
             onPress={() => router.push(`/temple/${item.id}`)}
             style={styles.card}
           >
-            <Image source={{ uri: item.banner }} style={styles.banner} />
+            <View style={styles.bannerWrap}>
+              {!!item.banner && <Image source={{ uri: item.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+              <LinearGradient colors={['transparent', 'rgba(45,27,25,0.5)']} style={StyleSheet.absoluteFill} />
+            </View>
             <View style={styles.cardBody}>
               <View style={styles.row}>
-                <Image source={{ uri: item.logo }} style={styles.logo} />
+                <View style={styles.logoWrap}>
+                  {!!item.logo && <Image source={{ uri: item.logo }} style={[StyleSheet.absoluteFill, { borderRadius: 22 }]} resizeMode="cover" />}
+                </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.name}>{item.name}</Text>
                   <View style={styles.meta}>
@@ -110,10 +115,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: theme.colors.border,
     shadowColor: '#8B1515', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
   },
-  banner: { width: '100%', height: 160 },
+  bannerWrap: { width: '100%', height: 160, backgroundColor: '#3D1515' },
   cardBody: { padding: 16 },
   row: { flexDirection: 'row', alignItems: 'center' },
-  logo: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: theme.colors.secondary },
+  logoWrap: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: theme.colors.secondary, backgroundColor: theme.colors.secondary, overflow: 'hidden' },
   name: { fontSize: 17, fontWeight: '700', color: theme.colors.text },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   loc: { fontSize: 12, color: theme.colors.textSecondary },

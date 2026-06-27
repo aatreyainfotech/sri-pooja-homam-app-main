@@ -15,10 +15,13 @@ import { theme } from '../../src/constants/theme';
 export default function VerifyOtp() {
   const router = useRouter();
   const safeBack = useSafeBack();
-  const { mobile, otp_mock } = useLocalSearchParams<{ mobile: string; otp_mock: string }>();
+  const { mobile, otp_mock, delivery_failed } = useLocalSearchParams<{ mobile: string; otp_mock: string; delivery_failed: string }>();
+  const whatsappFailed = delivery_failed === '1';
   const { setSession } = useAuth();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const refs = useRef<(TextInput | null)[]>([]);
 
   // Auto-fill mocked OTP after 500ms for UX convenience
@@ -28,6 +31,33 @@ export default function VerifyOtp() {
       return () => clearTimeout(t);
     }
   }, [otp_mock]);
+
+  // Resend cooldown countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const resend = async () => {
+    setResending(true);
+    try {
+      const { data } = await api.post('/auth/resend-otp', { mobile });
+      setCooldown(60);
+      if (data.otp_mock) {
+        setOtp(data.otp_mock.split(''));
+        Alert.alert('Test Mode', `Your OTP: ${data.otp_mock}`);
+      } else if (data.delivery_failed) {
+        Alert.alert('Delivery Failed', 'WhatsApp not working. Contact support: +91 9999999999');
+      } else {
+        Alert.alert('OTP Resent', 'Check your WhatsApp messages.');
+      }
+    } catch (e) {
+      Alert.alert('Error', apiError(e));
+    } finally {
+      setResending(false);
+    }
+  };
 
   const setDigit = (i: number, v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 1);
@@ -72,6 +102,15 @@ export default function VerifyOtp() {
             We sent a 6-digit code via WhatsApp to{'\n'}<Text style={{ color: theme.colors.secondary, fontWeight: '700' }}>+91 {mobile}</Text>
           </Text>
 
+          {whatsappFailed && (
+            <View style={styles.warnBox}>
+              <Ionicons name="warning" size={18} color="#FF6F00" />
+              <Text style={styles.warnText}>
+                WhatsApp delivery failed. Tap <Text style={{ fontWeight: '800' }}>Resend OTP</Text> below to try again.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.otpRow}>
             {otp.map((d, i) => (
               <TextInput
@@ -99,11 +138,25 @@ export default function VerifyOtp() {
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity
+            onPress={resend}
+            disabled={cooldown > 0 || resending}
+            style={styles.resendBtn}
+          >
+            {resending ? (
+              <ActivityIndicator color={theme.colors.secondary} size="small" />
+            ) : (
+              <Text style={[styles.resendText, cooldown > 0 && styles.resendDisabled]}>
+                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
           {otp_mock ? (
             <View style={styles.mockBox}>
-              <Text style={styles.mockLabel}>🧪 MOCKED OTP (for testing)</Text>
+              <Text style={styles.mockLabel}>🧪 TEST MODE — WhatsApp not configured</Text>
               <Text style={styles.mockOtp}>{otp_mock}</Text>
-              <Text style={styles.mockSub}>Real WhatsApp integration can be plugged in later</Text>
+              <Text style={styles.mockSub}>Configure META_WHATSAPP_TOKEN in backend .env to send real OTPs</Text>
             </View>
           ) : null}
         </KeyboardAvoidingView>
@@ -132,6 +185,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   btnPrimaryText: { color: '#2D1B19', fontSize: 16, fontWeight: '700' },
+  resendBtn: { alignItems: 'center', paddingVertical: 14 },
+  resendText: { color: theme.colors.secondary, fontSize: 14, fontWeight: '600' },
+  resendDisabled: { color: 'rgba(212,175,55,0.4)' },
+  warnBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 16,
+    backgroundColor: 'rgba(255,111,0,0.15)', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: 'rgba(255,111,0,0.4)',
+  },
+  warnText: { flex: 1, color: '#FFD180', fontSize: 13, lineHeight: 19 },
   mockBox: {
     marginTop: 24, padding: 14, borderRadius: 14,
     backgroundColor: 'rgba(212,175,55,0.15)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)',

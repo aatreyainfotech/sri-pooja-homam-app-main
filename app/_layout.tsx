@@ -16,7 +16,10 @@ import { AppAlertHost } from '../src/components/AppAlert';
 // ── Shared screen stack ────────────────────────────────────────────────────
 function AppStack() {
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+    <Stack screenOptions={{
+      headerShown: false, animation: 'fade',
+      ...(Platform.OS === 'web' ? { contentStyle: { backgroundColor: '#0D0302' } } : {}),
+    }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
@@ -101,77 +104,6 @@ function WebNavbar() {
         )}
       </View>
       <View style={w.navGoldLine} />
-    </View>
-  );
-}
-
-// ── Web Footer ─────────────────────────────────────────────────────────────
-function WebFooter() {
-  const router = useRouter();
-  return (
-    <View style={w.footer}>
-      <View style={w.footerRow}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} style={w.footerBrand}>
-          <Image source={require('../assets/images/icon.png')} style={w.footerLogo} />
-          <View>
-            <Text style={w.footerTelugu}>శ్రీ పూజా హోమం</Text>
-            <Text style={w.footerTagline}>Divine devotion at your fingertips</Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={w.footerLinks}>
-          <Text style={w.footerHead}>Quick Links</Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
-            <Text style={w.footerLink}>Register</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)}>
-            <Text style={w.footerLink}>Temples</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/live' as any)}>
-            <Text style={w.footerLink}>Live Darshan</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
-            <Text style={w.footerLink}>Privacy Policy</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/legal/terms' as any)}>
-            <Text style={w.footerLink}>Terms & Conditions</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={w.footerLinks}>
-          <Text style={w.footerHead}>Services</Text>
-          <Text style={w.footerItem}>Book Poojas Online</Text>
-          <Text style={w.footerItem}>Live Temple Darshan</Text>
-          <Text style={w.footerItem}>Homam Booking</Text>
-          <Text style={w.footerItem}>Pujari Seva</Text>
-          <Text style={w.footerItem}>Panchangam Calendar</Text>
-        </View>
-
-        <View style={w.footerLinks}>
-          <Text style={w.footerHead}>Download App</Text>
-          <TouchableOpacity style={w.storeBtn} onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}>
-            <Ionicons name="logo-android" size={14} color="#A5D6A7" />
-            <Text style={w.storeTxt}>Google Play</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={w.storeBtn} onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}>
-            <Ionicons name="logo-apple" size={14} color="#90CAF9" />
-            <Text style={w.storeTxt}>App Store</Text>
-          </TouchableOpacity>
-          <View style={{ marginTop: 10 }}>
-            <Text style={w.footerHead}>Contact</Text>
-            <Text style={w.footerItem}>info@sripoojahomam.com</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={w.footerBottom}>
-        <Text style={w.copyright}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
-        <TouchableOpacity onPress={() => Linking.openURL('https://aatreya.org')}>
-          <Text style={w.devTxt}>
-            Developed with ❤ by <Text style={w.devName}>Aatreya Infotech Systems LLP</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -299,8 +231,10 @@ export default function RootLayout() {
   const { width: screenWidth } = useWindowDimensions();
 
   // Mobile = native app OR browser on small screen (phone/tablet < 768px)
-  const isMobileWeb = Platform.OS === 'web' && screenWidth < 768;
-  const isAdminWeb  = Platform.OS === 'web' && screenWidth >= 768 && (pathname?.startsWith('/admin') ?? false);
+  const isMobileWeb  = Platform.OS === 'web' && screenWidth < 768;
+  const isAdminWeb   = Platform.OS === 'web' && screenWidth >= 768 && (pathname?.startsWith('/admin') ?? false);
+  const AUTH_PATHS   = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password-otp'];
+  const isAuthRoute  = Platform.OS === 'web' && AUTH_PATHS.some(p => pathname === p);
 
   useEffect(() => {
     Font.loadAsync({
@@ -364,28 +298,37 @@ export default function RootLayout() {
       <AuthProvider>
         <StatusBar style="light" />
 
-        {/* Announcement strip */}
-        <View style={w.topStrip}>
-          <Text style={w.topStripText}>
-            ✦  Book Sacred Poojas & Homams Online  •  Sri Pooja Homam  ✦
-          </Text>
-        </View>
+        {/* Announcement strip + Navbar — hidden on auth pages */}
+        {!isAuthRoute && (
+          <>
+            <View style={w.topStrip}>
+              <Text style={w.topStripText}>
+                ✦  Book Sacred Poojas & Homams Online  •  Sri Pooja Homam  ✦
+              </Text>
+            </View>
+            <WebNavbar />
+          </>
+        )}
 
-        {/* Auth-aware Navbar */}
-        <WebNavbar />
-
-        {/* Main content */}
+        {/* Scrollable page body */}
         <View style={w.pageWrap}>
           <View style={w.pageBg} />
           <View style={w.appColumn}>
-            <SafeAreaProvider style={{ flex: 1 }}>
+            <SafeAreaProvider style={{ flex: 1, backgroundColor: 'transparent' } as any}>
               <AppStack />
             </SafeAreaProvider>
           </View>
         </View>
 
-        {/* Footer */}
-        <WebFooter />
+        {/* Floating WhatsApp — fixed to viewport */}
+        <TouchableOpacity
+          style={w.waFloat}
+          onPress={() => Linking.openURL('https://wa.me/918309067121?text=Namaste%2C%20I%20want%20to%20book%20a%20Pooja')}
+        >
+          <Ionicons name="logo-whatsapp" size={26} color="#fff" />
+          <Text style={w.waFloatText}>Chat</Text>
+        </TouchableOpacity>
+
         <AppAlertHost />
       </AuthProvider>
     </GestureHandlerRootView>
@@ -544,46 +487,32 @@ const w = StyleSheet.create({
 
   // Page content
   pageWrap: {
-    flex: 1, overflow: 'hidden', position: 'relative', alignItems: 'center',
+    flex: 1, position: 'relative',
+    ...(Platform.OS === 'web'
+      ? { overflowY: 'auto', backgroundColor: '#0D0302' } as any
+      : { overflow: 'hidden' }),
   } as any,
   pageBg: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     ...(Platform.OS === 'web' ? {
-      background: 'radial-gradient(ellipse at 50% 0%, #5C1010 0%, #1C0505 55%, #0D0302 100%)',
+      background: 'radial-gradient(ellipse at 50% 40%, #4A0E0E 0%, #1C0505 50%, #0D0302 100%)',
+      minHeight: '100%',
     } as any : { backgroundColor: '#2D0B00' }),
   } as any,
   appColumn: {
     flex: 1, width: '100%', zIndex: 1,
+    ...(Platform.OS === 'web' ? { backgroundColor: 'transparent' } as any : {}),
   } as any,
 
-  // Footer
-  footer: {
-    backgroundColor: DARK, flexShrink: 0,
-    ...(Platform.OS === 'web' ? { boxShadow: 'inset 0 2px 0 rgba(212,175,55,0.12)' } as any : {}),
-  },
-  footerRow: {
-    flexDirection: 'row', gap: 32,
-    paddingHorizontal: 32, paddingTop: 24, paddingBottom: 20,
-    flexWrap: 'wrap',
-    ...(Platform.OS === 'web' ? { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any : {}),
-  },
-  footerBrand: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 180 },
-  footerLogo: { width: 36, height: 36, borderRadius: 8 },
-  footerTelugu: { color: GOLD, fontSize: 15, fontWeight: '800' },
-  footerTagline: { color: 'rgba(253,251,247,0.38)', fontSize: 11, marginTop: 2 },
-  footerLinks: { gap: 8, minWidth: 130 },
-  footerHead: { color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 4 },
-  footerLink: { color: 'rgba(253,251,247,0.55)', fontSize: 13, paddingVertical: 1 },
-  footerItem: { color: 'rgba(253,251,247,0.35)', fontSize: 13, paddingVertical: 1 },
-  storeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  storeTxt: { color: 'rgba(253,251,247,0.55)', fontSize: 13 },
-  footerBottom: {
-    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.1)',
-    paddingVertical: 12, paddingHorizontal: 32,
-    flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6,
-    ...(Platform.OS === 'web' ? { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any : {}),
-  },
-  copyright: { color: 'rgba(212,175,55,0.22)', fontSize: 11 },
-  devTxt: { color: 'rgba(253,251,247,0.28)', fontSize: 11 } as any,
-  devName: { color: 'rgba(212,175,55,0.5)', fontWeight: '700' },
+  // Floating WhatsApp button — fixed to viewport so it stays visible while scrolling
+  waFloat: {
+    bottom: 28, right: 28, zIndex: 9999,
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    backgroundColor: '#25D366', paddingHorizontal: 18, paddingVertical: 12,
+    borderRadius: 999,
+    ...(Platform.OS === 'web'
+      ? { position: 'fixed', boxShadow: '0 4px 20px rgba(37,211,102,0.45)', cursor: 'pointer' }
+      : { position: 'absolute' }) as any,
+  } as any,
+  waFloatText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
