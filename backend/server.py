@@ -2501,6 +2501,33 @@ async def set_hotel_manager_role(user_id: str, user: dict = Depends(require_supe
     await sql_execute("UPDATE dbo.users SET role='hotel_manager' WHERE id=?", (user_id,))
     return {"ok": True}
 
+class HotelManagerCreateIn(BaseModel):
+    full_name: str
+    mobile: str
+    email: str
+    password: str
+
+@api.post("/admin/create-hotel-manager")
+async def create_hotel_manager(data: HotelManagerCreateIn, user: dict = Depends(require_admin)):
+    mobile = re.sub(r"\D", "", data.mobile.strip())
+    if mobile.startswith("91") and len(mobile) > 10:
+        mobile = mobile[2:]
+    if len(mobile) != 10:
+        raise HTTPException(400, "Mobile must be 10 digits")
+    email = data.email.strip().lower()
+    if await sql_fetch_one("SELECT id FROM dbo.users WHERE mobile=?", (mobile,)):
+        raise HTTPException(400, "Mobile already registered")
+    if await sql_fetch_one("SELECT id FROM dbo.users WHERE email=?", (email,)):
+        raise HTTPException(400, "Email already registered")
+    uid = str(uuid.uuid4())
+    await sql_execute(
+        "INSERT INTO dbo.users (id, full_name, mobile, email, address, city, pincode, "
+        "password_hash, role, is_active, verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,1,1,?)",
+        (uid, data.full_name.strip(), mobile, email, "", "", "",
+         hash_password(data.password), "hotel_manager", now_naive())
+    )
+    return {"id": uid, "ok": True, "full_name": data.full_name, "mobile": mobile}
+
 # ----------------------------- Wire up ---------------------------------------
 app.include_router(api)
 
