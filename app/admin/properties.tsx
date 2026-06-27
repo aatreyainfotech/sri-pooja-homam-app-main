@@ -153,8 +153,10 @@ export default function AdminProperties() {
   const [properties, setProperties] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [showAddManager, setShowAddManager] = useState(false);
   const [temples, setTemples] = useState<any[]>([]);
   const [propImages, setPropImages] = useState<string[]>([]);
+  const [managerForm, setManagerForm] = useState({ full_name: '', mobile: '', email: '', password: '' });
   const [form, setForm] = useState({
     name: '', type: 'hotel', temple_id: '', address: '', city: '',
     phone: '', description: '', amenities: '', upi_id: '',
@@ -163,12 +165,13 @@ export default function AdminProperties() {
   });
 
   const load = useCallback(async () => {
+    // Split calls so temple loading doesn't depend on properties success
     try {
-      const [pRes, tRes] = await Promise.all([
-        api.get('/admin/properties'),
-        api.get('/temples'),
-      ]);
+      const pRes = await api.get('/admin/properties');
       setProperties(pRes.data);
+    } catch {}
+    try {
+      const tRes = await api.get('/temples');
       setTemples(tRes.data);
     } catch {}
   }, []);
@@ -204,6 +207,22 @@ export default function AdminProperties() {
       Alert.alert('Created', 'Property created. Go to property detail to add room categories, then activate it.');
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.detail || 'Failed to create property');
+    }
+  };
+
+  const handleCreateManager = async () => {
+    const { full_name, mobile, email, password } = managerForm;
+    if (!full_name.trim() || !mobile.trim() || !email.trim() || !password.trim()) {
+      Alert.alert('Missing Fields', 'All fields are required.');
+      return;
+    }
+    try {
+      await api.post('/admin/create-hotel-manager', { full_name, mobile, email, password });
+      setShowAddManager(false);
+      setManagerForm({ full_name: '', mobile: '', email: '', password: '' });
+      Alert.alert('Hotel Manager Created', `Account created for ${full_name}.\nMobile: ${mobile}\nThey can now log in and be assigned to a property.`);
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.detail || 'Failed to create hotel manager account');
     }
   };
 
@@ -314,11 +333,16 @@ export default function AdminProperties() {
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Accommodation</Text>
-          <TouchableOpacity style={styles.addBtn} onPress={() => setShowCreate(true)}>
-            <Ionicons name="add" size={22} color="#fff" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddManager(true)}>
+              <Ionicons name="person-add-outline" size={19} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addBtn} onPress={() => setShowCreate(true)}>
+              <Ionicons name="add" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <Text style={styles.headerSub}>{properties.length} properties registered</Text>
+        <Text style={styles.headerSub}>{properties.length} properties · tap 👤+ to add hotel manager</Text>
       </LinearGradient>
 
       <FlatList
@@ -456,6 +480,68 @@ export default function AdminProperties() {
           </View>
         </View>
       </Modal>
+
+      {/* ── Add Hotel Manager Modal ── */}
+      <Modal visible={showAddManager} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Add Hotel Manager</Text>
+                <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 2 }}>
+                  Creates a login account with hotel_manager role
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                setShowAddManager(false);
+                setManagerForm({ full_name: '', mobile: '', email: '', password: '' });
+              }}>
+                <Ionicons name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <FormInput
+                label="Full Name *"
+                value={managerForm.full_name}
+                onChangeText={(v) => setManagerForm({ ...managerForm, full_name: v })}
+                placeholder="Ramesh Kumar"
+              />
+              <FormInput
+                label="Mobile Number *"
+                value={managerForm.mobile}
+                onChangeText={(v) => setManagerForm({ ...managerForm, mobile: v })}
+                placeholder="9876543210"
+                keyboardType="phone-pad"
+              />
+              <FormInput
+                label="Email *"
+                value={managerForm.email}
+                onChangeText={(v) => setManagerForm({ ...managerForm, email: v })}
+                placeholder="manager@hotel.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <FormInput
+                label="Password *"
+                value={managerForm.password}
+                onChangeText={(v) => setManagerForm({ ...managerForm, password: v })}
+                placeholder="Set a strong password"
+                secureTextEntry
+              />
+              <View style={styles.managerInfoBox}>
+                <Ionicons name="information-circle-outline" size={18} color={BLUE} />
+                <Text style={styles.managerInfoText}>
+                  After creating the account, go to a Property → Assign Manager to link them to a property.
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.submitBtn} onPress={handleCreateManager}>
+                <Ionicons name="person-add-outline" size={20} color="#fff" />
+                <Text style={styles.submitText}>Create Hotel Manager Account</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -582,4 +668,10 @@ const styles = StyleSheet.create({
 
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, marginTop: 8, marginBottom: 20 },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+
+  managerInfoBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: '#E3F2FD', borderRadius: 12, padding: 14, marginBottom: 16,
+  },
+  managerInfoText: { flex: 1, fontSize: 13, color: '#0277BD', lineHeight: 20 },
 });
