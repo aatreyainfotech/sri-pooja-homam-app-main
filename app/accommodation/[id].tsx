@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
-  TextInput, Modal, Platform, Linking,
+  TextInput, type TextInputProps, Modal, Platform, Linking,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,8 @@ export default function PropertyDetailPage() {
     guest_name: '', guest_mobile: '', special_requests: '',
   });
   const [booking, setBooking] = useState<any>(null);
+  const [utrInput, setUtrInput] = useState('');
+  const [payMethod, setPayMethod] = useState<'razorpay' | 'upi'>('razorpay');
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -89,10 +91,9 @@ export default function PropertyDetailPage() {
     }
   };
 
-  const handlePayment = () => {
+  const handleRazorpayPayment = () => {
     if (!booking) return;
     if (IS_WEB && booking.razorpay_order_id && booking.razorpay_key_id) {
-      // Razorpay web checkout
       const options = {
         key: booking.razorpay_key_id,
         amount: Math.round(booking.amount * 100),
@@ -109,9 +110,9 @@ export default function PropertyDetailPage() {
               razorpay_signature: response.razorpay_signature,
             });
             setBooking(null);
-            Alert.alert('Booking Confirmed! 🎉', `Your stay at ${prop?.name} is confirmed. We'll WhatsApp you the details.`);
+            Alert.alert('Booking Confirmed!', `Your stay at ${prop?.name} is confirmed. We'll WhatsApp you the details.`);
           } catch {
-            Alert.alert('Verification Error', 'Payment done but could not confirm. Please contact support.');
+            Alert.alert('Verification Error', 'Payment done but could not confirm. Contact support.');
           }
         },
         prefill: { name: bookForm.guest_name, contact: bookForm.guest_mobile },
@@ -125,7 +126,6 @@ export default function PropertyDetailPage() {
         Alert.alert('Payment Gateway', 'Opening payment gateway…');
       }
     } else {
-      // Fallback: WhatsApp payment intent
       const msg = encodeURIComponent(
         `Hi, I want to pay ₹${booking.amount} for booking at ${prop?.name}.\n` +
         `Booking ID: ${booking.id}\nDates: ${bookForm.check_in} to ${bookForm.check_out}`
@@ -134,14 +134,25 @@ export default function PropertyDetailPage() {
     }
   };
 
+  const handleUpiPayment = async () => {
+    if (!booking) return;
+    const utr = utrInput.trim();
+    if (!utr) { Alert.alert('Enter UTR', 'Please enter your UPI Transaction Reference (UTR) number.'); return; }
+    try {
+      await api.post('/accommodation-bookings/upi-payment', { booking_id: booking.id, utr_number: utr });
+      setBooking(null);
+      setUtrInput('');
+      Alert.alert('Payment Submitted!', 'Your UPI payment details have been submitted. The hotel manager will verify and confirm your booking shortly.');
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.detail || 'Failed to submit payment. Try again.');
+    }
+  };
+
   if (!prop) return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.loading}><Text style={styles.loadingText}>Loading…</Text></View>
     </SafeAreaView>
   );
-
-  const nights = calcNights();
-  const amount = calcAmount();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -292,34 +303,93 @@ export default function PropertyDetailPage() {
               <LinearGradient colors={['#E3F2FD', '#fff']} style={styles.paymentHeader}>
                 <Ionicons name="checkmark-circle" size={40} color="#2E7D32" />
                 <Text style={styles.paymentTitle}>Booking Created!</Text>
-                <Text style={styles.paymentSub}>Complete payment to confirm your stay</Text>
+                <Text style={styles.paymentSub}>Choose how to pay</Text>
               </LinearGradient>
-              <View style={{ padding: 20 }}>
+              <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
                 <View style={styles.priceSummary}>
                   <View style={styles.priceLine}>
                     <Text style={styles.priceLabel}>Booking ID</Text>
                     <Text style={styles.priceValue}>{booking.id?.slice(0, 8).toUpperCase()}</Text>
                   </View>
                   <View style={styles.priceLine}>
-                    <Text style={styles.priceLabel}>Nights</Text>
-                    <Text style={styles.priceValue}>{booking.nights}</Text>
+                    <Text style={styles.priceLabel}>Property</Text>
+                    <Text style={[styles.priceValue, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>{prop?.name}</Text>
                   </View>
                   <View style={[styles.priceLine, styles.priceTotal]}>
                     <Text style={styles.priceTotalLabel}>Amount to Pay</Text>
                     <Text style={styles.priceTotalValue}>₹{parseFloat(booking.amount || 0).toFixed(0)}</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.bookBtn} onPress={handlePayment}>
-                  <Ionicons name="card-outline" size={18} color="#fff" />
-                  <Text style={styles.bookBtnText}>Pay Now</Text>
-                </TouchableOpacity>
+
+                {/* Payment Method Selector */}
+                <Text style={styles.payMethodLabel}>Payment Method</Text>
+                <View style={styles.payMethodRow}>
+                  <TouchableOpacity
+                    style={[styles.payMethodBtn, payMethod === 'razorpay' && styles.payMethodBtnActive]}
+                    onPress={() => setPayMethod('razorpay')}
+                  >
+                    <Ionicons name="card-outline" size={20} color={payMethod === 'razorpay' ? '#fff' : BLUE} />
+                    <Text style={[styles.payMethodText, payMethod === 'razorpay' && styles.payMethodTextActive]}>Card / Net Banking</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.payMethodBtn, payMethod === 'upi' && styles.payMethodBtnActive]}
+                    onPress={() => setPayMethod('upi')}
+                  >
+                    <Ionicons name="phone-portrait-outline" size={20} color={payMethod === 'upi' ? '#fff' : '#5C6BC0'} />
+                    <Text style={[styles.payMethodText, payMethod === 'upi' && styles.payMethodTextActive]}>UPI</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {payMethod === 'razorpay' ? (
+                  <TouchableOpacity style={styles.bookBtn} onPress={handleRazorpayPayment}>
+                    <Ionicons name="card-outline" size={18} color="#fff" />
+                    <Text style={styles.bookBtnText}>Pay ₹{parseFloat(booking.amount || 0).toFixed(0)} via Card / Net Banking</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View>
+                    {/* UPI ID display */}
+                    {prop?.upi_id ? (
+                      <View style={styles.upiBox}>
+                        <Ionicons name="phone-portrait-outline" size={22} color="#5C6BC0" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.upiLabel}>Pay to UPI ID</Text>
+                          <Text style={styles.upiId} selectable>{prop.upi_id}</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={[styles.upiBox, { backgroundColor: '#FFF8E7' }]}>
+                        <Ionicons name="information-circle-outline" size={22} color="#E67E22" />
+                        <Text style={{ fontSize: 13, color: '#E67E22', flex: 1 }}>Contact property for UPI details: {prop?.phone}</Text>
+                      </View>
+                    )}
+                    <View style={{ marginBottom: 4 }}>
+                      <Text style={styles.inputLabel}>Enter UTR / Transaction Reference *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. 316812345678"
+                        placeholderTextColor={theme.colors.textMuted}
+                        value={utrInput}
+                        onChangeText={setUtrInput}
+                        autoCapitalize="characters"
+                      />
+                      <Text style={{ fontSize: 11, color: theme.colors.textMuted, marginTop: 4 }}>
+                        After paying via UPI app, enter the 12-digit UTR from your payment confirmation
+                      </Text>
+                    </View>
+                    <TouchableOpacity style={[styles.bookBtn, { backgroundColor: '#5C6BC0' }]} onPress={handleUpiPayment}>
+                      <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                      <Text style={styles.bookBtnText}>Submit UPI Payment</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 <TouchableOpacity style={styles.laterBtn} onPress={() => {
                   setBooking(null);
                   router.push('/(tabs)' as any);
                 }}>
-                  <Text style={styles.laterBtnText}>Pay Later (via WhatsApp)</Text>
+                  <Text style={styles.laterBtnText}>Pay Later (contact via WhatsApp)</Text>
                 </TouchableOpacity>
-              </View>
+              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -340,13 +410,14 @@ function InfoItem({ icon, label, value }: any) {
   );
 }
 
-function FormInput({ label, ...props }: any) {
+function FormInput({ label, multiline, style, ...props }: TextInputProps & { label: string }) {
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={styles.inputLabel}>{label}</Text>
       <TextInput
-        style={[styles.input, props.multiline && { height: 72, textAlignVertical: 'top' }]}
+        style={[styles.input, multiline && { height: 72, textAlignVertical: 'top' }, style as any]}
         placeholderTextColor={theme.colors.textMuted}
+        multiline={multiline}
         {...props}
       />
     </View>
@@ -432,4 +503,21 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: theme.colors.text, backgroundColor: '#FAFAFA',
   },
+
+  payMethodLabel: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
+  payMethodRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  payMethodBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingVertical: 12, backgroundColor: '#FAFAFA',
+  },
+  payMethodBtnActive: { backgroundColor: BLUE, borderColor: BLUE },
+  payMethodText: { fontSize: 13, fontWeight: '700', color: theme.colors.textMuted },
+  payMethodTextActive: { color: '#fff' },
+
+  upiBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#EDE7F6', borderRadius: 12, padding: 14, marginBottom: 14,
+  },
+  upiLabel: { fontSize: 10, fontWeight: '800', color: '#5C6BC0', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 },
+  upiId: { fontSize: 16, fontWeight: '800', color: '#311B92', letterSpacing: 0.5 },
 });
