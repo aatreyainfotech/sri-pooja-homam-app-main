@@ -132,6 +132,19 @@ const gf = StyleSheet.create({
   input: { fontSize: 15, color: '#1A1A1A', fontWeight: '500', padding: 0 },
 });
 
+function CatPhoto({ uri }: { uri: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const s = { width: 88, height: 88, borderRadius: 12 } as const;
+  if (!uri || failed) {
+    return (
+      <LinearGradient colors={['#E3F2FD', '#B3E5FC']} style={[s, { alignItems: 'center', justifyContent: 'center' } as any]}>
+        <Ionicons name="bed-outline" size={28} color={BLUE} />
+      </LinearGradient>
+    );
+  }
+  return <Image source={{ uri }} style={s} resizeMode="cover" onError={() => setFailed(true)} />;
+}
+
 export default function PropertyDetailPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -150,6 +163,7 @@ export default function PropertyDetailPage() {
   const [payMethod, setPayMethod] = useState<'razorpay' | 'upi'>('razorpay');
   const [payError, setPayError] = useState('');
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [photoErrors, setPhotoErrors] = useState<Set<number>>(new Set());
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -264,9 +278,14 @@ export default function PropertyDetailPage() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         {/* ── Hero / Photo Gallery ─────────────────────────────── */}
         <View style={styles.hero}>
-          {photos.length > 0 ? (
+          {photos.length > 0 && !photoErrors.has(photoIdx) ? (
             <View style={styles.photoGallery}>
-              <Image source={{ uri: photos[photoIdx] }} style={styles.heroPhoto} resizeMode="cover" />
+              <Image
+                source={{ uri: photos[photoIdx] }}
+                style={styles.heroPhoto}
+                resizeMode="cover"
+                onError={() => setPhotoErrors((prev) => new Set([...prev, photoIdx]))}
+              />
               {photos.length > 1 && (
                 <>
                   <TouchableOpacity style={[styles.photoNav, styles.photoNavLeft]} onPress={() => setPhotoIdx((i) => (i - 1 + photos.length) % photos.length)}>
@@ -375,13 +394,7 @@ export default function PropertyDetailPage() {
                 return (
                   <View key={cat.id} style={[styles.catCard, isSelected && styles.catCardSelected]}>
                     <View style={styles.catTop}>
-                      {catPhoto ? (
-                        <Image source={{ uri: catPhoto }} style={styles.catPhoto} resizeMode="cover" />
-                      ) : (
-                        <LinearGradient colors={['#E3F2FD', '#B3E5FC']} style={[styles.catPhoto, { alignItems: 'center', justifyContent: 'center' }]}>
-                          <Ionicons name="bed-outline" size={28} color={BLUE} />
-                        </LinearGradient>
-                      )}
+                      <CatPhoto uri={catPhoto} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.catName}>{cat.name}</Text>
                         <View style={styles.catMetaRow}>
