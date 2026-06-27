@@ -157,6 +157,9 @@ export default function AdminProperties() {
   const [temples, setTemples] = useState<any[]>([]);
   const [propImages, setPropImages] = useState<string[]>([]);
   const [managerForm, setManagerForm] = useState({ full_name: '', mobile: '', email: '', password: '' });
+  const [managerError, setManagerError] = useState('');
+  const [managerSuccess, setManagerSuccess] = useState('');
+  const [managerLoading, setManagerLoading] = useState(false);
   const [form, setForm] = useState({
     name: '', type: 'hotel', temple_id: '', address: '', city: '',
     phone: '', description: '', amenities: '', upi_id: '',
@@ -212,17 +215,21 @@ export default function AdminProperties() {
 
   const handleCreateManager = async () => {
     const { full_name, mobile, email, password } = managerForm;
+    setManagerError('');
+    setManagerSuccess('');
     if (!full_name.trim() || !mobile.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Missing Fields', 'All fields are required.');
+      setManagerError('All fields are required.');
       return;
     }
+    setManagerLoading(true);
     try {
       await api.post('/admin/create-hotel-manager', { full_name, mobile, email, password });
-      setShowAddManager(false);
+      setManagerSuccess(`Account created for ${full_name} (${mobile}). They can now log in.`);
       setManagerForm({ full_name: '', mobile: '', email: '', password: '' });
-      Alert.alert('Hotel Manager Created', `Account created for ${full_name}.\nMobile: ${mobile}\nThey can now log in and be assigned to a property.`);
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail || 'Failed to create hotel manager account');
+      setManagerError(e?.response?.data?.detail || 'Failed to create hotel manager account');
+    } finally {
+      setManagerLoading(false);
     }
   };
 
@@ -495,11 +502,24 @@ export default function AdminProperties() {
               <TouchableOpacity onPress={() => {
                 setShowAddManager(false);
                 setManagerForm({ full_name: '', mobile: '', email: '', password: '' });
+                setManagerError(''); setManagerSuccess('');
               }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {!!managerError && (
+                <View style={{ backgroundColor: '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                  <Ionicons name="alert-circle-outline" size={18} color="#C62828" />
+                  <Text style={{ color: '#C62828', fontSize: 13, flex: 1 }}>{managerError}</Text>
+                </View>
+              )}
+              {!!managerSuccess && (
+                <View style={{ backgroundColor: '#E8F5E9', borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color="#2E7D32" />
+                  <Text style={{ color: '#2E7D32', fontSize: 13, flex: 1 }}>{managerSuccess}</Text>
+                </View>
+              )}
               <FormInput
                 label="Full Name *"
                 value={managerForm.full_name}
@@ -534,9 +554,9 @@ export default function AdminProperties() {
                   After creating the account, go to a Property → Assign Manager to link them to a property.
                 </Text>
               </View>
-              <TouchableOpacity style={styles.submitBtn} onPress={handleCreateManager}>
+              <TouchableOpacity style={[styles.submitBtn, managerLoading && { opacity: 0.6 }]} onPress={handleCreateManager} disabled={managerLoading}>
                 <Ionicons name="person-add-outline" size={20} color="#fff" />
-                <Text style={styles.submitText}>Create Hotel Manager Account</Text>
+                <Text style={styles.submitText}>{managerLoading ? 'Creating...' : 'Create Hotel Manager Account'}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
