@@ -553,9 +553,11 @@ async def _startup_init():
                total_rooms INT NULL DEFAULT 0,
                is_active BIT NOT NULL DEFAULT 0,
                manager_id NVARCHAR(36) NULL,
+               upi_id NVARCHAR(100) NULL,
                created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
                CONSTRAINT PK_accommodation_properties PRIMARY KEY (id)
            )""",
+        "IF COL_LENGTH('dbo.accommodation_properties','upi_id') IS NULL ALTER TABLE dbo.accommodation_properties ADD upi_id NVARCHAR(100) NULL",
         """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'room_categories' AND schema_id = SCHEMA_ID('dbo'))
            CREATE TABLE dbo.room_categories (
                id NVARCHAR(36) NOT NULL,
@@ -2037,6 +2039,7 @@ class PropertyIn(BaseModel):
     check_in_time: Optional[str] = "12:00"
     check_out_time: Optional[str] = "11:00"
     total_rooms: int = 0
+    upi_id: Optional[str] = ""
 
 class RoomCategoryIn(BaseModel):
     property_id: str
@@ -2071,13 +2074,17 @@ class AccomPaymentConfirmIn(BaseModel):
     razorpay_order_id: Optional[str] = None
     razorpay_signature: Optional[str] = None
 
+class UpiBookingPaymentIn(BaseModel):
+    booking_id: str
+    utr_number: str
+
 class PropertyManagerIn(BaseModel):
     manager_id: str
 
 _PROP_COLS = (
     "p.id, p.temple_id, p.name, p.type, p.address, p.city, p.phone, "
     "p.description, p.images, p.amenities, p.check_in_time, p.check_out_time, "
-    "p.rating, p.total_rooms, p.is_active, p.manager_id, p.created_at, "
+    "p.rating, p.total_rooms, p.is_active, p.manager_id, p.upi_id, p.created_at, "
     "t.name AS temple_name, t.location AS temple_location"
 )
 
@@ -2133,12 +2140,12 @@ async def create_property(data: PropertyIn, user: dict = Depends(require_admin))
     await sql_execute(
         "INSERT INTO dbo.accommodation_properties "
         "(id, temple_id, name, type, address, city, phone, description, images, amenities, "
-        "check_in_time, check_out_time, total_rooms, is_active, created_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,?)",
+        "check_in_time, check_out_time, total_rooms, is_active, upi_id, created_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?)",
         (pid, data.temple_id, data.name, data.type, data.address, data.city or "",
          data.phone or "", data.description, data.images or "", data.amenities or "",
          data.check_in_time or "12:00", data.check_out_time or "11:00",
-         data.total_rooms, now_naive())
+         data.total_rooms, data.upi_id or "", now_naive())
     )
     return {"id": pid, "ok": True}
 
@@ -2150,10 +2157,11 @@ async def update_property(property_id: str, data: PropertyIn, user: dict = Depen
             raise HTTPException(403, "You can only manage your assigned property")
     await sql_execute(
         "UPDATE dbo.accommodation_properties SET name=?, type=?, address=?, city=?, phone=?, "
-        "description=?, images=?, amenities=?, check_in_time=?, check_out_time=?, total_rooms=? WHERE id=?",
+        "description=?, images=?, amenities=?, check_in_time=?, check_out_time=?, total_rooms=?, upi_id=? WHERE id=?",
         (data.name, data.type, data.address, data.city or "", data.phone or "",
          data.description, data.images or "", data.amenities or "",
-         data.check_in_time or "12:00", data.check_out_time or "11:00", data.total_rooms, property_id)
+         data.check_in_time or "12:00", data.check_out_time or "11:00", data.total_rooms,
+         data.upi_id or "", property_id)
     )
     return {"ok": True}
 
@@ -2359,6 +2367,24 @@ async def confirm_accom_payment(data: AccomPaymentConfirmIn, user: dict = Depend
         cur += _td2(days=1)
 
     return {"ok": True, "status": "confirmed"}
+
+@api.post("/accommodation-bookings/upi-payment")
+async def upi_accom_payment(data: UpiBookingPaymentIn, user: dict = Depends(get_current_user)):
+    booking = await sql_fetch_one(
+        "SELECT * FROM dbo.accommodation_bookings WHERE id=? AND user_id=?",
+        (data.booking_id, user["id"])
+    )
+    if not booking:
+        raise HTTPException(404, "Booking not found")
+    utr = data.utr_number.strip().upper()
+    if not utr:
+        raise HTTPException(400, "UTR number required")
+    await sql_execute(
+        "UPDATE dbo.accommodation_bookings SET payment_status='upi_submitted', status='pending', "
+        "razorpay_payment_id=? WHERE id=?",
+        (f"UTR:{utr}", data.booking_id)
+    )
+    return {"ok": True, "status": "upi_submitted"}
 
 @api.get("/accommodation-bookings/mine")
 async def my_accommodation_bookings(user: dict = Depends(get_current_user)):
