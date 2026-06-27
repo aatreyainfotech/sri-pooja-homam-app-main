@@ -277,6 +277,11 @@ async def require_poojari_or_admin(user: dict = Depends(get_current_user)) -> di
         raise HTTPException(status_code=403, detail="Admin or Poojari access required")
     return user
 
+async def require_hotel_manager_or_admin(user: dict = Depends(get_current_user)) -> dict:
+    if user["role"] not in ("super_admin", "admin", "hotel_manager"):
+        raise HTTPException(status_code=403, detail="Hotel manager or admin access required")
+    return user
+
 _optional_bearer = HTTPBearer(auto_error=False)
 
 def _is_privileged(creds: Optional[HTTPAuthorizationCredentials]) -> bool:
@@ -528,6 +533,79 @@ async def _startup_init():
                created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
                paid_at DATETIME2 NULL,
                CONSTRAINT PK_wallet_payouts PRIMARY KEY (id)
+           )""",
+        # ─── Accommodation system ───────────────────────────────────────────
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'accommodation_properties' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.accommodation_properties (
+               id NVARCHAR(36) NOT NULL,
+               temple_id NVARCHAR(36) NULL,
+               name NVARCHAR(200) NOT NULL,
+               type NVARCHAR(50) NOT NULL DEFAULT 'hotel',
+               address NVARCHAR(500) NULL,
+               city NVARCHAR(100) NULL,
+               phone NVARCHAR(30) NULL,
+               description NVARCHAR(MAX) NULL,
+               images NVARCHAR(MAX) NULL,
+               amenities NVARCHAR(MAX) NULL,
+               check_in_time NVARCHAR(20) NULL DEFAULT '12:00',
+               check_out_time NVARCHAR(20) NULL DEFAULT '11:00',
+               rating FLOAT NULL DEFAULT 0,
+               total_rooms INT NULL DEFAULT 0,
+               is_active BIT NOT NULL DEFAULT 0,
+               manager_id NVARCHAR(36) NULL,
+               created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+               CONSTRAINT PK_accommodation_properties PRIMARY KEY (id)
+           )""",
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'room_categories' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.room_categories (
+               id NVARCHAR(36) NOT NULL,
+               property_id NVARCHAR(36) NOT NULL,
+               name NVARCHAR(100) NOT NULL,
+               description NVARCHAR(500) NULL,
+               price_per_night DECIMAL(10,2) NOT NULL DEFAULT 0,
+               capacity INT NOT NULL DEFAULT 2,
+               total_rooms INT NOT NULL DEFAULT 10,
+               amenities NVARCHAR(MAX) NULL,
+               images NVARCHAR(MAX) NULL,
+               is_active BIT NOT NULL DEFAULT 1,
+               created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+               CONSTRAINT PK_room_categories PRIMARY KEY (id)
+           )""",
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'room_quotas' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.room_quotas (
+               id NVARCHAR(36) NOT NULL,
+               room_category_id NVARCHAR(36) NOT NULL,
+               quota_date DATE NOT NULL,
+               total_quota INT NOT NULL DEFAULT 0,
+               booked INT NOT NULL DEFAULT 0,
+               CONSTRAINT PK_room_quotas PRIMARY KEY (id),
+               CONSTRAINT UQ_room_quotas UNIQUE (room_category_id, quota_date)
+           )""",
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'accommodation_bookings' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.accommodation_bookings (
+               id NVARCHAR(36) NOT NULL,
+               user_id NVARCHAR(36) NOT NULL,
+               property_id NVARCHAR(36) NOT NULL,
+               room_category_id NVARCHAR(36) NOT NULL,
+               check_in DATE NOT NULL,
+               check_out DATE NOT NULL,
+               guests INT NOT NULL DEFAULT 1,
+               rooms INT NOT NULL DEFAULT 1,
+               total_nights INT NOT NULL DEFAULT 1,
+               amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+               status NVARCHAR(20) NOT NULL DEFAULT 'pending_payment',
+               payment_status NVARCHAR(20) NOT NULL DEFAULT 'pending',
+               razorpay_order_id NVARCHAR(200) NULL,
+               razorpay_payment_id NVARCHAR(200) NULL,
+               razorpay_signature NVARCHAR(500) NULL,
+               pooja_booking_id NVARCHAR(36) NULL,
+               guest_name NVARCHAR(200) NOT NULL,
+               guest_mobile NVARCHAR(20) NOT NULL,
+               special_requests NVARCHAR(500) NULL,
+               property_name NVARCHAR(200) NULL,
+               room_category_name NVARCHAR(100) NULL,
+               created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+               CONSTRAINT PK_accommodation_bookings PRIMARY KEY (id)
            )""",
     ]
     for stmt in alters:
@@ -1940,6 +2018,443 @@ async def set_notif_prefs(data: NotifPrefsIn, user: dict = Depends(get_current_u
         (1 if data.notify_pooja else 0, 1 if data.notify_video else 0,
          1 if data.notify_live else 0, 1 if data.notify_booking else 0, user["id"])
     )
+    return {"ok": True}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ACCOMMODATION SYSTEM — Models + Routes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class PropertyIn(BaseModel):
+    temple_id: Optional[str] = None
+    name: str
+    type: str = "hotel"
+    address: str
+    city: Optional[str] = ""
+    phone: Optional[str] = ""
+    description: str
+    images: Optional[str] = ""
+    amenities: Optional[str] = ""
+    check_in_time: Optional[str] = "12:00"
+    check_out_time: Optional[str] = "11:00"
+    total_rooms: int = 0
+
+class RoomCategoryIn(BaseModel):
+    property_id: str
+    name: str
+    description: Optional[str] = ""
+    price_per_night: float
+    capacity: int = 2
+    total_rooms: int = 10
+    amenities: Optional[str] = ""
+    images: Optional[str] = ""
+
+class QuotaSetIn(BaseModel):
+    room_category_id: str
+    dates: list
+    quota: int
+
+class AccommodationBookingIn(BaseModel):
+    property_id: str
+    room_category_id: str
+    check_in: str
+    check_out: str
+    guests: int = 1
+    rooms: int = 1
+    guest_name: str
+    guest_mobile: str
+    special_requests: Optional[str] = ""
+    pooja_booking_id: Optional[str] = None
+
+class AccomPaymentConfirmIn(BaseModel):
+    booking_id: str
+    razorpay_payment_id: Optional[str] = None
+    razorpay_order_id: Optional[str] = None
+    razorpay_signature: Optional[str] = None
+
+class PropertyManagerIn(BaseModel):
+    manager_id: str
+
+_PROP_COLS = (
+    "p.id, p.temple_id, p.name, p.type, p.address, p.city, p.phone, "
+    "p.description, p.images, p.amenities, p.check_in_time, p.check_out_time, "
+    "p.rating, p.total_rooms, p.is_active, p.manager_id, p.created_at, "
+    "t.name AS temple_name, t.location AS temple_location"
+)
+
+_ABOOKING_COLS = (
+    "ab.id, ab.user_id, ab.property_id, ab.room_category_id, ab.check_in, ab.check_out, "
+    "ab.guests, ab.rooms, ab.total_nights, ab.amount, ab.status, ab.payment_status, "
+    "ab.razorpay_order_id, ab.guest_name, ab.guest_mobile, ab.special_requests, "
+    "ab.property_name, ab.room_category_name, ab.pooja_booking_id, ab.created_at, "
+    "u.full_name AS user_full_name, u.mobile AS user_mobile_no"
+)
+
+# ── Properties (public + admin) ───────────────────────────────────────────────
+
+@api.get("/properties")
+async def list_properties(temple_id: Optional[str] = None, type: Optional[str] = None, active_only: bool = False):
+    wheres = ["1=1"]
+    params: list = []
+    if temple_id:
+        wheres.append("p.temple_id = ?")
+        params.append(temple_id)
+    if type:
+        wheres.append("p.type = ?")
+        params.append(type)
+    if active_only:
+        wheres.append("p.is_active = 1")
+    rows = await sql_fetch_all(
+        f"SELECT {_PROP_COLS} FROM dbo.accommodation_properties p "
+        f"LEFT JOIN dbo.temples t ON t.id = p.temple_id "
+        f"WHERE {' AND '.join(wheres)} ORDER BY p.created_at DESC",
+        params if params else None
+    )
+    return rows
+
+@api.get("/properties/{property_id}")
+async def get_property(property_id: str):
+    prop = await sql_fetch_one(
+        f"SELECT {_PROP_COLS} FROM dbo.accommodation_properties p "
+        f"LEFT JOIN dbo.temples t ON t.id = p.temple_id WHERE p.id = ?",
+        (property_id,)
+    )
+    if not prop:
+        raise HTTPException(404, "Property not found")
+    cats = await sql_fetch_all(
+        "SELECT * FROM dbo.room_categories WHERE property_id = ? AND is_active = 1 ORDER BY price_per_night",
+        (property_id,)
+    )
+    prop["room_categories"] = cats
+    return prop
+
+@api.post("/properties")
+async def create_property(data: PropertyIn, user: dict = Depends(require_admin)):
+    pid = str(uuid.uuid4())
+    await sql_execute(
+        "INSERT INTO dbo.accommodation_properties "
+        "(id, temple_id, name, type, address, city, phone, description, images, amenities, "
+        "check_in_time, check_out_time, total_rooms, is_active, created_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,?)",
+        (pid, data.temple_id, data.name, data.type, data.address, data.city or "",
+         data.phone or "", data.description, data.images or "", data.amenities or "",
+         data.check_in_time or "12:00", data.check_out_time or "11:00",
+         data.total_rooms, now_naive())
+    )
+    return {"id": pid, "ok": True}
+
+@api.put("/properties/{property_id}")
+async def update_property(property_id: str, data: PropertyIn, user: dict = Depends(require_hotel_manager_or_admin)):
+    if user["role"] == "hotel_manager":
+        prop = await sql_fetch_one("SELECT manager_id FROM dbo.accommodation_properties WHERE id = ?", (property_id,))
+        if not prop or prop.get("manager_id") != user["id"]:
+            raise HTTPException(403, "You can only manage your assigned property")
+    await sql_execute(
+        "UPDATE dbo.accommodation_properties SET name=?, type=?, address=?, city=?, phone=?, "
+        "description=?, images=?, amenities=?, check_in_time=?, check_out_time=?, total_rooms=? WHERE id=?",
+        (data.name, data.type, data.address, data.city or "", data.phone or "",
+         data.description, data.images or "", data.amenities or "",
+         data.check_in_time or "12:00", data.check_out_time or "11:00", data.total_rooms, property_id)
+    )
+    return {"ok": True}
+
+@api.put("/properties/{property_id}/activate")
+async def activate_property(property_id: str, body: dict, user: dict = Depends(require_super_admin)):
+    is_active = 1 if body.get("is_active") else 0
+    await sql_execute("UPDATE dbo.accommodation_properties SET is_active=? WHERE id=?", (is_active, property_id))
+    return {"ok": True}
+
+@api.put("/properties/{property_id}/manager")
+async def assign_manager(property_id: str, data: PropertyManagerIn, user: dict = Depends(require_admin)):
+    mgr = await sql_fetch_one("SELECT id FROM dbo.users WHERE id = ? AND role = 'hotel_manager'", (data.manager_id,))
+    if not mgr:
+        raise HTTPException(404, "Hotel manager user not found — assign role first")
+    await sql_execute("UPDATE dbo.accommodation_properties SET manager_id=? WHERE id=?", (data.manager_id, property_id))
+    return {"ok": True}
+
+@api.delete("/properties/{property_id}")
+async def delete_property(property_id: str, user: dict = Depends(require_super_admin)):
+    await sql_execute("DELETE FROM dbo.room_categories WHERE property_id = ?", (property_id,))
+    await sql_execute("DELETE FROM dbo.accommodation_properties WHERE id = ?", (property_id,))
+    return {"ok": True}
+
+# ── Room Categories ───────────────────────────────────────────────────────────
+
+@api.get("/properties/{property_id}/categories")
+async def list_room_categories(property_id: str):
+    rows = await sql_fetch_all(
+        "SELECT * FROM dbo.room_categories WHERE property_id = ? ORDER BY price_per_night",
+        (property_id,)
+    )
+    return rows
+
+@api.post("/room-categories")
+async def create_room_category(data: RoomCategoryIn, user: dict = Depends(require_hotel_manager_or_admin)):
+    if user["role"] == "hotel_manager":
+        prop = await sql_fetch_one("SELECT manager_id FROM dbo.accommodation_properties WHERE id = ?", (data.property_id,))
+        if not prop or prop.get("manager_id") != user["id"]:
+            raise HTTPException(403, "Not your property")
+    cid = str(uuid.uuid4())
+    await sql_execute(
+        "INSERT INTO dbo.room_categories (id, property_id, name, description, price_per_night, "
+        "capacity, total_rooms, amenities, images, is_active, created_at) VALUES (?,?,?,?,?,?,?,?,?,1,?)",
+        (cid, data.property_id, data.name, data.description or "", data.price_per_night,
+         data.capacity, data.total_rooms, data.amenities or "", data.images or "", now_naive())
+    )
+    return {"id": cid, "ok": True}
+
+@api.put("/room-categories/{cat_id}")
+async def update_room_category(cat_id: str, data: RoomCategoryIn, user: dict = Depends(require_hotel_manager_or_admin)):
+    await sql_execute(
+        "UPDATE dbo.room_categories SET name=?, description=?, price_per_night=?, capacity=?, "
+        "total_rooms=?, amenities=?, images=? WHERE id=?",
+        (data.name, data.description or "", data.price_per_night, data.capacity,
+         data.total_rooms, data.amenities or "", data.images or "", cat_id)
+    )
+    return {"ok": True}
+
+@api.delete("/room-categories/{cat_id}")
+async def delete_room_category(cat_id: str, user: dict = Depends(require_admin)):
+    await sql_execute("DELETE FROM dbo.room_quotas WHERE room_category_id = ?", (cat_id,))
+    await sql_execute("DELETE FROM dbo.room_categories WHERE id = ?", (cat_id,))
+    return {"ok": True}
+
+# ── Quotas ────────────────────────────────────────────────────────────────────
+
+@api.get("/room-categories/{cat_id}/quotas")
+async def get_quotas(cat_id: str, from_date: str, to_date: str):
+    rows = await sql_fetch_all(
+        "SELECT CONVERT(VARCHAR(10), quota_date, 120) AS quota_date, total_quota, booked, "
+        "(total_quota - booked) AS available "
+        "FROM dbo.room_quotas WHERE room_category_id = ? AND quota_date BETWEEN ? AND ? ORDER BY quota_date",
+        (cat_id, from_date, to_date)
+    )
+    return rows
+
+@api.post("/quotas/set")
+async def set_quotas(data: QuotaSetIn, user: dict = Depends(require_hotel_manager_or_admin)):
+    for d in data.dates:
+        existing = await sql_fetch_one(
+            "SELECT id FROM dbo.room_quotas WHERE room_category_id = ? AND quota_date = ?",
+            (data.room_category_id, d)
+        )
+        if existing:
+            await sql_execute(
+                "UPDATE dbo.room_quotas SET total_quota=? WHERE room_category_id=? AND quota_date=?",
+                (data.quota, data.room_category_id, d)
+            )
+        else:
+            await sql_execute(
+                "INSERT INTO dbo.room_quotas (id, room_category_id, quota_date, total_quota, booked) VALUES (?,?,?,?,0)",
+                (str(uuid.uuid4()), data.room_category_id, d, data.quota)
+            )
+    return {"ok": True, "dates_set": len(data.dates)}
+
+# ── Accommodation Bookings ────────────────────────────────────────────────────
+
+@api.post("/accommodation-bookings")
+async def create_accommodation_booking(data: AccommodationBookingIn, user: dict = Depends(get_current_user)):
+    from datetime import date as _date, timedelta as _td
+    try:
+        ci = _date.fromisoformat(data.check_in)
+        co = _date.fromisoformat(data.check_out)
+    except ValueError:
+        raise HTTPException(400, "Invalid dates — use YYYY-MM-DD")
+    if co <= ci:
+        raise HTTPException(400, "Check-out must be after check-in")
+    nights = (co - ci).days
+
+    cat = await sql_fetch_one(
+        "SELECT rc.price_per_night, rc.name AS cat_name, ap.name AS prop_name, ap.is_active "
+        "FROM dbo.room_categories rc "
+        "JOIN dbo.accommodation_properties ap ON ap.id = rc.property_id "
+        "WHERE rc.id = ? AND ap.id = ? AND rc.is_active = 1",
+        (data.room_category_id, data.property_id)
+    )
+    if not cat:
+        raise HTTPException(404, "Room category not found")
+    if not cat.get("is_active"):
+        raise HTTPException(400, "Property is not accepting bookings")
+
+    # Check quota for each night
+    cur = ci
+    while cur < co:
+        dn = cur.isoformat()
+        quota = await sql_fetch_one(
+            "SELECT total_quota, booked FROM dbo.room_quotas WHERE room_category_id=? AND quota_date=?",
+            (data.room_category_id, dn)
+        )
+        if quota:
+            available = int(quota.get("total_quota") or 0) - int(quota.get("booked") or 0)
+            if available < data.rooms:
+                raise HTTPException(400, f"Not enough rooms available for {dn}")
+        cur += _td(days=1)
+
+    amount = float(cat["price_per_night"]) * nights * data.rooms
+    bid = str(uuid.uuid4())
+    rzp_order_id = None
+    if RAZORPAY_ENABLED:
+        try:
+            order = _rzp_client.order.create({"amount": int(amount * 100), "currency": "INR", "receipt": f"accom_{bid[:8]}"})
+            rzp_order_id = order["id"]
+        except Exception as e:
+            logger.warning("Razorpay accom order failed: %s", e)
+
+    await sql_execute(
+        "INSERT INTO dbo.accommodation_bookings "
+        "(id,user_id,property_id,room_category_id,check_in,check_out,guests,rooms,total_nights,"
+        "amount,status,payment_status,razorpay_order_id,guest_name,guest_mobile,special_requests,"
+        "property_name,room_category_name,pooja_booking_id,created_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (bid, user["id"], data.property_id, data.room_category_id,
+         data.check_in, data.check_out, data.guests, data.rooms, nights,
+         amount, "pending_payment", "pending", rzp_order_id,
+         data.guest_name, data.guest_mobile, data.special_requests or "",
+         cat.get("prop_name", ""), cat.get("cat_name", ""),
+         data.pooja_booking_id, now_naive())
+    )
+    return {
+        "id": bid, "amount": amount, "nights": nights,
+        "razorpay_order_id": rzp_order_id,
+        "razorpay_key_id": os.getenv("RAZORPAY_KEY_ID") if RAZORPAY_ENABLED else None,
+    }
+
+@api.post("/accommodation-bookings/confirm-payment")
+async def confirm_accom_payment(data: AccomPaymentConfirmIn, user: dict = Depends(get_current_user)):
+    booking = await sql_fetch_one(
+        "SELECT * FROM dbo.accommodation_bookings WHERE id=? AND user_id=?",
+        (data.booking_id, user["id"])
+    )
+    if not booking:
+        raise HTTPException(404, "Booking not found")
+
+    if RAZORPAY_ENABLED and data.razorpay_signature:
+        import hmac, hashlib as _hl
+        msg = f"{data.razorpay_order_id}|{data.razorpay_payment_id}"
+        sig = hmac.new(os.getenv("RAZORPAY_KEY_SECRET", "").encode(), msg.encode(), _hl.sha256).hexdigest()
+        if sig != data.razorpay_signature:
+            raise HTTPException(400, "Payment signature verification failed")
+
+    await sql_execute(
+        "UPDATE dbo.accommodation_bookings SET payment_status='paid', status='confirmed', "
+        "razorpay_payment_id=?, razorpay_signature=? WHERE id=?",
+        (data.razorpay_payment_id or "", data.razorpay_signature or "", data.booking_id)
+    )
+
+    from datetime import date as _date2, timedelta as _td2
+    ci = _date2.fromisoformat(str(booking["check_in"])[:10])
+    co = _date2.fromisoformat(str(booking["check_out"])[:10])
+    rooms_booked = int(booking.get("rooms") or 1)
+    cur = ci
+    while cur < co:
+        dn = cur.isoformat()
+        q_row = await sql_fetch_one(
+            "SELECT id FROM dbo.room_quotas WHERE room_category_id=? AND quota_date=?",
+            (booking["room_category_id"], dn)
+        )
+        if q_row:
+            await sql_execute(
+                "UPDATE dbo.room_quotas SET booked=booked+? WHERE room_category_id=? AND quota_date=?",
+                (rooms_booked, booking["room_category_id"], dn)
+            )
+        cur += _td2(days=1)
+
+    return {"ok": True, "status": "confirmed"}
+
+@api.get("/accommodation-bookings/mine")
+async def my_accommodation_bookings(user: dict = Depends(get_current_user)):
+    rows = await sql_fetch_all(
+        f"SELECT {_ABOOKING_COLS} FROM dbo.accommodation_bookings ab "
+        f"LEFT JOIN dbo.users u ON u.id = ab.user_id "
+        f"WHERE ab.user_id=? ORDER BY ab.created_at DESC",
+        (user["id"],)
+    )
+    return rows
+
+@api.get("/accommodation-bookings")
+async def list_accommodation_bookings(
+    user: dict = Depends(require_hotel_manager_or_admin),
+    property_id: Optional[str] = None,
+    status: Optional[str] = None,
+):
+    wheres = ["1=1"]
+    params: list = []
+    if user["role"] == "hotel_manager":
+        prop = await sql_fetch_one(
+            "SELECT id FROM dbo.accommodation_properties WHERE manager_id=?", (user["id"],)
+        )
+        if not prop:
+            return []
+        wheres.append("ab.property_id=?")
+        params.append(prop["id"])
+    elif property_id:
+        wheres.append("ab.property_id=?")
+        params.append(property_id)
+    if status:
+        wheres.append("ab.status=?")
+        params.append(status)
+    rows = await sql_fetch_all(
+        f"SELECT {_ABOOKING_COLS} FROM dbo.accommodation_bookings ab "
+        f"LEFT JOIN dbo.users u ON u.id = ab.user_id "
+        f"WHERE {' AND '.join(wheres)} ORDER BY ab.created_at DESC",
+        params if params else None
+    )
+    return rows
+
+# ── Hotel Manager Dashboard ───────────────────────────────────────────────────
+
+@api.get("/hotel-manager/dashboard")
+async def hotel_manager_dashboard(user: dict = Depends(require_hotel_manager_or_admin)):
+    prop = await sql_fetch_one(
+        f"SELECT {_PROP_COLS} FROM dbo.accommodation_properties p "
+        f"LEFT JOIN dbo.temples t ON t.id = p.temple_id WHERE p.manager_id=?",
+        (user["id"],)
+    )
+    if not prop:
+        return {"property": None, "stats": {}}
+    pid = prop["id"]
+    total_bk = await sql_scalar("SELECT COUNT(*) AS v FROM dbo.accommodation_bookings WHERE property_id=?", (pid,))
+    confirmed = await sql_scalar("SELECT COUNT(*) AS v FROM dbo.accommodation_bookings WHERE property_id=? AND status='confirmed'", (pid,))
+    revenue = await sql_scalar("SELECT ISNULL(SUM(amount),0) AS v FROM dbo.accommodation_bookings WHERE property_id=? AND payment_status='paid'", (pid,))
+    cat_count = await sql_scalar("SELECT COUNT(*) AS v FROM dbo.room_categories WHERE property_id=? AND is_active=1", (pid,))
+    return {
+        "property": prop,
+        "stats": {
+            "total_bookings": total_bk,
+            "confirmed_bookings": confirmed,
+            "revenue": revenue,
+            "room_categories": cat_count,
+        }
+    }
+
+# ── Admin Properties Management ───────────────────────────────────────────────
+
+@api.get("/admin/properties")
+async def admin_list_properties(user: dict = Depends(require_admin)):
+    rows = await sql_fetch_all(
+        f"SELECT {_PROP_COLS}, "
+        f"(SELECT COUNT(*) FROM dbo.room_categories rc WHERE rc.property_id=p.id AND rc.is_active=1) AS room_category_count, "
+        f"(SELECT COUNT(*) FROM dbo.accommodation_bookings ab WHERE ab.property_id=p.id AND ab.status='confirmed') AS confirmed_bookings, "
+        f"mgr.full_name AS manager_name, mgr.mobile AS manager_mobile "
+        f"FROM dbo.accommodation_properties p "
+        f"LEFT JOIN dbo.temples t ON t.id=p.temple_id "
+        f"LEFT JOIN dbo.users mgr ON mgr.id=p.manager_id "
+        f"ORDER BY p.created_at DESC"
+    )
+    return rows
+
+@api.get("/admin/hotel-managers")
+async def list_hotel_managers(user: dict = Depends(require_admin)):
+    rows = await sql_fetch_all(
+        "SELECT id, full_name, mobile, email, is_active FROM dbo.users WHERE role='hotel_manager' ORDER BY full_name"
+    )
+    return rows
+
+@api.put("/admin/users/{user_id}/set-hotel-manager")
+async def set_hotel_manager_role(user_id: str, user: dict = Depends(require_super_admin)):
+    target = await sql_fetch_one("SELECT id, role FROM dbo.users WHERE id=?", (user_id,))
+    if not target:
+        raise HTTPException(404, "User not found")
+    await sql_execute("UPDATE dbo.users SET role='hotel_manager' WHERE id=?", (user_id,))
     return {"ok": True}
 
 # ----------------------------- Wire up ---------------------------------------
