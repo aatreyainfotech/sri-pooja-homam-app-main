@@ -8,14 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../../src/services/api';
-import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 
 const BLUE = '#0288D1';
 
 export default function HotelManagerDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
   const [data, setData] = useState<any>({ property: null, stats: {} });
   const [refreshing, setRefreshing] = useState(false);
   const [showEditInfo, setShowEditInfo] = useState(false);
@@ -41,6 +39,7 @@ export default function HotelManagerDashboard() {
         images: editForm.images || '', amenities: editForm.amenities || '',
         check_in_time: editForm.check_in_time, check_out_time: editForm.check_out_time,
         total_rooms: parseInt(editForm.total_rooms) || 0,
+        upi_id: editForm.upi_id || '',
       });
       setShowEditInfo(false);
       await load();
@@ -141,6 +140,7 @@ export default function HotelManagerDashboard() {
               <FormInput label="Phone" value={editForm.phone || ''} onChangeText={(v: string) => setEditForm({ ...editForm, phone: v })} />
               <FormInput label="Description" value={editForm.description || ''} onChangeText={(v: string) => setEditForm({ ...editForm, description: v })} multiline />
               <FormInput label="Amenities" value={editForm.amenities || ''} onChangeText={(v: string) => setEditForm({ ...editForm, amenities: v })} placeholder="WiFi, Parking, Restaurant..." />
+              <FormInput label="UPI ID (for guest payments)" value={editForm.upi_id || ''} onChangeText={(v: string) => setEditForm({ ...editForm, upi_id: v })} placeholder="name@upi or 9876543210@okaxis" />
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}><FormInput label="Check-in" value={editForm.check_in_time || ''} onChangeText={(v: string) => setEditForm({ ...editForm, check_in_time: v })} /></View>
                 <View style={{ flex: 1 }}><FormInput label="Check-out" value={editForm.check_out_time || ''} onChangeText={(v: string) => setEditForm({ ...editForm, check_out_time: v })} /></View>
