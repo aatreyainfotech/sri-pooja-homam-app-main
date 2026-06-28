@@ -156,6 +156,16 @@ export default function PropertyDetail() {
   const [quotaMsg, setQuotaMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [quotaLoading, setQuotaLoading] = useState(false);
   const [managerId, setManagerId] = useState('');
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '', type: 'hotel', address: '', city: '', phone: '',
+    description: '', amenities: '', check_in_time: '12:00',
+    check_out_time: '11:00', total_rooms: '0', upi_id: '',
+  });
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState('');
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -168,6 +178,15 @@ export default function PropertyDetail() {
       setCategories(pRes.data.room_categories || []);
       setManagers(mRes.data);
       setManagerId(pRes.data.manager_id || '');
+      const p = pRes.data;
+      setEditForm({
+        name: p.name || '', type: p.type || 'hotel', address: p.address || '',
+        city: p.city || '', phone: p.phone || '', description: p.description || '',
+        amenities: p.amenities || '', check_in_time: p.check_in_time || '12:00',
+        check_out_time: p.check_out_time || '11:00',
+        total_rooms: String(p.total_rooms || '0'), upi_id: p.upi_id || '',
+      });
+      setEditImages(p.images ? p.images.split(',').map((s: string) => s.trim()).filter(Boolean) : []);
     } catch {}
   }, [id]);
 
@@ -243,6 +262,36 @@ export default function PropertyDetail() {
     }
   };
 
+  const handleEditProperty = async () => {
+    setEditError(''); setEditSuccess('');
+    if (!editForm.name.trim() || !editForm.address.trim()) {
+      setEditError('Name and address are required.'); return;
+    }
+    setEditLoading(true);
+    try {
+      await api.put(`/properties/${id}`, {
+        name: editForm.name,
+        type: editForm.type,
+        address: editForm.address,
+        city: editForm.city,
+        phone: editForm.phone,
+        description: editForm.description,
+        amenities: editForm.amenities,
+        check_in_time: editForm.check_in_time,
+        check_out_time: editForm.check_out_time,
+        total_rooms: parseInt(editForm.total_rooms) || 0,
+        upi_id: editForm.upi_id,
+        images: editImages.join(','),
+      });
+      setEditSuccess('Property updated successfully!');
+      await load();
+    } catch (e: any) {
+      setEditError(e?.response?.data?.detail || 'Failed to update property.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const deleteCategory = (cat: any) => {
     Alert.alert('Delete Category', `Delete "${cat.name}"?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -268,7 +317,9 @@ export default function PropertyDetail() {
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>{prop.name}</Text>
-          <View style={{ width: 40 }} />
+          <TouchableOpacity onPress={() => { setEditError(''); setEditSuccess(''); setShowEdit(true); }} style={styles.editHeaderBtn}>
+            <Ionicons name="pencil" size={17} color="#fff" />
+          </TouchableOpacity>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
           <View style={[styles.statusBadge, { backgroundColor: prop.is_active ? '#4CAF50' : '#FF9800' }]}>
@@ -420,6 +471,91 @@ export default function PropertyDetail() {
               <TouchableOpacity style={styles.submitBtn} onPress={handleAddCategory}>
                 <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
                 <Text style={styles.submitText}>Add Room Category</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Edit Property Modal ── */}
+      <Modal visible={showEdit} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '95%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Property</Text>
+              <TouchableOpacity onPress={() => setShowEdit(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {!!editError && (
+                <View style={{ backgroundColor: '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 14, flexDirection: 'row', gap: 8 }}>
+                  <Ionicons name="alert-circle-outline" size={16} color="#C62828" />
+                  <Text style={{ color: '#C62828', fontSize: 13, flex: 1 }}>{editError}</Text>
+                </View>
+              )}
+              {!!editSuccess && (
+                <View style={{ backgroundColor: '#E8F5E9', borderRadius: 10, padding: 12, marginBottom: 14, flexDirection: 'row', gap: 8 }}>
+                  <Ionicons name="checkmark-circle-outline" size={16} color="#2E7D32" />
+                  <Text style={{ color: '#2E7D32', fontSize: 13, flex: 1 }}>{editSuccess}</Text>
+                </View>
+              )}
+
+              <FormInput label="Property Name *" value={editForm.name} onChangeText={(v) => setEditForm({ ...editForm, name: v })} placeholder="Grand Hotel" />
+
+              <View style={{ marginBottom: 14 }}>
+                <Text style={styles.label}>Type</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {['hotel', 'dharamshala', 'guesthouse', 'lodge'].map((t) => (
+                    <TouchableOpacity
+                      key={t}
+                      onPress={() => setEditForm({ ...editForm, type: t })}
+                      style={[styles.typeChip, editForm.type === t && styles.typeChipActive]}
+                    >
+                      <Text style={[styles.typeChipText, editForm.type === t && styles.typeChipTextActive]}>
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <FormInput label="Address *" value={editForm.address} onChangeText={(v) => setEditForm({ ...editForm, address: v })} placeholder="123, Temple Road" />
+              <FormInput label="City" value={editForm.city} onChangeText={(v) => setEditForm({ ...editForm, city: v })} placeholder="Varanasi" />
+              <FormInput label="Phone" value={editForm.phone} onChangeText={(v) => setEditForm({ ...editForm, phone: v })} placeholder="+91 98765 43210" keyboardType="phone-pad" />
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <FormInput label="Check-in Time" value={editForm.check_in_time} onChangeText={(v) => setEditForm({ ...editForm, check_in_time: v })} placeholder="12:00" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <FormInput label="Check-out Time" value={editForm.check_out_time} onChangeText={(v) => setEditForm({ ...editForm, check_out_time: v })} placeholder="11:00" />
+                </View>
+              </View>
+
+              <FormInput label="Total Rooms" value={editForm.total_rooms} onChangeText={(v) => setEditForm({ ...editForm, total_rooms: v })} placeholder="50" keyboardType="numeric" />
+              <FormInput label="Description" value={editForm.description} onChangeText={(v) => setEditForm({ ...editForm, description: v })} placeholder="Describe the property…" multiline />
+              <FormInput label="Amenities (comma-separated)" value={editForm.amenities} onChangeText={(v) => setEditForm({ ...editForm, amenities: v })} placeholder="WiFi, Parking, AC, Restaurant" />
+              <FormInput label="UPI ID (for payments)" value={editForm.upi_id} onChangeText={(v) => setEditForm({ ...editForm, upi_id: v })} placeholder="hotel@upi" />
+
+              <ImagePickerSection
+                label="Property Photos"
+                images={editImages}
+                onAdd={async () => {
+                  const imgs = await pickMultipleImagesWeb();
+                  if (imgs.length) setEditImages((prev) => [...prev, ...imgs]);
+                }}
+                onRemove={(idx) => setEditImages((prev) => prev.filter((_, i) => i !== idx))}
+                onUrlAdd={(url) => setEditImages((prev) => [...prev, url])}
+              />
+
+              <TouchableOpacity
+                style={[styles.submitBtn, editLoading && { opacity: 0.6 }]}
+                onPress={handleEditProperty}
+                disabled={editLoading}
+              >
+                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                <Text style={styles.submitText}>{editLoading ? 'Saving…' : 'Save Changes'}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -598,6 +734,11 @@ const styles = StyleSheet.create({
   urlRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   urlAddBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' },
 
+  editHeaderBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  typeChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderColor: theme.colors.border, backgroundColor: '#F5F7FA' },
+  typeChipActive: { backgroundColor: BLUE, borderColor: BLUE },
+  typeChipText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted },
+  typeChipTextActive: { color: '#fff' },
   assignBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: BLUE, borderRadius: 12, paddingVertical: 12 },
   assignBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 
