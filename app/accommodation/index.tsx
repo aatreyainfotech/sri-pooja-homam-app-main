@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl,
-  TextInput, Platform, Image,
+  TextInput, Platform, Image, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,14 +58,18 @@ export default function AccommodationBrowse() {
   const [refreshing, setRefreshing] = useState(false);
   const [q, setQ] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const params: any = { active_only: true };
       if (filterType) params.type = filterType;
       const res = await api.get('/properties', { params });
       setProperties(res.data);
-    } catch {}
+    } catch {} finally {
+      setLoading(false);
+    }
   }, [filterType]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -165,7 +169,7 @@ export default function AccommodationBrowse() {
             activeOpacity={0.85}
           >
             <LinearGradient colors={[DARK_BLUE, BLUE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.viewBtnGrad}>
-              <Text style={styles.viewBtnText}>View Rooms &amp; Book</Text>
+              <Text style={styles.viewBtnText}>View Rooms & Book</Text>
               <Ionicons name="arrow-forward" size={14} color="#fff" />
             </LinearGradient>
           </TouchableOpacity>
@@ -212,23 +216,29 @@ export default function AccommodationBrowse() {
       </LinearGradient>
 
       {/* ── Filter chips ────────────────────────────────── */}
-      <View style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}
+        style={{ backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ECEFF1' }}
+      >
         {[
-          { label: 'All', value: '' },
-          { label: '🏨 Hotel', value: 'hotel' },
-          { label: '🏠 Dharamshala', value: 'dharamshala' },
-          { label: '🏢 Guesthouse', value: 'guesthouse' },
-          { label: '🏡 Lodge', value: 'lodge' },
+          { label: 'All', value: '', icon: 'apps-outline' },
+          { label: 'Hotel', value: 'hotel', icon: 'bed-outline' },
+          { label: 'Dharamshala', value: 'dharamshala', icon: 'home-outline' },
+          { label: 'Guesthouse', value: 'guesthouse', icon: 'business-outline' },
+          { label: 'Lodge', value: 'lodge', icon: 'storefront-outline' },
         ].map((f) => (
           <TouchableOpacity
             key={f.value}
             style={[styles.filterChip, filterType === f.value && styles.filterChipActive]}
             onPress={() => setFilterType(f.value)}
           >
+            <Ionicons name={f.icon as any} size={13} color={filterType === f.value ? '#fff' : '#78909C'} />
             <Text style={[styles.filterText, filterType === f.value && styles.filterTextActive]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       {/* ── List ────────────────────────────────────────── */}
       <View style={[IS_WEB && styles.listWrapWeb]}>
@@ -245,13 +255,20 @@ export default function AccommodationBrowse() {
           key={IS_WEB ? 'web-2' : 'mob-1'}
           columnWrapperStyle={IS_WEB ? ({ gap: 16 } as any) : undefined}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <LinearGradient colors={[DARK_BLUE, BLUE]} style={styles.emptyIcon}>
-                <Ionicons name="bed-outline" size={36} color="rgba(255,255,255,0.8)" />
-              </LinearGradient>
-              <Text style={styles.emptyTitle}>No properties available</Text>
-              <Text style={styles.emptySub}>We're adding more accommodation options near temples. Check back soon!</Text>
-            </View>
+            loading ? (
+              <View style={styles.empty}>
+                <ActivityIndicator size="large" color={BLUE} />
+                <Text style={styles.emptySub}>Finding stays near temples…</Text>
+              </View>
+            ) : (
+              <View style={styles.empty}>
+                <LinearGradient colors={[DARK_BLUE, BLUE]} style={styles.emptyIcon}>
+                  <Ionicons name="bed-outline" size={36} color="rgba(255,255,255,0.8)" />
+                </LinearGradient>
+                <Text style={styles.emptyTitle}>No properties available</Text>
+                <Text style={styles.emptySub}>We're adding more accommodation options near temples. Check back soon!</Text>
+              </View>
+            )
           }
           ListFooterComponent={IS_WEB ? <WebFooter /> : null}
         />
@@ -285,11 +302,13 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, color: '#fff', fontSize: 14, ...(IS_WEB ? { outline: 'none' } as any : {}) } as any,
 
   filterRow: {
-    flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 12, gap: 8, backgroundColor: '#fff',
-    borderBottomWidth: 1, borderBottomColor: '#ECEFF1',
-    ...(IS_WEB ? { overflowX: 'auto' } as any : { flexWrap: 'nowrap' }),
+    flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 12, gap: 8,
   },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F5F7FA', borderWidth: 1.5, borderColor: '#ECEFF1', flexShrink: 0 },
+  filterChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
+    backgroundColor: '#F5F7FA', borderWidth: 1.5, borderColor: '#ECEFF1', flexShrink: 0,
+  },
   filterChipActive: { backgroundColor: BLUE, borderColor: BLUE },
   filterText: { fontSize: 13, fontWeight: '600', color: '#78909C' },
   filterTextActive: { color: '#fff' },
