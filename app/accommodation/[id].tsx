@@ -16,6 +16,13 @@ const IS_WEB = Platform.OS === 'web';
 const BLUE = '#0288D1';
 const DARK_BLUE = '#01579B';
 
+function parseImages(s: string | null | undefined): string[] {
+  if (!s) return [];
+  if (s.includes('|||')) return s.split('|||').map(v => v.trim()).filter(Boolean);
+  if (s.startsWith('data:')) return [s.trim()];
+  return s.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 // ── Date input ─────────────────────────────────────────────────────────────────
 function DateInput({ label, value, onChange, placeholder, icon }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; icon?: string;
@@ -269,7 +276,7 @@ export default function PropertyDetailPage() {
     </SafeAreaView>
   );
 
-  const photos = prop.images ? prop.images.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  const photos = parseImages(prop.images);
   const nights = calcNights();
   const amount = calcAmount();
 
@@ -389,7 +396,7 @@ export default function PropertyDetailPage() {
               <Text style={styles.noCats}>Room details coming soon. Contact property for availability.</Text>
             ) : (
               categories.map((cat) => {
-                const catPhoto = cat.images ? cat.images.split(',')[0]?.trim() : null;
+                const catPhoto = parseImages(cat.images)[0] || null;
                 const isSelected = selectedCat?.id === cat.id;
                 return (
                   <View key={cat.id} style={[styles.catCard, isSelected && styles.catCardSelected]}>

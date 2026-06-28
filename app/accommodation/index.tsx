@@ -16,6 +16,13 @@ const IS_WEB = Platform.OS === 'web';
 const BLUE = '#0288D1';
 const DARK_BLUE = '#01579B';
 
+function parseImages(s: string | null | undefined): string[] {
+  if (!s) return [];
+  if (s.includes('|||')) return s.split('|||').map(v => v.trim()).filter(Boolean);
+  if (s.startsWith('data:')) return [s.trim()];
+  return s.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 const TYPE_ICONS: Record<string, string> = {
   hotel: 'bed', dharamshala: 'home', guesthouse: 'business', lodge: 'storefront',
 };
@@ -72,7 +79,7 @@ export default function AccommodationBrowse() {
 
   const renderItem = ({ item }: any) => {
     const iconName = TYPE_ICONS[item.type || 'hotel'] || 'bed';
-    const coverPhoto = item.images ? item.images.split(',')[0]?.trim() : null;
+    const coverPhoto = parseImages(item.images)[0] || null;
     const minPrice = item.min_price ? parseFloat(item.min_price) : null;
     const gradColors = TYPE_COLORS[item.type || 'hotel'] || [DARK_BLUE, BLUE];
     const hasRating = item.rating && parseFloat(item.rating) > 0;

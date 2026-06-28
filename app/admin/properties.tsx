@@ -16,6 +16,13 @@ import { theme } from '../../src/constants/theme';
 const BLUE = '#0288D1';
 const IS_WEB = Platform.OS === 'web';
 
+function parseImages(s: string | null | undefined): string[] {
+  if (!s) return [];
+  if (s.includes('|||')) return s.split('|||').map(v => v.trim()).filter(Boolean);
+  if (s.startsWith('data:')) return [s.trim()];
+  return s.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 // Resize + compress image to max 1200px at 70% JPEG quality
 function compressImage(file: File, maxPx = 1200, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
@@ -293,7 +300,7 @@ export default function AdminProperties() {
   };
 
   const renderProp = ({ item }: any) => {
-    const coverImg = item.images ? item.images.split(',')[0]?.trim() : null;
+    const coverImg = parseImages(item.images)[0] || null;
     return (
       <TouchableOpacity
         style={styles.card}
