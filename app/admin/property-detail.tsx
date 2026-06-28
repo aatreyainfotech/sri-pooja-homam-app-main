@@ -15,7 +15,30 @@ import { theme } from '../../src/constants/theme';
 const BLUE = '#0288D1';
 const IS_WEB = Platform.OS === 'web';
 
-// pickMultipleImagesWeb removed — use <label><input> in ImagePickerSection instead
+// Resize + compress image to max 1200px wide/tall at 70% JPEG quality
+function compressImage(file: File, maxPx = 1200, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new (window as any).Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxPx || height > maxPx) {
+          const ratio = Math.min(maxPx / width, maxPx / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 // ── Manager Dropdown ───────────────────────────────────────────────────────
 function ManagerDropdown({ managers, value, onChange }: { managers: any[]; value: string; onChange: (id: string) => void }) {
@@ -102,11 +125,8 @@ function ImagePickerSection({
     if (!files.length) return;
     const results: string[] = [];
     for (const file of files) {
-      await new Promise<void>((res) => {
-        const reader = new FileReader();
-        reader.onload = () => { results.push(reader.result as string); res(); };
-        reader.readAsDataURL(file);
-      });
+      const compressed = await compressImage(file);
+      results.push(compressed);
     }
     onAdd(results);
     e.target.value = ''; // allow re-selecting same file
