@@ -102,7 +102,7 @@ export default function HotelManagerDashboard() {
             {/* Property Info */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Property Details</Text>
+                <Text style={styles.sectionTitle}>Hotel Info</Text>
                 <TouchableOpacity style={styles.editBtn} onPress={() => setShowEditInfo(true)}>
                   <Ionicons name="pencil-outline" size={14} color={BLUE} />
                   <Text style={styles.editBtnText}>Edit</Text>
@@ -141,7 +141,7 @@ export default function HotelManagerDashboard() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Property</Text>
+              <Text style={styles.modalTitle}>Edit Hotel Info</Text>
               <TouchableOpacity onPress={() => { setShowEditInfo(false); setUpdateMsg(null); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
@@ -153,7 +153,7 @@ export default function HotelManagerDashboard() {
                   <Text style={{ color: '#C62828', fontSize: 13, flex: 1 }}>{updateMsg.text}</Text>
                 </View>
               )}
-              <FormInput label="Property Name" value={editForm.name || ''} onChangeText={(v: string) => setEditForm({ ...editForm, name: v })} />
+              <FormInput label="Hotel Name" value={editForm.name || ''} onChangeText={(v: string) => setEditForm({ ...editForm, name: v })} />
               <FormInput label="Address" value={editForm.address || ''} onChangeText={(v: string) => setEditForm({ ...editForm, address: v })} />
               <FormInput label="City" value={editForm.city || ''} onChangeText={(v: string) => setEditForm({ ...editForm, city: v })} />
               <FormInput label="Phone" value={editForm.phone || ''} onChangeText={(v: string) => setEditForm({ ...editForm, phone: v })} />

@@ -15,6 +15,14 @@ import { theme } from '../../src/constants/theme';
 const BLUE = '#0288D1';
 const IS_WEB = Platform.OS === 'web';
 
+// Safe image list parser — handles ||| separator (new), single base64, and old comma-URL format
+function parseImages(s: string | null | undefined): string[] {
+  if (!s) return [];
+  if (s.includes('|||')) return s.split('|||').map(v => v.trim()).filter(Boolean);
+  if (s.startsWith('data:')) return [s.trim()]; // single old-style base64
+  return s.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 // Resize + compress image to max 1200px wide/tall at 70% JPEG quality
 function compressImage(file: File, maxPx = 1200, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
@@ -231,7 +239,7 @@ export default function PropertyDetail() {
         check_out_time: p.check_out_time || '11:00',
         total_rooms: String(p.total_rooms || '0'), upi_id: p.upi_id || '',
       });
-      setEditImages(p.images ? p.images.split(',').map((s: string) => s.trim()).filter(Boolean) : []);
+      setEditImages(parseImages(p.images));
     } catch {}
   }, [id]);
 
@@ -257,7 +265,7 @@ export default function PropertyDetail() {
         capacity: parseInt(catForm.capacity) || 2,
         total_rooms: parseInt(catForm.total_rooms) || 10,
         amenities: catForm.amenities,
-        images: roomImages.join(','),
+        images: roomImages.join('|||'),
       });
       setShowAddCat(false);
       resetCatForm();
@@ -327,7 +335,7 @@ export default function PropertyDetail() {
         check_out_time: editForm.check_out_time,
         total_rooms: parseInt(editForm.total_rooms) || 0,
         upi_id: editForm.upi_id,
-        images: editImages.join(','),
+        images: editImages.join('|||'),
       });
       setEditSuccess('Property updated successfully!');
       await load();
@@ -348,7 +356,7 @@ export default function PropertyDetail() {
     </SafeAreaView>
   );
 
-  const coverImg = prop.images ? prop.images.split(',')[0]?.trim() : null;
+  const coverImg = parseImages(prop.images)[0] || null;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -389,7 +397,7 @@ export default function PropertyDetail() {
         <View style={{ padding: 16 }}>
           {/* Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Property Info</Text>
+            <Text style={styles.sectionTitle}>Hotel Info</Text>
             <InfoRow icon="location-outline" text={`${prop.address}${prop.city ? `, ${prop.city}` : ''}`} />
             {prop.phone ? <InfoRow icon="call-outline" text={prop.phone} /> : null}
             {prop.temple_name ? <InfoRow icon="business-outline" text={`Near ${prop.temple_name}`} /> : null}
@@ -443,7 +451,7 @@ export default function PropertyDetail() {
               </View>
             ) : (
               categories.map((cat) => {
-                const catCover = cat.images ? cat.images.split(',')[0]?.trim() : null;
+                const catCover = parseImages(cat.images)[0] || null;
                 return (
                   <View key={cat.id} style={styles.catCard}>
                     {catCover ? (
