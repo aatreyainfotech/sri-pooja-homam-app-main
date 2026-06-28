@@ -22,6 +22,10 @@ function pickMultipleImagesWeb(): Promise<string[]> {
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
+    // Must be in the DOM for the click to fire reliably in all browsers
+    input.style.cssText = 'position:fixed;top:-200px;left:-200px;opacity:0;pointer-events:none;';
+    document.body.appendChild(input);
+    const cleanup = () => { try { document.body.removeChild(input); } catch {} };
     input.onchange = async (e: any) => {
       const files: File[] = Array.from(e.target?.files || []);
       const results: string[] = [];
@@ -32,8 +36,16 @@ function pickMultipleImagesWeb(): Promise<string[]> {
           reader.readAsDataURL(file);
         });
       }
+      cleanup();
       resolve(results);
     };
+    // Resolve empty if user cancels without selecting
+    window.addEventListener('focus', function onFocus() {
+      setTimeout(() => {
+        window.removeEventListener('focus', onFocus);
+        if (!input.files?.length) { cleanup(); resolve([]); }
+      }, 500);
+    }, { once: true });
     input.click();
   });
 }
@@ -85,6 +97,27 @@ function ManagerDropdown({ managers, value, onChange }: { managers: any[]; value
   );
 }
 
+// ── Thumbnail with error fallback ─────────────────────────────────────────
+function ThumbnailImage({ uri }: { uri: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !uri) {
+    return (
+      <View style={{ width: 90, height: 90, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+        <Ionicons name="image-outline" size={26} color="#BDBDBD" />
+        <Text style={{ fontSize: 9, color: '#BDBDBD', textAlign: 'center' }}>Broken{'\n'}URL</Text>
+      </View>
+    );
+  }
+  return (
+    <Image
+      source={{ uri }}
+      style={{ width: 90, height: 90 }}
+      resizeMode="cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 // ── Image Picker Section ───────────────────────────────────────────────────
 function ImagePickerSection({
   label, images, onAdd, onRemove, onUrlAdd,
@@ -103,7 +136,7 @@ function ImagePickerSection({
         <View style={{ flexDirection: 'row', gap: 10 }}>
           {images.map((img, idx) => (
             <View key={idx} style={styles.imgPreview}>
-              <Image source={{ uri: img }} style={styles.imgPreviewImg} resizeMode="cover" />
+              <ThumbnailImage uri={img} />
               <TouchableOpacity style={styles.imgRemoveBtn} onPress={() => onRemove(idx)}>
                 <Ionicons name="close-circle" size={20} color="#E53935" />
               </TouchableOpacity>
@@ -497,7 +530,10 @@ export default function PropertyDetail() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { maxHeight: '95%' }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Property</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>Edit Property</Text>
+                <Text style={{ fontSize: 12, color: BLUE, fontWeight: '600', marginTop: 2 }}>{prop?.name}</Text>
+              </View>
               <TouchableOpacity onPress={() => setShowEdit(false)}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
@@ -516,7 +552,7 @@ export default function PropertyDetail() {
                 </View>
               )}
 
-              <FormInput label="Property Name *" value={editForm.name} onChangeText={(v) => setEditForm({ ...editForm, name: v })} placeholder="Grand Hotel" />
+              <FormInput label="Hotel Name *" value={editForm.name} onChangeText={(v) => setEditForm({ ...editForm, name: v })} placeholder="e.g. Grand Hotel Kashi" />
 
               <View style={{ marginBottom: 14 }}>
                 <Text style={styles.label}>Type</Text>
