@@ -22,6 +22,7 @@ export default function HotelManagerBookings() {
   const router = useRouter();
   const [bookings, setBookings] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
 
   const load = useCallback(async () => {
@@ -29,8 +30,14 @@ export default function HotelManagerBookings() {
       const params: any = {};
       if (filter) params.status = filter;
       const res = await api.get('/accommodation-bookings', { params });
-      setBookings(res.data);
-    } catch {}
+      const sorted = [...res.data].sort((a, b) =>
+        new Date(a.check_in).getTime() - new Date(b.check_in).getTime()
+      );
+      setBookings(sorted);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
   }, [filter]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -71,7 +78,16 @@ export default function HotelManagerBookings() {
 
         <View style={styles.metaRow}>
           <Text style={styles.metaText}>{item.room_category_name || 'Room'}</Text>
-          <Text style={styles.metaText}>👥 {item.guests} guests · 🛏 {item.rooms} rooms</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="people-outline" size={13} color={theme.colors.textMuted} />
+              <Text style={styles.metaText}>{item.guests} guests</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="bed-outline" size={13} color={theme.colors.textMuted} />
+              <Text style={styles.metaText}>{item.rooms} rooms</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.amountRow}>
@@ -80,7 +96,10 @@ export default function HotelManagerBookings() {
         </View>
 
         {item.special_requests ? (
-          <Text style={styles.requests} numberOfLines={2}>📝 {item.special_requests}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="chatbubble-ellipses-outline" size={13} color={theme.colors.textMuted} style={{ marginTop: 1 }} />
+            <Text style={[styles.requests, { flex: 1, marginBottom: 0 }]} numberOfLines={2}>{item.special_requests}</Text>
+          </View>
         ) : null}
 
         <Text style={styles.bookedOn}>Booked: {String(item.created_at).slice(0, 10)}</Text>
@@ -119,19 +138,29 @@ export default function HotelManagerBookings() {
         ))}
       </View>
 
-      <FlatList
-        data={bookings}
-        keyExtractor={(i) => i.id}
-        contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BLUE} />}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="receipt-outline" size={56} color={theme.colors.border} />
-            <Text style={styles.emptyText}>No bookings yet</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.loadingWrap}>
+          <Ionicons name="receipt-outline" size={40} color={BLUE + '40'} />
+          <Text style={styles.loadingText}>Loading bookings…</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={bookings}
+          keyExtractor={(i) => i.id}
+          contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 40 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BLUE} />}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="receipt-outline" size={56} color={theme.colors.border} />
+              <Text style={styles.emptyText}>No bookings yet</Text>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 6, textAlign: 'center' }}>
+                {filter ? `No ${filter.replace('_', ' ')} bookings` : 'Bookings will appear here once guests make reservations'}
+              </Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -179,6 +208,8 @@ const styles = StyleSheet.create({
   requests: { fontSize: 12, color: theme.colors.textMuted, fontStyle: 'italic', marginBottom: 8 },
   bookedOn: { fontSize: 11, color: theme.colors.textMuted },
 
+  loadingWrap: { alignItems: 'center', marginTop: 80, gap: 12 },
+  loadingText: { color: theme.colors.textMuted, fontSize: 14 },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { color: theme.colors.textMuted, fontSize: 16, marginTop: 16 },
+  emptyText: { color: theme.colors.text, fontWeight: '700', fontSize: 16, marginTop: 16 },
 });

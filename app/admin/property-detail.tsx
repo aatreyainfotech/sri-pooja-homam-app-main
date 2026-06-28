@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, type TextInputProps, Modal, RefreshControl, Platform, Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -210,6 +210,7 @@ export default function PropertyDetail() {
   const [editSuccess, setEditSuccess] = useState('');
   const [catError, setCatError] = useState('');
   const [managerMsg, setManagerMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [showDeleteCat, setShowDeleteCat] = useState<any>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -338,12 +339,7 @@ export default function PropertyDetail() {
   };
 
   const deleteCategory = (cat: any) => {
-    Alert.alert('Delete Category', `Delete "${cat.name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        try { await api.delete(`/room-categories/${cat.id}`); await load(); } catch {}
-      }},
-    ]);
+    setShowDeleteCat(cat);
   };
 
   if (!prop) return (
@@ -679,6 +675,28 @@ export default function PropertyDetail() {
           </View>
         </View>
       </Modal>
+
+      {/* ── Delete Room Type Confirmation ── */}
+      <Modal visible={!!showDeleteCat} animationType="fade" transparent>
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmCard}>
+            <Ionicons name="trash-outline" size={36} color="#E53935" style={{ marginBottom: 12 }} />
+            <Text style={styles.confirmTitle}>Delete Room Type?</Text>
+            <Text style={styles.confirmSub}>Delete "{showDeleteCat?.name}"? This cannot be undone.</Text>
+            <View style={styles.confirmBtns}>
+              <TouchableOpacity style={styles.confirmCancel} onPress={() => setShowDeleteCat(null)}>
+                <Text style={styles.confirmCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.confirmDelete} onPress={async () => {
+                try { await api.delete(`/room-categories/${showDeleteCat.id}`); await load(); } catch {}
+                setShowDeleteCat(null);
+              }}>
+                <Text style={styles.confirmDeleteText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -802,4 +820,14 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: '800', color: theme.colors.text },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, marginTop: 4, marginBottom: 20 },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+
+  confirmOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  confirmCard: { backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', maxWidth: 340, width: '100%' },
+  confirmTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text, marginBottom: 8, textAlign: 'center' },
+  confirmSub: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
+  confirmBtns: { flexDirection: 'row', gap: 12, width: '100%' },
+  confirmCancel: { flex: 1, borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  confirmCancelText: { fontSize: 15, fontWeight: '700', color: theme.colors.textMuted },
+  confirmDelete: { flex: 1, backgroundColor: '#E53935', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  confirmDeleteText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });
