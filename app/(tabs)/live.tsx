@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Image, TouchableOpacity,
-  RefreshControl, Platform,
+  RefreshControl, Platform, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,13 +19,21 @@ export default function Live() {
   const [videos, setVideos] = useState<any[]>([]);
   const [tab, setTab] = useState<'live' | 'reels'>('live');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
+    setError('');
+    setLoading(true);
     try {
       const [l, v] = await Promise.all([api.get('/live-streams'), api.get('/videos')]);
-      setLive(l.data);
-      setVideos(v.data);
-    } catch {}
+      setLive(Array.isArray(l.data) ? l.data : []);
+      setVideos(Array.isArray(v.data) ? v.data : []);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || e?.message || 'Failed to load. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -129,11 +137,28 @@ export default function Live() {
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <View style={styles.empty}>
-                <Ionicons name="radio-outline" size={52} color={IS_WEB ? 'rgba(212,175,55,0.3)' : theme.colors.border} />
-                <Text style={styles.emptyText}>No live streams right now</Text>
-                <Text style={styles.emptySub}>Check back soon for live pooja & homam</Text>
-              </View>
+              loading ? (
+                <View style={styles.empty}>
+                  <ActivityIndicator size="large" color="#D4AF37" />
+                  <Text style={styles.emptySub}>Loading live streams…</Text>
+                </View>
+              ) : error ? (
+                <View style={styles.empty}>
+                  <Ionicons name="cloud-offline-outline" size={48} color="#E53935" />
+                  <Text style={[styles.emptyText, { color: '#C62828' }]}>Could Not Load</Text>
+                  <Text style={styles.emptySub}>{error}</Text>
+                  <TouchableOpacity style={styles.retryBtn} onPress={load}>
+                    <Ionicons name="refresh" size={15} color="#fff" />
+                    <Text style={styles.retryText}>Try Again</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.empty}>
+                  <Ionicons name="radio-outline" size={52} color={IS_WEB ? 'rgba(212,175,55,0.3)' : theme.colors.border} />
+                  <Text style={styles.emptyText}>No live streams right now</Text>
+                  <Text style={styles.emptySub}>Check back soon for live pooja & homam</Text>
+                </View>
+              )
             }
             ListFooterComponent={IS_WEB ? <WebFooter /> : null}
           />
@@ -164,11 +189,28 @@ export default function Live() {
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <View style={styles.empty}>
-                <Ionicons name="videocam-outline" size={52} color={IS_WEB ? 'rgba(212,175,55,0.3)' : theme.colors.border} />
-                <Text style={styles.emptyText}>No videos yet</Text>
-                <Text style={styles.emptySub}>Devotional reels coming soon</Text>
-              </View>
+              loading ? (
+                <View style={styles.empty}>
+                  <ActivityIndicator size="large" color="#D4AF37" />
+                  <Text style={styles.emptySub}>Loading videos…</Text>
+                </View>
+              ) : error ? (
+                <View style={styles.empty}>
+                  <Ionicons name="cloud-offline-outline" size={48} color="#E53935" />
+                  <Text style={[styles.emptyText, { color: '#C62828' }]}>Could Not Load</Text>
+                  <Text style={styles.emptySub}>{error}</Text>
+                  <TouchableOpacity style={styles.retryBtn} onPress={load}>
+                    <Ionicons name="refresh" size={15} color="#fff" />
+                    <Text style={styles.retryText}>Try Again</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.empty}>
+                  <Ionicons name="videocam-outline" size={52} color={IS_WEB ? 'rgba(212,175,55,0.3)' : theme.colors.border} />
+                  <Text style={styles.emptyText}>No videos yet</Text>
+                  <Text style={styles.emptySub}>Devotional reels coming soon</Text>
+                </View>
+              )
             }
             ListFooterComponent={IS_WEB ? <WebFooter /> : null}
           />
@@ -282,7 +324,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(139,21,21,0.85)', alignItems: 'center', justifyContent: 'center',
   },
 
-  // Empty state
+  // Empty / Error / Loading state
   empty: { alignItems: 'center', marginTop: 80, padding: 20 },
   emptyText: {
     color: theme.colors.textSecondary,
@@ -290,6 +332,12 @@ const styles = StyleSheet.create({
   },
   emptySub: {
     color: theme.colors.textMuted,
-    fontSize: 13, marginTop: 6, textAlign: 'center',
+    fontSize: 13, marginTop: 6, textAlign: 'center', maxWidth: 280,
   },
+  retryBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#8B1515', paddingHorizontal: 22, paddingVertical: 11,
+    borderRadius: 999, marginTop: 18,
+  },
+  retryText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });

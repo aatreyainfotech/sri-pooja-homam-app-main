@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, Alert, Modal, ScrollView,
+  RefreshControl, Alert, Modal, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,13 +14,21 @@ export default function Bookings() {
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [receipt, setReceipt] = useState<any | null>(null);
 
   const load = useCallback(async () => {
+    setError('');
+    setLoading(true);
     try {
       const { data } = await api.get('/bookings/mine');
-      setItems(data);
-    } catch {}
+      setItems(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || e?.message || 'Could not load bookings.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -103,18 +111,35 @@ export default function Bookings() {
           </View>
         )}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="receipt-outline" size={48} color={theme.colors.textMuted} />
-            <Text style={styles.emptyTitle}>No bookings yet</Text>
-            <Text style={styles.emptySub}>Browse temples to book your first pooja</Text>
-            <TouchableOpacity
-              testID="bookings-browse-btn"
-              style={styles.browseBtn}
-              onPress={() => router.push('/(tabs)/temples')}
-            >
-              <Text style={styles.browseBtnText}>Browse Temples</Text>
-            </TouchableOpacity>
-          </View>
+          loading ? (
+            <View style={styles.empty}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.emptySub}>Loading your bookings…</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.empty}>
+              <Ionicons name="cloud-offline-outline" size={48} color="#E53935" />
+              <Text style={[styles.emptyTitle, { color: '#C62828' }]}>Could Not Load</Text>
+              <Text style={styles.emptySub}>{error}</Text>
+              <TouchableOpacity style={styles.browseBtn} onPress={load}>
+                <Ionicons name="refresh" size={15} color="#fff" />
+                <Text style={styles.browseBtnText}>Try Again</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Ionicons name="receipt-outline" size={48} color={theme.colors.textMuted} />
+              <Text style={styles.emptyTitle}>No bookings yet</Text>
+              <Text style={styles.emptySub}>Browse temples to book your first pooja</Text>
+              <TouchableOpacity
+                testID="bookings-browse-btn"
+                style={styles.browseBtn}
+                onPress={() => router.push('/(tabs)/temples')}
+              >
+                <Text style={styles.browseBtnText}>Browse Temples</Text>
+              </TouchableOpacity>
+            </View>
+          )
         }
       />
 
@@ -206,6 +231,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 17, fontWeight: '700', color: theme.colors.text, marginTop: 10 },
   emptySub: { fontSize: 13, color: theme.colors.textMuted, marginTop: 4 },
   browseBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
     marginTop: 16, backgroundColor: theme.colors.primary,
     paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999,
   },
