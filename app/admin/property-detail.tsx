@@ -15,40 +15,7 @@ import { theme } from '../../src/constants/theme';
 const BLUE = '#0288D1';
 const IS_WEB = Platform.OS === 'web';
 
-function pickMultipleImagesWeb(): Promise<string[]> {
-  return new Promise((resolve) => {
-    if (!IS_WEB) { resolve([]); return; }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.multiple = true;
-    // Must be in the DOM for the click to fire reliably in all browsers
-    input.style.cssText = 'position:fixed;top:-200px;left:-200px;opacity:0;pointer-events:none;';
-    document.body.appendChild(input);
-    const cleanup = () => { try { document.body.removeChild(input); } catch {} };
-    input.onchange = async (e: any) => {
-      const files: File[] = Array.from(e.target?.files || []);
-      const results: string[] = [];
-      for (const file of files) {
-        await new Promise<void>((res) => {
-          const reader = new FileReader();
-          reader.onload = () => { results.push(reader.result as string); res(); };
-          reader.readAsDataURL(file);
-        });
-      }
-      cleanup();
-      resolve(results);
-    };
-    // Resolve empty if user cancels without selecting
-    window.addEventListener('focus', function onFocus() {
-      setTimeout(() => {
-        window.removeEventListener('focus', onFocus);
-        if (!input.files?.length) { cleanup(); resolve([]); }
-      }, 500);
-    }, { once: true });
-    input.click();
-  });
-}
+// pickMultipleImagesWeb removed — use <label><input> in ImagePickerSection instead
 
 // ── Manager Dropdown ───────────────────────────────────────────────────────
 function ManagerDropdown({ managers, value, onChange }: { managers: any[]; value: string; onChange: (id: string) => void }) {
@@ -124,16 +91,32 @@ function ImagePickerSection({
 }: {
   label: string;
   images: string[];
-  onAdd: () => void;
+  onAdd: (uris: string[]) => void;
   onRemove: (idx: number) => void;
   onUrlAdd: (url: string) => void;
 }) {
   const [urlInput, setUrlInput] = useState('');
+
+  const handleFileChange = async (e: any) => {
+    const files: File[] = Array.from(e.target?.files || []);
+    if (!files.length) return;
+    const results: string[] = [];
+    for (const file of files) {
+      await new Promise<void>((res) => {
+        const reader = new FileReader();
+        reader.onload = () => { results.push(reader.result as string); res(); };
+        reader.readAsDataURL(file);
+      });
+    }
+    onAdd(results);
+    e.target.value = ''; // allow re-selecting same file
+  };
+
   return (
     <View style={{ marginBottom: 16 }}>
       <Text style={styles.label}>{label}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
           {images.map((img, idx) => (
             <View key={idx} style={styles.imgPreview}>
               <ThumbnailImage uri={img} />
@@ -142,12 +125,18 @@ function ImagePickerSection({
               </TouchableOpacity>
             </View>
           ))}
-          {IS_WEB && (
-            <TouchableOpacity style={styles.imgAddBtn} onPress={onAdd}>
-              <Ionicons name="camera-outline" size={24} color={BLUE} />
-              <Text style={styles.imgAddText}>Upload</Text>
-            </TouchableOpacity>
-          )}
+          {IS_WEB ? (
+            // Native label+input — guaranteed to open file picker on all browsers
+            <View style={styles.imgAddBtn}>
+              {/* @ts-ignore */}
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '100%', height: '100%', gap: 6 }}>
+                {/* @ts-ignore */}
+                <input type="file" accept="image/*" multiple onChange={handleFileChange} style={{ display: 'none' }} />
+                <Ionicons name="camera-outline" size={24} color={BLUE} />
+                <Text style={styles.imgAddText}>Upload</Text>
+              </label>
+            </View>
+          ) : null}
         </View>
       </ScrollView>
       <View style={styles.urlRow}>
@@ -508,10 +497,7 @@ export default function PropertyDetail() {
               <ImagePickerSection
                 label="Room Photos"
                 images={roomImages}
-                onAdd={async () => {
-                  const imgs = await pickMultipleImagesWeb();
-                  if (imgs.length) setRoomImages((prev) => [...prev, ...imgs]);
-                }}
+                onAdd={(uris) => { if (uris.length) setRoomImages((prev) => [...prev, ...uris]); }}
                 onRemove={(idx) => setRoomImages((prev) => prev.filter((_, i) => i !== idx))}
                 onUrlAdd={(url) => setRoomImages((prev) => [...prev, url])}
               />
@@ -590,12 +576,9 @@ export default function PropertyDetail() {
               <FormInput label="UPI ID (for payments)" value={editForm.upi_id} onChangeText={(v) => setEditForm({ ...editForm, upi_id: v })} placeholder="hotel@upi" />
 
               <ImagePickerSection
-                label="Property Photos"
+                label="Hotel Photos"
                 images={editImages}
-                onAdd={async () => {
-                  const imgs = await pickMultipleImagesWeb();
-                  if (imgs.length) setEditImages((prev) => [...prev, ...imgs]);
-                }}
+                onAdd={(uris) => { if (uris.length) setEditImages((prev) => [...prev, ...uris]); }}
                 onRemove={(idx) => setEditImages((prev) => prev.filter((_, i) => i !== idx))}
                 onUrlAdd={(url) => setEditImages((prev) => [...prev, url])}
               />
