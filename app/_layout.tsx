@@ -2,7 +2,7 @@ import { Stack, useRouter, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Platform, View, Text, StyleSheet, Image, Linking,
   TouchableOpacity, ScrollView, useWindowDimensions,
@@ -32,79 +32,201 @@ function AppStack() {
       <Stack.Screen name="legal/terms" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="legal/refund" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="notification-settings" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="hotel-manager" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="accommodation" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="accommodation/[id]" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="destinations" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="travel-packages" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="yatra-pass" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="blogs" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="contact" options={{ animation: 'slide_from_right' }} />
     </Stack>
   );
 }
+
+// ── Mega Nav Data ──────────────────────────────────────────────────────────
+const MEGA_NAV: Array<{
+  label: string; route?: string; live?: boolean;
+  children?: Array<{ label: string; sub: string; route: string }>;
+}> = [
+  {
+    label: 'Destinations',
+    children: [
+      { label: 'Andhra Pradesh', sub: 'Tirupati · Srisailam', route: '/destinations?state=andhra-pradesh' },
+      { label: 'Telangana', sub: 'Yadagirigutta · Dharmapuri', route: '/destinations?state=telangana' },
+      { label: 'Tamil Nadu', sub: 'Madurai · Rameshwaram', route: '/destinations?state=tamil-nadu' },
+      { label: 'Karnataka', sub: 'Udupi · Kukke Subramanya', route: '/destinations?state=karnataka' },
+      { label: 'Kerala', sub: 'Guruvayur · Sabarimala', route: '/destinations?state=kerala' },
+      { label: 'Maharashtra', sub: 'Shirdi · Pandharpur', route: '/destinations?state=maharashtra' },
+      { label: 'Gujarat', sub: 'Dwarka · Somnath', route: '/destinations?state=gujarat' },
+      { label: 'Uttarakhand', sub: 'Char Dham · Haridwar', route: '/destinations?state=uttarakhand' },
+      { label: 'Uttar Pradesh', sub: 'Varanasi · Mathura', route: '/destinations?state=uttar-pradesh' },
+    ],
+  },
+  {
+    label: 'Accommodation',
+    children: [
+      { label: 'Dharamshala', sub: 'Pilgrimage dharamshalas', route: '/accommodation' },
+      { label: 'Ashram', sub: 'Spiritual retreat stays', route: '/accommodation' },
+      { label: 'Temple Guest House', sub: 'Temple-managed stays', route: '/accommodation' },
+      { label: 'Hotels', sub: 'Comfortable hotel stays', route: '/accommodation' },
+    ],
+  },
+  { label: 'Puja Booking', route: '/(tabs)/temples' },
+  { label: 'Live Darshan', route: '/(tabs)/live', live: true },
+  {
+    label: 'More',
+    children: [
+      { label: 'Temple Information', sub: 'History, timings & routes', route: '/(tabs)/temples' },
+      { label: 'Travel Packages', sub: 'Char Dham, Jyotirlinga & more', route: '/travel-packages' },
+      { label: 'Yatra Pass', sub: 'Digital pilgrim pass', route: '/yatra-pass' },
+      { label: 'Events & Festivals', sub: 'Temple events calendar', route: '/(tabs)/calendar' },
+      { label: 'Blogs', sub: 'Stories, guides & travel tips', route: '/blogs' },
+      { label: 'Contact Us', sub: 'Phone, WhatsApp & email', route: '/contact' },
+    ],
+  },
+];
 
 // ── Auth-aware Web Navbar (must be inside AuthProvider) ────────────────────
 function WebNavbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const isHotelMgr = user?.role === 'hotel_manager';
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+  const go = (route: string) => { setActiveMenu(null); router.push(route as any); };
+  const activeItem = MEGA_NAV.find(n => n.label === activeMenu);
 
   return (
-    <View style={w.navbar}>
-      <View style={w.navInner}>
-        {/* Brand */}
-        <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} style={w.brandRow}>
-          <Image source={require('../assets/images/icon.png')} style={w.navLogo} />
-          <View>
-            <Text style={w.navTelugu}>శ్రీ పూజా హోమం</Text>
-            <Text style={w.navLatin}>SRI POOJA HOMAM</Text>
-          </View>
-        </TouchableOpacity>
+    <>
+      {activeMenu !== null && (
+        <TouchableOpacity
+          onPress={() => setActiveMenu(null)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 49 } as any}
+        />
+      )}
 
-        {/* Nav links */}
-        <View style={w.navLinks}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)' as any)}>
-            <Text style={w.navLink}>Home</Text>
+      <View style={[w.navbar, { zIndex: 50 } as any]}>
+        <View style={w.navInner}>
+          {/* Brand */}
+          <TouchableOpacity onPress={() => go('/(tabs)')} style={w.brandRow}>
+            <Image source={require('../assets/images/icon.png')} style={w.navLogo} />
+            <View>
+              <Text style={w.navTelugu}>శ్రీ పూజా హోమం</Text>
+              <Text style={w.navLatin}>SRI POOJA HOMAM</Text>
+            </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/temples' as any)}>
-            <Text style={w.navLink}>Temples</Text>
-          </TouchableOpacity>
-          {user && (
-            <TouchableOpacity onPress={() => router.push('/(tabs)/bookings' as any)}>
-              <Text style={w.navLink}>My Bookings</Text>
+
+          {/* Nav links */}
+          <View style={w.navLinks}>
+            <TouchableOpacity onPress={() => go('/(tabs)')} style={w.navLinkWrap}>
+              <Text style={w.navLink}>Home</Text>
             </TouchableOpacity>
-          )}
-          <TouchableOpacity onPress={() => router.push('/(tabs)/live' as any)} style={w.livePill}>
-            <View style={w.liveDot} />
-            <Text style={w.liveLabel}>Live</Text>
-          </TouchableOpacity>
-          {isAdmin && (
-            <TouchableOpacity onPress={() => router.push('/admin' as any)} style={w.adminPill}>
-              <Ionicons name="shield-checkmark" size={13} color="#D4AF37" />
-              <Text style={w.adminLabel}>Admin CMS</Text>
+            {MEGA_NAV.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                onPress={() => item.children ? setActiveMenu(activeMenu === item.label ? null : item.label) : go(item.route!)}
+                style={[w.navLinkWrap, activeMenu === item.label && w.navLinkActive]}
+              >
+                {item.live && <View style={w.liveDotNav} />}
+                <Text style={[
+                  w.navLink,
+                  item.live && { color: '#EF9A9A' },
+                  activeMenu === item.label && { color: GOLD },
+                ]}>
+                  {item.label}
+                </Text>
+                {item.children && (
+                  <Ionicons
+                    name={activeMenu === item.label ? 'chevron-up' : 'chevron-down'}
+                    size={11}
+                    color={activeMenu === item.label ? GOLD : 'rgba(255,255,255,0.45)'}
+                  />
+                )}
+              </TouchableOpacity>
+            ))}
+            {user && (
+              <TouchableOpacity onPress={() => go('/(tabs)/bookings')} style={w.navLinkWrap}>
+                <Text style={w.navLink}>My Bookings</Text>
+              </TouchableOpacity>
+            )}
+            {isAdmin && (
+              <TouchableOpacity onPress={() => go('/admin')} style={w.adminPill}>
+                <Ionicons name="shield-checkmark" size={13} color="#D4AF37" />
+                <Text style={w.adminLabel}>Admin CMS</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Auth area */}
+          {user ? (
+            <View style={w.authRow}>
+              {isHotelMgr && (
+                <TouchableOpacity onPress={() => go('/hotel-manager')} style={w.adminPill}>
+                  <Ionicons name="business-outline" size={13} color="#D4AF37" />
+                  <Text style={w.adminLabel}>My Hotel</Text>
+                </TouchableOpacity>
+              )}
+              <View style={w.userChip}>
+                <View style={w.userDot}>
+                  <Text style={w.userDotText}>{(user.full_name || 'U').charAt(0).toUpperCase()}</Text>
+                </View>
+                <Text style={w.userName} numberOfLines={1}>{user.full_name}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={async () => { await logout(); router.replace('/(auth)/login' as any); }}
+                style={w.logoutBtn}
+              >
+                <Ionicons name="log-out-outline" size={14} color="rgba(255,255,255,0.55)" />
+                <Text style={w.logoutText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={() => go('/(auth)/login')} style={w.loginBtn}>
+              <Ionicons name="person-circle-outline" size={17} color="#D4AF37" />
+              <Text style={w.loginBtnText}>Sign In</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Right: auth */}
-        {user ? (
-          <View style={w.authRow}>
-            <View style={w.userChip}>
-              <View style={w.userDot}>
-                <Text style={w.userDotText}>{(user.full_name || 'U').charAt(0).toUpperCase()}</Text>
-              </View>
-              <Text style={w.userName} numberOfLines={1}>{user.full_name}</Text>
+        {/* ── Mega Dropdown Panel ── */}
+        {activeMenu && activeItem?.children && (
+          <View style={w.megaPanel}>
+            <View style={w.megaInner}>
+              {activeItem.label === 'Destinations' ? (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {activeItem.children.map((child) => (
+                    <TouchableOpacity key={child.label} onPress={() => go(child.route)} style={w.megaDestItem}>
+                      <View style={w.megaDestDot} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={w.megaItemLabel}>{child.label}</Text>
+                        <Text style={w.megaItemSub}>{child.sub}</Text>
+                      </View>
+                      <Ionicons name="arrow-forward" size={12} color="rgba(212,175,55,0.45)" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {activeItem.children.map((child) => (
+                    <TouchableOpacity key={child.label} onPress={() => go(child.route)} style={w.megaItem}>
+                      <View>
+                        <Text style={w.megaItemLabel}>{child.label}</Text>
+                        <Text style={w.megaItemSub}>{child.sub}</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={14} color="rgba(212,175,55,0.35)" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
-            <TouchableOpacity
-              onPress={async () => { await logout(); router.replace('/(auth)/login' as any); }}
-              style={w.logoutBtn}
-            >
-              <Ionicons name="log-out-outline" size={14} color="rgba(255,255,255,0.55)" />
-              <Text style={w.logoutText}>Sign Out</Text>
-            </TouchableOpacity>
           </View>
-        ) : (
-          <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)} style={w.loginBtn}>
-            <Ionicons name="person-circle-outline" size={17} color="#D4AF37" />
-            <Text style={w.loginBtnText}>Sign In</Text>
-          </TouchableOpacity>
         )}
+
+        <View style={w.navGoldLine} />
       </View>
-      <View style={w.navGoldLine} />
-    </View>
+    </>
   );
 }
 
@@ -445,6 +567,30 @@ const w = StyleSheet.create({
   },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF5350' },
   liveLabel: { color: '#EF9A9A', fontSize: 13, fontWeight: '700' },
+
+  // Mega nav additions
+  navLinkWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 7 },
+  navLinkActive: { backgroundColor: 'rgba(212,175,55,0.1)' },
+  liveDotNav: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF5350' },
+  megaPanel: {
+    position: 'absolute', top: '100%', left: 0, right: 0,
+    backgroundColor: '#1A0404',
+    borderBottomLeftRadius: 16, borderBottomRightRadius: 16,
+    borderBottomWidth: 1, borderColor: 'rgba(212,175,55,0.15)',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 16px 48px rgba(0,0,0,0.65)' } as any : {}),
+  } as any,
+  megaInner: { maxWidth: 1280, alignSelf: 'center', width: '100%', paddingHorizontal: 28, paddingVertical: 24 },
+  megaDestItem: {
+    width: '33%', flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8,
+  },
+  megaDestDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#D4AF37', flexShrink: 0 },
+  megaItem: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+    paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, minWidth: 260,
+  },
+  megaItemLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  megaItemSub: { color: 'rgba(255,255,255,0.38)', fontSize: 12, marginTop: 2 },
 
   adminPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,

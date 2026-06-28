@@ -4,7 +4,7 @@ import {
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated,
   RefreshControl, FlatList, Dimensions, NativeSyntheticEvent,
-  NativeScrollEvent, useWindowDimensions, Linking, Platform,
+  NativeScrollEvent, useWindowDimensions, Linking, Platform, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,26 @@ const GOLD    = '#D4AF37';
 const SAFFRON = '#E67E22';
 const BG      = '#FFF8E7';
 const IS_WEB  = Platform.OS === 'web';
+
+const DESTINATIONS = [
+  { name: 'Tirupati', state: 'Andhra Pradesh', color: '#FF5722', route: '/destinations?state=andhra-pradesh' },
+  { name: 'Varanasi', state: 'Uttar Pradesh', color: '#9C27B0', route: '/destinations?state=uttar-pradesh' },
+  { name: 'Rishikesh', state: 'Uttarakhand', color: '#00BCD4', route: '/destinations?state=uttarakhand' },
+  { name: 'Shirdi', state: 'Maharashtra', color: '#FF9800', route: '/destinations?state=maharashtra' },
+  { name: 'Madurai', state: 'Tamil Nadu', color: '#E91E63', route: '/destinations?state=tamil-nadu' },
+  { name: 'Udupi', state: 'Karnataka', color: '#4CAF50', route: '/destinations?state=karnataka' },
+  { name: 'Dwarka', state: 'Gujarat', color: '#2196F3', route: '/destinations?state=gujarat' },
+  { name: 'Guruvayur', state: 'Kerala', color: '#8BC34A', route: '/destinations?state=kerala' },
+];
+
+const FESTIVALS = [
+  { name: 'Guru Purnima', date: 'Jul 21, 2025', desc: 'Day of spiritual teachers', color: '#9C27B0' },
+  { name: 'Varalakshmi Vratham', date: 'Aug 8, 2025', desc: 'Goddess Lakshmi festival', color: '#E91E63' },
+  { name: 'Ganesh Chaturthi', date: 'Aug 27, 2025', desc: "Lord Ganesha's birthday", color: '#FF5722' },
+  { name: 'Navratri Begins', date: 'Oct 2, 2025', desc: 'Nine nights of goddess worship', color: '#F44336' },
+  { name: 'Diwali', date: 'Oct 20, 2025', desc: 'Festival of lights', color: '#FFC107' },
+  { name: 'Karthika Masam', date: 'Nov 1, 2025', desc: 'Holy month of Lord Shiva', color: '#2196F3' },
+];
 
 const SERVICES = [
   { title: 'Book Pooja',     desc: 'Perform sacred poojas at home or at the temple with verified Vedic pujaris.', icon: 'flower-outline',   color: '#FF8C00', bg: 'rgba(255,140,0,0.14)', route: '/(tabs)/temples' },
@@ -236,6 +256,10 @@ function WebHome() {
   const [temples, setTemples] = useState<any[]>([]);
   const [poojas, setPoojas] = useState<any[]>([]);
   const [live, setLive] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [searchDest, setSearchDest] = useState('');
+  const [searchTemple, setSearchTemple] = useState('');
+  const [searchGuests, setSearchGuests] = useState('2');
 
   const innerW = Math.min(W, 1280);
 
@@ -244,10 +268,12 @@ function WebHome() {
       api.get('/temples'),
       api.get('/poojas'),
       api.get('/live-streams').catch(() => ({ data: [] })),
-    ]).then(([t, p, l]) => {
+      api.get('/properties').catch(() => ({ data: [] })),
+    ]).then(([t, p, l, pr]) => {
       setTemples(t.data || []);
       setPoojas(p.data || []);
       setLive(l.data || []);
+      setProperties((pr.data || []).filter((x: any) => x.is_active));
     }).catch(() => {});
   }, []);
 
@@ -316,6 +342,69 @@ function WebHome() {
         </View>
       </View>
 
+      {/* ── SMART SEARCH ─────────────────────────────────────────────────── */}
+      <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6', paddingVertical: 0 }]}>
+        <View style={{
+          maxWidth: innerW, alignSelf: 'center', width: '100%',
+          paddingHorizontal: 24, marginTop: -36,
+        }}>
+          <View style={wh.searchCard}>
+            <View style={wh.searchRow}>
+              <View style={wh.searchField}>
+                <Ionicons name="location-outline" size={18} color={SAFFRON} />
+                <TextInput
+                  style={wh.searchInput}
+                  placeholder="Destination / State"
+                  placeholderTextColor="#aaa"
+                  value={searchDest}
+                  onChangeText={setSearchDest}
+                />
+              </View>
+              <View style={wh.searchDivider} />
+              <View style={wh.searchField}>
+                <Ionicons name="business-outline" size={18} color={SAFFRON} />
+                <TextInput
+                  style={wh.searchInput}
+                  placeholder="Temple Name"
+                  placeholderTextColor="#aaa"
+                  value={searchTemple}
+                  onChangeText={setSearchTemple}
+                />
+              </View>
+              <View style={wh.searchDivider} />
+              <View style={wh.searchField}>
+                <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
+                <TextInput style={wh.searchInput} placeholder="Check-in Date" placeholderTextColor="#aaa" />
+              </View>
+              <View style={wh.searchDivider} />
+              <View style={wh.searchField}>
+                <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
+                <TextInput style={wh.searchInput} placeholder="Check-out Date" placeholderTextColor="#aaa" />
+              </View>
+              <View style={wh.searchDivider} />
+              <View style={[wh.searchField, { maxWidth: 100 }]}>
+                <Ionicons name="people-outline" size={18} color={SAFFRON} />
+                <TextInput
+                  style={wh.searchInput}
+                  placeholder="Guests"
+                  placeholderTextColor="#aaa"
+                  value={searchGuests}
+                  onChangeText={setSearchGuests}
+                  keyboardType="numeric"
+                />
+              </View>
+              <TouchableOpacity
+                style={wh.searchBtn}
+                onPress={() => router.push('/accommodation' as any)}
+              >
+                <Ionicons name="search" size={18} color="#fff" />
+                <Text style={wh.searchBtnText}>Search</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
+
       {/* ── LIVE DARSHAN ─────────────────────────────────────────────────── */}
       {live.length > 0 && (
         <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
@@ -368,6 +457,45 @@ function WebHome() {
         </View>
       )}
 
+      {/* ── POPULAR DESTINATIONS ─────────────────────────────────────────── */}
+      <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+        <View style={[wh.section, { maxWidth: innerW }]}>
+          <SecHead title="Popular Destinations" sub="Sacred pilgrimage cities across India" onAll={() => router.push('/destinations' as any)} />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
+            {DESTINATIONS.map((d) => (
+              <TouchableOpacity
+                key={d.name}
+                onPress={() => router.push(d.route as any)}
+                activeOpacity={0.85}
+                style={{
+                  flex: 1, minWidth: 140,
+                  backgroundColor: '#fff',
+                  borderRadius: 16, overflow: 'hidden',
+                  borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(74,44,42,0.1)' } as any : {}),
+                } as any}
+              >
+                <LinearGradient
+                  colors={[d.color + '22', d.color + '08']}
+                  style={{ padding: 18, alignItems: 'center', gap: 8 }}
+                >
+                  <View style={{
+                    width: 48, height: 48, borderRadius: 24,
+                    backgroundColor: d.color + '20',
+                    borderWidth: 2, borderColor: d.color + '40',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Ionicons name="location" size={22} color={d.color} />
+                  </View>
+                  <Text style={{ color: '#4A2C2A', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
+                  <Text style={{ color: '#7A6A5A', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+
       {/* ── SERVICES ─────────────────────────────────────────────────────── */}
       <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
@@ -399,6 +527,70 @@ function WebHome() {
         </View>
       )}
 
+      {/* ── FEATURED ACCOMMODATIONS ──────────────────────────────────────── */}
+      {properties.length > 0 && (
+        <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+          <View style={[wh.section, { maxWidth: innerW }]}>
+            <SecHead title="Featured Accommodations" sub="Hotels & dharamshalas near sacred temples" onAll={() => router.push('/accommodation' as any)} />
+            <View style={{ flexDirection: 'row', gap: 18, flexWrap: 'wrap' }}>
+              {properties.slice(0, 3).map((p: any) => {
+                const img = p.images ? (p.images.includes('|||') ? p.images.split('|||')[0] : p.images.split(',')[0]) : null;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    onPress={() => router.push(`/accommodation/${p.id}` as any)}
+                    activeOpacity={0.88}
+                    style={{
+                      flex: 1, minWidth: 260,
+                      backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
+                      borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+                      ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(74,44,42,0.12)' } as any : {}),
+                    } as any}
+                  >
+                    <View style={{ height: 180, backgroundColor: '#F5E6C8' }}>
+                      {img ? (
+                        <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                      ) : (
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="bed-outline" size={40} color="#D35400" />
+                        </View>
+                      )}
+                      <View style={{
+                        position: 'absolute', top: 12, left: 12,
+                        backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
+                      }}>
+                        <Text style={{ color: '#D35400', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>
+                          {p.type || 'Hotel'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{ padding: 16 }}>
+                      <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{p.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+                        <Ionicons name="location-outline" size={13} color={SAFFRON} />
+                        <Text style={{ color: '#7A6A5A', fontSize: 12 }} numberOfLines={1}>{p.city || p.address}</Text>
+                      </View>
+                      {p.amenities && (
+                        <Text style={{ color: '#999', fontSize: 11 }} numberOfLines={1}>{p.amenities}</Text>
+                      )}
+                      <TouchableOpacity
+                        onPress={() => router.push(`/accommodation/${p.id}` as any)}
+                        style={{
+                          marginTop: 12, paddingVertical: 10, borderRadius: 10, alignItems: 'center',
+                          backgroundColor: '#D35400',
+                        }}
+                      >
+                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>View Rooms →</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* ── POOJAS CAROUSEL ──────────────────────────────────────────────── */}
       {poojas.length > 0 && (
         <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#FDF5E6' }}>
@@ -410,6 +602,38 @@ function WebHome() {
           </View>
         </View>
       )}
+
+      {/* ── FESTIVAL HIGHLIGHTS ──────────────────────────────────────────── */}
+      <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+        <View style={[wh.section, { maxWidth: innerW }]}>
+          <SecHead title="Festival Highlights" sub="Upcoming sacred festivals & celebrations" onAll={() => router.push('/(tabs)/calendar' as any)} />
+          <View style={{ flexDirection: 'row', gap: 14, flexWrap: 'wrap' }}>
+            {FESTIVALS.map((f) => (
+              <View
+                key={f.name}
+                style={{
+                  flex: 1, minWidth: 220,
+                  backgroundColor: '#fff', borderRadius: 16, padding: 18,
+                  borderLeftWidth: 4, borderLeftColor: f.color,
+                  borderWidth: 1, borderColor: 'rgba(230,126,34,0.12)',
+                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(74,44,42,0.08)' } as any : {}),
+                } as any}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: f.color + '18', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="calendar" size={18} color={f.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: f.color, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>{f.date}</Text>
+                    <Text style={{ color: '#4A2C2A', fontSize: 14, fontWeight: '800', marginTop: 1 }}>{f.name}</Text>
+                  </View>
+                </View>
+                <Text style={{ color: '#7A6A5A', fontSize: 12, lineHeight: 18 }}>{f.desc}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
 
       {/* ── ACCOMMODATION TEASER ─────────────────────────────────────────── */}
       <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6' }]}>
@@ -763,6 +987,32 @@ const wh: any = {
   },
   whyTitle: { color: '#4A2C2A', fontSize: 15, fontWeight: '800', marginBottom: 6 },
   whyDesc: { color: '#5A5A5A', fontSize: 13, lineHeight: 21 },
+
+  // Search widget
+  searchCard: {
+    backgroundColor: '#fff', borderRadius: 18, padding: 6,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0 8px 40px rgba(74,44,42,0.18)',
+    } as any : {}),
+    borderWidth: 1, borderColor: 'rgba(230,126,34,0.18)',
+  },
+  searchRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+  searchField: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 14, paddingVertical: 10, minWidth: 120,
+  },
+  searchInput: {
+    flex: 1, fontSize: 14, color: '#4A2C2A', outline: 'none',
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
+  } as any,
+  searchDivider: { width: 1, height: 28, backgroundColor: 'rgba(230,126,34,0.2)' },
+  searchBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#D35400', paddingHorizontal: 22, paddingVertical: 13,
+    borderRadius: 12, margin: 4,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 16px rgba(211,84,0,0.35)' } as any : {}),
+  },
+  searchBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
 
   // CTA section
   ctaSection: {
