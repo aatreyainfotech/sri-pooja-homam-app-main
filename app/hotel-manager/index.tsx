@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert, TextInput, Modal,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,7 @@ export default function HotelManagerDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [showEditInfo, setShowEditInfo] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
+  const [updateMsg, setUpdateMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -31,6 +32,7 @@ export default function HotelManagerDashboard() {
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const handleUpdateInfo = async () => {
+    setUpdateMsg(null);
     try {
       await api.put(`/properties/${data.property.id}`, {
         name: editForm.name, type: editForm.type || 'hotel',
@@ -43,9 +45,9 @@ export default function HotelManagerDashboard() {
       });
       setShowEditInfo(false);
       await load();
-      Alert.alert('Updated', 'Property information saved.');
+      setUpdateMsg({ type: 'success', text: 'Property information saved successfully.' });
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail || 'Update failed');
+      setUpdateMsg({ type: 'error', text: e?.response?.data?.detail || 'Update failed. Please try again.' });
     }
   };
 
@@ -123,17 +125,34 @@ export default function HotelManagerDashboard() {
         )}
       </ScrollView>
 
+      {/* Success toast on main screen */}
+      {!!updateMsg && updateMsg.type === 'success' && !showEditInfo && (
+        <View style={[styles.toast, { backgroundColor: '#2E7D32' }]}>
+          <Ionicons name="checkmark-circle" size={20} color="#fff" />
+          <Text style={styles.toastText}>{updateMsg.text}</Text>
+          <TouchableOpacity onPress={() => setUpdateMsg(null)}>
+            <Ionicons name="close" size={18} color="rgba(255,255,255,0.8)" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Edit Info Modal */}
       <Modal visible={showEditInfo} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Property</Text>
-              <TouchableOpacity onPress={() => setShowEditInfo(false)}>
+              <TouchableOpacity onPress={() => { setShowEditInfo(false); setUpdateMsg(null); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
+              {!!updateMsg && updateMsg.type === 'error' && (
+                <View style={{ backgroundColor: '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 14, flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                  <Ionicons name="alert-circle-outline" size={18} color="#C62828" />
+                  <Text style={{ color: '#C62828', fontSize: 13, flex: 1 }}>{updateMsg.text}</Text>
+                </View>
+              )}
               <FormInput label="Property Name" value={editForm.name || ''} onChangeText={(v: string) => setEditForm({ ...editForm, name: v })} />
               <FormInput label="Address" value={editForm.address || ''} onChangeText={(v: string) => setEditForm({ ...editForm, address: v })} />
               <FormInput label="City" value={editForm.city || ''} onChangeText={(v: string) => setEditForm({ ...editForm, city: v })} />
@@ -238,6 +257,8 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
   input: { borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: theme.colors.text, backgroundColor: '#FAFAFA' },
 
+  toast: { position: 'absolute', bottom: 24, left: 16, right: 16, borderRadius: 14, padding: 14, flexDirection: 'row', gap: 10, alignItems: 'center', zIndex: 999 },
+  toastText: { flex: 1, color: '#fff', fontWeight: '600', fontSize: 13 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: '88%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
