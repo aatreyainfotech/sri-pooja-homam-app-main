@@ -166,6 +166,8 @@ export default function PropertyDetail() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
+  const [catError, setCatError] = useState('');
+  const [managerMsg, setManagerMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -199,9 +201,9 @@ export default function PropertyDetail() {
   };
 
   const handleAddCategory = async () => {
+    setCatError('');
     if (!catForm.name.trim() || !catForm.price_per_night) {
-      Alert.alert('Missing Fields', 'Name and price are required.');
-      return;
+      setCatError('Category name and price are required.'); return;
     }
     try {
       await api.post('/room-categories', {
@@ -218,7 +220,7 @@ export default function PropertyDetail() {
       resetCatForm();
       await load();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail || 'Failed to add room category');
+      setCatError(e?.response?.data?.detail || 'Failed to add room category');
     }
   };
 
@@ -252,13 +254,14 @@ export default function PropertyDetail() {
   };
 
   const handleAssignManager = async () => {
+    setManagerMsg(null);
     if (!managerId) return;
     try {
       await api.put(`/properties/${id}/manager`, { manager_id: managerId });
-      Alert.alert('Done', 'Manager assigned');
+      setManagerMsg({ type: 'success', text: 'Manager assigned successfully.' });
       await load();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail || 'Failed to assign manager');
+      setManagerMsg({ type: 'error', text: e?.response?.data?.detail || 'Failed to assign manager' });
     }
   };
 
@@ -371,6 +374,12 @@ export default function PropertyDetail() {
                 value={managerId}
                 onChange={setManagerId}
               />
+              {!!managerMsg && (
+                <View style={{ backgroundColor: managerMsg.type === 'success' ? '#E8F5E9' : '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 8 }}>
+                  <Ionicons name={managerMsg.type === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline'} size={16} color={managerMsg.type === 'success' ? '#2E7D32' : '#C62828'} />
+                  <Text style={{ color: managerMsg.type === 'success' ? '#2E7D32' : '#C62828', fontSize: 13, flex: 1 }}>{managerMsg.text}</Text>
+                </View>
+              )}
               <TouchableOpacity style={styles.assignBtn} onPress={handleAssignManager}>
                 <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
                 <Text style={styles.assignBtnText}>Assign Manager</Text>
@@ -438,11 +447,17 @@ export default function PropertyDetail() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Room Category</Text>
-              <TouchableOpacity onPress={() => { setShowAddCat(false); resetCatForm(); }}>
+              <TouchableOpacity onPress={() => { setShowAddCat(false); resetCatForm(); setCatError(''); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {!!catError && (
+                <View style={{ backgroundColor: '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 14, flexDirection: 'row', gap: 8 }}>
+                  <Ionicons name="alert-circle-outline" size={16} color="#C62828" />
+                  <Text style={{ color: '#C62828', fontSize: 13, flex: 1 }}>{catError}</Text>
+                </View>
+              )}
               <FormInput label="Category Name *" value={catForm.name} onChangeText={(v) => setCatForm({ ...catForm, name: v })} placeholder="Deluxe Room" />
               <FormInput label="Price per Night (₹) *" value={catForm.price_per_night} onChangeText={(v) => setCatForm({ ...catForm, price_per_night: v })} placeholder="1500" keyboardType="numeric" />
               <View style={{ flexDirection: 'row', gap: 12 }}>
