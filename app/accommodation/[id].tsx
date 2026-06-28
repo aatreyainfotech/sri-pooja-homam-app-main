@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import WebFooter from '../../src/components/WebFooter';
 
 const IS_WEB = Platform.OS === 'web';
 const BLUE = '#0288D1';
@@ -339,7 +340,7 @@ export default function PropertyDetailPage() {
           </View>
         </View>
 
-        <View style={[styles.body, IS_WEB && { maxWidth: 960, alignSelf: 'center', width: '100%' } as any]}>
+        <View style={[styles.body, IS_WEB && { maxWidth: 1100, alignSelf: 'center', width: '100%' } as any]}>
           {/* ── Quick Info Strip ─────────────────────────────── */}
           <View style={styles.quickStrip}>
             <View style={styles.quickItem}>
@@ -437,6 +438,7 @@ export default function PropertyDetailPage() {
             )}
           </View>
         </View>
+        {IS_WEB && <WebFooter />}
       </ScrollView>
 
       {/* ══════════════════ BOOKING MODAL ══════════════════════ */}
@@ -731,8 +733,20 @@ const styles = StyleSheet.create({
   selectBtnTextActive: { color: '#fff' },
 
   // Modal shell
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%', overflow: 'hidden' },
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+    ...(IS_WEB
+      ? { justifyContent: 'center', alignItems: 'center', padding: 24 }
+      : { justifyContent: 'flex-end' }
+    ),
+  } as any,
+  modalCard: {
+    backgroundColor: '#fff', overflow: 'hidden',
+    ...(IS_WEB
+      ? { borderRadius: 24, width: '100%', maxWidth: 560, maxHeight: '90%' }
+      : { borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' }
+    ),
+  } as any,
 
   // Booking modal
   bookHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 24, gap: 12 },
