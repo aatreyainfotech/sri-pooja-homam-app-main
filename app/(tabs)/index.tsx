@@ -21,6 +21,13 @@ const SAFFRON = '#E67E22';
 const BG      = '#FFF8E7';
 const IS_WEB  = Platform.OS === 'web';
 
+function parseImages(s: string | null | undefined): string[] {
+  if (!s) return [];
+  if (s.includes('|||')) return s.split('|||').map(v => v.trim()).filter(Boolean);
+  if (s.startsWith('data:')) return [s.trim()];
+  return s.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 const DESTINATIONS = [
   { name: 'Tirupati', state: 'Andhra Pradesh', color: '#FF5722', route: '/destinations?state=andhra-pradesh' },
   { name: 'Varanasi', state: 'Uttar Pradesh', color: '#9C27B0', route: '/destinations?state=uttar-pradesh' },
@@ -534,56 +541,14 @@ function WebHome() {
             <SecHead title="Featured Accommodations" sub="Hotels & dharamshalas near sacred temples" onAll={() => router.push('/accommodation' as any)} />
             <View style={{ flexDirection: 'row', gap: 18, flexWrap: 'wrap' }}>
               {properties.slice(0, 3).map((p: any) => {
-                const img = p.images ? (p.images.includes('|||') ? p.images.split('|||')[0] : p.images.split(',')[0]) : null;
+                const img = parseImages(p.images)[0] || null;
                 return (
-                  <TouchableOpacity
+                  <AccomCard
                     key={p.id}
+                    property={p}
+                    img={img}
                     onPress={() => router.push(`/accommodation/${p.id}` as any)}
-                    activeOpacity={0.88}
-                    style={{
-                      flex: 1, minWidth: 260,
-                      backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-                      borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
-                      ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(74,44,42,0.12)' } as any : {}),
-                    } as any}
-                  >
-                    <View style={{ height: 180, backgroundColor: '#F5E6C8' }}>
-                      {img ? (
-                        <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                      ) : (
-                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="bed-outline" size={40} color="#D35400" />
-                        </View>
-                      )}
-                      <View style={{
-                        position: 'absolute', top: 12, left: 12,
-                        backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
-                      }}>
-                        <Text style={{ color: '#D35400', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>
-                          {p.type || 'Hotel'}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={{ padding: 16 }}>
-                      <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{p.name}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-                        <Ionicons name="location-outline" size={13} color={SAFFRON} />
-                        <Text style={{ color: '#7A6A5A', fontSize: 12 }} numberOfLines={1}>{p.city || p.address}</Text>
-                      </View>
-                      {p.amenities && (
-                        <Text style={{ color: '#999', fontSize: 11 }} numberOfLines={1}>{p.amenities}</Text>
-                      )}
-                      <TouchableOpacity
-                        onPress={() => router.push(`/accommodation/${p.id}` as any)}
-                        style={{
-                          marginTop: 12, paddingVertical: 10, borderRadius: 10, alignItems: 'center',
-                          backgroundColor: '#D35400',
-                        }}
-                      >
-                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>View Rooms →</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -1270,6 +1235,69 @@ function CategoryCard({ icon, title, subtitle, gradColors, onPress }: any) {
         <Text style={mob.catTitle}>{title}</Text>
         <Text style={mob.catSub}>{subtitle}</Text>
       </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
+function AccomCard({ property: p, img, onPress }: { property: any; img: string | null; onPress: () => void }) {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.88}
+      style={{
+        flex: 1, minWidth: 260,
+        backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
+        borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+        ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(74,44,42,0.12)' } as any : {}),
+      } as any}
+    >
+      <View style={{ height: 180 }}>
+        {img && !imgError ? (
+          <Image
+            source={{ uri: img }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <LinearGradient
+            colors={['#7B1515', '#D35400']}
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="bed-outline" size={48} color="rgba(255,255,255,0.7)" />
+          </LinearGradient>
+        )}
+        <View style={{
+          position: 'absolute', top: 12, left: 12,
+          backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
+        }}>
+          <Text style={{ color: '#D35400', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>
+            {p.type || 'Hotel'}
+          </Text>
+        </View>
+        {p.min_price ? (
+          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#D35400', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>₹{parseFloat(p.min_price).toFixed(0)}/night</Text>
+          </View>
+        ) : null}
+      </View>
+      <View style={{ padding: 16 }}>
+        <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{p.name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+          <Ionicons name="location-outline" size={13} color={SAFFRON} />
+          <Text style={{ color: '#7A6A5A', fontSize: 12 }} numberOfLines={1}>{p.city || p.address}</Text>
+        </View>
+        {p.amenities ? (
+          <Text style={{ color: '#999', fontSize: 11, marginBottom: 8 }} numberOfLines={1}>{p.amenities}</Text>
+        ) : null}
+        <TouchableOpacity
+          onPress={onPress}
+          style={{ paddingVertical: 10, borderRadius: 10, alignItems: 'center', backgroundColor: '#D35400' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>View Rooms</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 }
