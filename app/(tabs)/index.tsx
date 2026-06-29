@@ -296,8 +296,8 @@ function WebHome() {
       <View style={wh.hero}>
         {/* Background gradient */}
         <LinearGradient
-          colors={['#0D0305', '#4A0E0E', '#8B1515', '#C9922A']}
-          locations={[0, 0.35, 0.7, 1]}
+          colors={['#C9922A', '#8B1515', '#3D0808', '#0D0305']}
+          locations={[0, 0.3, 0.65, 1]}
           style={StyleSheet.absoluteFill}
         />
         {/* Decorative OM */}
@@ -352,10 +352,10 @@ function WebHome() {
       </View>
 
       {/* ── SMART SEARCH ─────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF', paddingVertical: 0 }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF', paddingTop: 0, paddingBottom: 24 }]}>
         <View style={{
           maxWidth: innerW, alignSelf: 'center', width: '100%',
-          paddingHorizontal: 24, marginTop: -36,
+          paddingHorizontal: 24, marginTop: -48,
         }}>
           <View style={wh.searchCard}>
             <View style={wh.searchRow}>
@@ -777,7 +777,7 @@ const wh: any = {
   },
   heroOm: {
     position: 'absolute', right: -20, top: -20,
-    fontSize: 360, color: 'rgba(255,140,0,0.07)',
+    fontSize: 360, color: 'rgba(0,0,0,0.12)',
     fontWeight: '400', lineHeight: 400,
   },
   heroInner: { width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
@@ -805,9 +805,9 @@ const wh: any = {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: GOLD, paddingHorizontal: 28, paddingVertical: 15,
     borderRadius: 999,
-    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(212,175,55,0.4)' } as any : {}),
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(201,146,42,0.45)' } as any : {}),
   },
-  heroBtn1Text: { color: '#2D0B00', fontSize: 16, fontWeight: '800' },
+  heroBtn1Text: { color: '#1A0505', fontSize: 16, fontWeight: '800' },
   heroBtn2: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 24, paddingVertical: 15,
