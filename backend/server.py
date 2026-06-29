@@ -72,8 +72,17 @@ logger = logging.getLogger(__name__)
 
 # ----------------------------- DB Helpers ------------------------------------
 def _get_conn():
-    """Connect to Azure SQL with up to 3 retries — handles Serverless auto-resume (~30s)."""
+    """Connect to Azure SQL with retries tuned for Serverless auto-resume (30-60s).
+
+    Azure SQL Serverless refuses TCP connections immediately while auto-paused,
+    so each attempt fails in <1s. We must wait long enough between retries for
+    the database to finish resuming before we try again.
+    Timeline: attempt-1 fails fast → wait 30s (DB waking) → attempt-2 often
+    succeeds; if not → wait 20s → attempt-3 should always succeed.
+    Total worst-case: ~51s, well inside the 90s frontend timeout.
+    """
     last_err = None
+    sleep_secs = [30, 20]
     for attempt in range(3):
         try:
             return pymssql.connect(
@@ -89,7 +98,9 @@ def _get_conn():
             last_err = e
             logger.warning(f"DB connection attempt {attempt + 1}/3 failed: {e}")
             if attempt < 2:
-                time.sleep(8)
+                wait = sleep_secs[attempt]
+                logger.info(f"Waiting {wait}s for Azure SQL Serverless to resume…")
+                time.sleep(wait)
     logger.error(f"DB connection failed after 3 attempts: {last_err}")
     raise HTTPException(status_code=503, detail="Database temporarily unavailable. Please try again.")
 
