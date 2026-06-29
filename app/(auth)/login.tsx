@@ -56,13 +56,16 @@ export default function Login() {
       router.replace('/(tabs)');
     } catch (e) {
       const msg = apiError(e);
-      setLoginError(msg);
       const isDbError = /database|unavailable|server|starting/i.test(msg);
       if (isDbError) {
+        // Keep spinner running — show calm "waking up" state, not an error
+        setLoginError('__waking__');
         startRetryCountdown(onLogin);
+        // Do NOT setLoading(false) — button stays in loading/connecting state
+      } else {
+        setLoginError(msg);
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -123,26 +126,26 @@ export default function Login() {
           <Text style={w.title}>Sign In</Text>
           <Text style={w.sub}>Enter your mobile number and password</Text>
 
-          {!!loginError && (
-            <View style={w.errorBox}>
-              <Ionicons name={retryIn > 0 ? 'time-outline' : 'alert-circle-outline'} size={18} color={retryIn > 0 ? '#E67E22' : '#E53935'} />
+          {loginError === '__waking__' ? (
+            <View style={w.wakingBox}>
+              <ActivityIndicator size="small" color={GOLD} />
               <View style={{ flex: 1 }}>
-                <Text style={[w.errorText, retryIn > 0 && { color: '#E67E22' }]}>{loginError}</Text>
-                {retryIn > 0 && (
-                  <Text style={w.retryText}>Server is starting up — retrying in {retryIn}s…</Text>
-                )}
+                <Text style={w.wakingText}>Server is starting up…</Text>
+                <Text style={w.wakingRetry}>Auto-connecting in {retryIn}s</Text>
               </View>
-              {retryIn > 0 ? (
-                <TouchableOpacity onPress={onLogin}>
-                  <Text style={{ color: '#E67E22', fontWeight: '700', fontSize: 12 }}>Retry Now</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity onPress={() => setLoginError('')}>
-                  <Ionicons name="close" size={16} color="#E53935" />
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity onPress={onLogin}>
+                <Text style={{ color: GOLD, fontWeight: '700', fontSize: 12 }}>Now</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          ) : !!loginError ? (
+            <View style={w.errorBox}>
+              <Ionicons name="alert-circle-outline" size={18} color="#E53935" />
+              <Text style={[w.errorText, { flex: 1 }]}>{loginError}</Text>
+              <TouchableOpacity onPress={() => setLoginError('')}>
+                <Ionicons name="close" size={16} color="#E53935" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
             <Ionicons name="call-outline" size={19} color={focused === 'mobile' ? GOLD : 'rgba(212,175,55,0.5)'} />
@@ -178,8 +181,15 @@ export default function Login() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity testID="login-submit-btn" style={w.btnPrimary} onPress={onLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : (
+          <TouchableOpacity testID="login-submit-btn" style={[w.btnPrimary, loading && { opacity: 0.85 }]} onPress={onLogin} disabled={loading}>
+            {loading ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <ActivityIndicator color="#fff" size="small" />
+                <Text style={w.btnPrimaryText}>
+                  {loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}
+                </Text>
+              </View>
+            ) : (
               <>
                 <Text style={w.btnPrimaryText}>Sign In</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
@@ -244,15 +254,20 @@ export default function Login() {
               <Text style={m.cardTitle}>Sign In</Text>
               <Text style={m.cardSub}>Enter your mobile number and password</Text>
 
-              {!!loginError && (
-                <View style={m.errorBox}>
-                  <Ionicons name={retryIn > 0 ? 'time-outline' : 'alert-circle-outline'} size={16} color={retryIn > 0 ? '#E65100' : '#C62828'} />
+              {loginError === '__waking__' ? (
+                <View style={m.wakingBox}>
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
                   <View style={{ flex: 1 }}>
-                    <Text style={m.errorText}>{loginError}</Text>
-                    {retryIn > 0 && <Text style={m.retryText}>Retrying in {retryIn}s…</Text>}
+                    <Text style={m.wakingText}>Server is starting up…</Text>
+                    <Text style={m.wakingRetry}>Auto-connecting in {retryIn}s</Text>
                   </View>
                 </View>
-              )}
+              ) : !!loginError ? (
+                <View style={m.errorBox}>
+                  <Ionicons name="alert-circle-outline" size={16} color="#C62828" />
+                  <Text style={[m.errorText, { flex: 1 }]}>{loginError}</Text>
+                </View>
+              ) : null}
 
               <View style={m.inputWrap}>
                 <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
@@ -284,8 +299,15 @@ export default function Login() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity testID="login-submit-btn" style={m.btnPrimary} onPress={onLogin} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : (
+              <TouchableOpacity testID="login-submit-btn" style={[m.btnPrimary, loading && { opacity: 0.85 }]} onPress={onLogin} disabled={loading}>
+                {loading ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <ActivityIndicator color="#fff" size="small" />
+                    <Text style={m.btnPrimaryText}>
+                      {loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}
+                    </Text>
+                  </View>
+                ) : (
                   <>
                     <Text style={m.btnPrimaryText}>Sign In</Text>
                     <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -409,13 +431,20 @@ const w = StyleSheet.create({
   },
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.4 },
 
+  wakingBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(212,175,55,0.1)', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)', marginBottom: 14,
+  },
+  wakingText: { color: GOLD, fontSize: 13, fontWeight: '700' },
+  wakingRetry: { color: 'rgba(212,175,55,0.65)', fontSize: 11, marginTop: 2 },
+
   errorBox: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: 'rgba(229,57,53,0.08)', borderRadius: 12, padding: 12,
     borderWidth: 1, borderColor: 'rgba(229,57,53,0.25)', marginBottom: 14,
   },
-  errorText: { color: '#E53935', fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 },
-  retryText: { color: '#E67E22', fontSize: 11, marginTop: 3 },
+  errorText: { color: '#E53935', fontSize: 13, fontWeight: '600', lineHeight: 18 },
 
   forgotBtn: { alignSelf: 'center', paddingVertical: 14, marginTop: 4 },
   forgotText: { color: GOLD, fontSize: 13, fontWeight: '600' },
@@ -467,13 +496,20 @@ const m = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
   },
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  wakingBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#FFF8E1', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#FFE082', marginBottom: 12,
+  },
+  wakingText: { color: '#E65100', fontSize: 13, fontWeight: '700' },
+  wakingRetry: { color: '#BF8A0B', fontSize: 11, marginTop: 2 },
+
   errorBox: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12,
     borderWidth: 1, borderColor: '#FFCDD2', marginBottom: 12,
   },
-  errorText: { color: '#C62828', fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 },
-  retryText: { color: '#E65100', fontSize: 11, marginTop: 3 },
+  errorText: { color: '#C62828', fontSize: 13, fontWeight: '600', lineHeight: 18 },
 
   forgotBtn: { alignSelf: 'flex-end', paddingVertical: 10, paddingHorizontal: 4, marginTop: 4 },
   forgotText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
