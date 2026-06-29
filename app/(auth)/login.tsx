@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Image,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,19 +21,46 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [retryIn, setRetryIn] = useState(0);
+  const retryTimer = useRef<any>(null);
+
+  useEffect(() => () => { if (retryTimer.current) clearInterval(retryTimer.current); }, []);
+
+  const startRetryCountdown = (cb: () => void) => {
+    setRetryIn(30);
+    retryTimer.current = setInterval(() => {
+      setRetryIn((prev) => {
+        if (prev <= 1) {
+          clearInterval(retryTimer.current);
+          cb();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const onLogin = async () => {
     if (!mobile.trim() || !password) {
-      Alert.alert('Required', 'Enter mobile and password');
+      setLoginError('Please enter your mobile number and password.');
       return;
     }
+    setLoginError('');
+    setRetryIn(0);
+    if (retryTimer.current) clearInterval(retryTimer.current);
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', { mobile: mobile.trim(), password });
       await setSession(data.token, data.user);
       router.replace('/(tabs)');
     } catch (e) {
-      Alert.alert('Login failed', apiError(e));
+      const msg = apiError(e);
+      setLoginError(msg);
+      const isDbError = /database|unavailable|server|starting/i.test(msg);
+      if (isDbError) {
+        startRetryCountdown(onLogin);
+      }
     } finally {
       setLoading(false);
     }
@@ -95,6 +122,27 @@ export default function Login() {
           <Text style={w.label}>WELCOME BACK, DEVOTEE</Text>
           <Text style={w.title}>Sign In</Text>
           <Text style={w.sub}>Enter your mobile number and password</Text>
+
+          {!!loginError && (
+            <View style={w.errorBox}>
+              <Ionicons name={retryIn > 0 ? 'time-outline' : 'alert-circle-outline'} size={18} color={retryIn > 0 ? '#E67E22' : '#E53935'} />
+              <View style={{ flex: 1 }}>
+                <Text style={[w.errorText, retryIn > 0 && { color: '#E67E22' }]}>{loginError}</Text>
+                {retryIn > 0 && (
+                  <Text style={w.retryText}>Server is starting up — retrying in {retryIn}s…</Text>
+                )}
+              </View>
+              {retryIn > 0 ? (
+                <TouchableOpacity onPress={onLogin}>
+                  <Text style={{ color: '#E67E22', fontWeight: '700', fontSize: 12 }}>Retry Now</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={() => setLoginError('')}>
+                  <Ionicons name="close" size={16} color="#E53935" />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
 
           <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
             <Ionicons name="call-outline" size={19} color={focused === 'mobile' ? GOLD : 'rgba(212,175,55,0.5)'} />
@@ -195,6 +243,16 @@ export default function Login() {
             <View style={m.card}>
               <Text style={m.cardTitle}>Sign In</Text>
               <Text style={m.cardSub}>Enter your mobile number and password</Text>
+
+              {!!loginError && (
+                <View style={m.errorBox}>
+                  <Ionicons name={retryIn > 0 ? 'time-outline' : 'alert-circle-outline'} size={16} color={retryIn > 0 ? '#E65100' : '#C62828'} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={m.errorText}>{loginError}</Text>
+                    {retryIn > 0 && <Text style={m.retryText}>Retrying in {retryIn}s…</Text>}
+                  </View>
+                </View>
+              )}
 
               <View style={m.inputWrap}>
                 <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
@@ -351,6 +409,14 @@ const w = StyleSheet.create({
   },
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.4 },
 
+  errorBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: 'rgba(229,57,53,0.08)', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: 'rgba(229,57,53,0.25)', marginBottom: 14,
+  },
+  errorText: { color: '#E53935', fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 },
+  retryText: { color: '#E67E22', fontSize: 11, marginTop: 3 },
+
   forgotBtn: { alignSelf: 'center', paddingVertical: 14, marginTop: 4 },
   forgotText: { color: GOLD, fontSize: 13, fontWeight: '600' },
 
@@ -401,6 +467,14 @@ const m = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
   },
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  errorBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#FFCDD2', marginBottom: 12,
+  },
+  errorText: { color: '#C62828', fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 },
+  retryText: { color: '#E65100', fontSize: 11, marginTop: 3 },
+
   forgotBtn: { alignSelf: 'flex-end', paddingVertical: 10, paddingHorizontal: 4, marginTop: 4 },
   forgotText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },

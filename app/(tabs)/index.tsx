@@ -271,17 +271,18 @@ function WebHome() {
   const innerW = Math.min(W, 1280);
 
   useEffect(() => {
+    const empty = { data: [] };
     Promise.all([
-      api.get('/temples'),
-      api.get('/poojas'),
-      api.get('/live-streams').catch(() => ({ data: [] })),
-      api.get('/properties').catch(() => ({ data: [] })),
+      api.get('/temples').catch(() => empty),
+      api.get('/poojas').catch(() => empty),
+      api.get('/live-streams').catch(() => empty),
+      api.get('/properties').catch(() => empty),
     ]).then(([t, p, l, pr]) => {
-      setTemples(t.data || []);
-      setPoojas(p.data || []);
-      setLive(l.data || []);
-      setProperties((pr.data || []).filter((x: any) => x.is_active));
-    }).catch(() => {});
+      setTemples(Array.isArray(t.data) ? t.data : []);
+      setPoojas(Array.isArray(p.data) ? p.data : []);
+      setLive(Array.isArray(l.data) ? l.data : []);
+      setProperties(Array.isArray(pr.data) ? pr.data.filter((x: any) => x.is_active !== false) : []);
+    });
   }, []);
 
   return (
