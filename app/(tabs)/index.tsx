@@ -268,6 +268,9 @@ function WebHome() {
   const [searchDest, setSearchDest] = useState('');
   const [searchTemple, setSearchTemple] = useState('');
   const [searchGuests, setSearchGuests] = useState('2');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const today = new Date().toISOString().split('T')[0];
 
   const innerW = Math.min(W, 1280);
 
@@ -383,12 +386,26 @@ function WebHome() {
               <View style={wh.searchDivider} />
               <View style={wh.searchField}>
                 <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
-                <TextInput style={wh.searchInput} placeholder="Check-in Date" placeholderTextColor="#aaa" />
+                <TextInput
+                  style={[wh.searchInput, Platform.OS === 'web' ? { cursor: 'pointer', colorScheme: 'light' } as any : {}]}
+                  placeholder="Check-in Date"
+                  placeholderTextColor="#aaa"
+                  value={checkIn}
+                  onChangeText={setCheckIn}
+                  {...(Platform.OS === 'web' ? { type: 'date', min: today } as any : {})}
+                />
               </View>
               <View style={wh.searchDivider} />
               <View style={wh.searchField}>
                 <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
-                <TextInput style={wh.searchInput} placeholder="Check-out Date" placeholderTextColor="#aaa" />
+                <TextInput
+                  style={[wh.searchInput, Platform.OS === 'web' ? { cursor: 'pointer', colorScheme: 'light' } as any : {}]}
+                  placeholder="Check-out Date"
+                  placeholderTextColor="#aaa"
+                  value={checkOut}
+                  onChangeText={setCheckOut}
+                  {...(Platform.OS === 'web' ? { type: 'date', min: checkIn || today } as any : {})}
+                />
               </View>
               <View style={wh.searchDivider} />
               <View style={[wh.searchField, { maxWidth: 100 }]}>
@@ -404,7 +421,16 @@ function WebHome() {
               </View>
               <TouchableOpacity
                 style={wh.searchBtn}
-                onPress={() => router.push('/accommodation' as any)}
+                onPress={() => {
+                  const params = new URLSearchParams();
+                  if (searchDest) params.set('dest', searchDest);
+                  if (searchTemple) params.set('temple', searchTemple);
+                  if (checkIn) params.set('checkIn', checkIn);
+                  if (checkOut) params.set('checkOut', checkOut);
+                  if (searchGuests) params.set('guests', searchGuests);
+                  const qs = params.toString();
+                  router.push(('/accommodation' + (qs ? '?' + qs : '')) as any);
+                }}
               >
                 <Ionicons name="search" size={18} color="#fff" />
                 <Text style={wh.searchBtnText}>Search</Text>
