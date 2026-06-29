@@ -16,9 +16,9 @@ import { theme } from '../../src/constants/theme';
 import WebFooter from '../../src/components/WebFooter';
 import WelcomePopup from '../../src/components/WelcomePopup';
 
-const GOLD    = '#D4AF37';
-const SAFFRON = '#E67E22';
-const BG      = '#FFF8E7';
+const GOLD    = '#C9922A';
+const SAFFRON = '#B22222';
+const BG      = '#FFFFFF';
 const IS_WEB  = Platform.OS === 'web';
 
 function parseImages(s: string | null | undefined): string[] {
@@ -58,8 +58,9 @@ const SERVICES = [
 // ── Temple Multi-Card Carousel (4 visible, auto-scroll) ──────────────────
 const ssArrow = {
   width: 44, height: 44, borderRadius: 22,
-  backgroundColor: 'rgba(255,248,231,0.95)', alignItems: 'center' as const,
-  justifyContent: 'center' as const, borderWidth: 1, borderColor: 'rgba(230,126,34,0.35)',
+  backgroundColor: '#FFFFFF', alignItems: 'center' as const,
+  justifyContent: 'center' as const, borderWidth: 1, borderColor: 'rgba(178,34,34,0.25)',
+  ...(Platform.OS === 'web' ? { boxShadow: '0 2px 8px rgba(0,0,0,0.12)' } : {}),
 };
 
 function TempleMultiCarousel({ temples, innerW }: { temples: any[]; innerW: number }) {
@@ -130,7 +131,7 @@ function TempleMultiCarousel({ temples, innerW }: { temples: any[]; innerW: numb
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {Array.from({ length: maxIdx + 1 }).map((_, i) => (
               <TouchableOpacity key={i} onPress={() => goTo(i)}>
-                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(74,44,42,0.2)' }} />
+                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
               </TouchableOpacity>
             ))}
           </View>
@@ -184,31 +185,31 @@ function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
               style={{
                 width: cardW, borderRadius: 20, overflow: 'hidden', flexShrink: 0,
                 backgroundColor: '#fff',
-                borderWidth: 1, borderColor: 'rgba(230,126,34,0.2)',
-                ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(74,44,42,0.12)' } : {}),
+                borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
+                ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(0,0,0,0.1)' } : {}),
               } as any}
             >
               {/* Image */}
-              <View style={{ height: 210, position: 'relative', backgroundColor: '#FFF0D0' }}>
+              <View style={{ height: 210, position: 'relative', backgroundColor: '#F5E8E0' }}>
                 {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
               </View>
               {/* Card body */}
-              <View style={{ padding: 18, borderTopWidth: 1, borderTopColor: 'rgba(230,126,34,0.1)' }}>
+              <View style={{ padding: 18, borderTopWidth: 1, borderTopColor: 'rgba(139,21,21,0.08)' }}>
                 <View style={{
                   alignSelf: 'flex-start', marginBottom: 10,
-                  backgroundColor: p.type === 'homam' ? 'rgba(230,126,34,0.12)' : 'rgba(178,34,34,0.1)',
+                  backgroundColor: p.type === 'homam' ? 'rgba(139,21,21,0.08)' : 'rgba(178,34,34,0.1)',
                   borderWidth: 1,
-                  borderColor: p.type === 'homam' ? 'rgba(230,126,34,0.4)' : 'rgba(178,34,34,0.35)',
+                  borderColor: p.type === 'homam' ? 'rgba(139,21,21,0.35)' : 'rgba(178,34,34,0.35)',
                   paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
                 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: '#4A2C2A' }}>
+                  <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: '#1A0505' }}>
                     {p.type?.toUpperCase()}
                   </Text>
                 </View>
-                <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 6, lineHeight: 22 }} numberOfLines={2}>
+                <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', marginBottom: 6, lineHeight: 22 }} numberOfLines={2}>
                   {p.name}
                 </Text>
-                <Text style={{ color: '#5A5A5A', fontSize: 12, lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
+                <Text style={{ color: '#555555', fontSize: 12, lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
                   {p.description}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
@@ -242,7 +243,7 @@ function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {Array.from({ length: maxIdx + 1 }).map((_, i) => (
               <TouchableOpacity key={i} onPress={() => goTo(i)}>
-                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(74,44,42,0.2)' }} />
+                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
               </TouchableOpacity>
             ))}
           </View>
@@ -295,8 +296,8 @@ function WebHome() {
       <View style={wh.hero}>
         {/* Background gradient */}
         <LinearGradient
-          colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
-          locations={[0, 0.3, 0.65, 1]}
+          colors={['#0D0305', '#4A0E0E', '#8B1515', '#C9922A']}
+          locations={[0, 0.35, 0.7, 1]}
           style={StyleSheet.absoluteFill}
         />
         {/* Decorative OM */}
@@ -351,7 +352,7 @@ function WebHome() {
       </View>
 
       {/* ── SMART SEARCH ─────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6', paddingVertical: 0 }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF', paddingVertical: 0 }]}>
         <View style={{
           maxWidth: innerW, alignSelf: 'center', width: '100%',
           paddingHorizontal: 24, marginTop: -36,
@@ -415,9 +416,9 @@ function WebHome() {
 
       {/* ── LIVE DARSHAN ─────────────────────────────────────────────────── */}
       {live.length > 0 && (
-        <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+        <View style={[wh.sectionBg, { backgroundColor: '#0D0305' }]}>
           <View style={[wh.section, { maxWidth: innerW }]}>
-            <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} />
+            <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} dark />
             <View style={wh.liveGrid}>
               {live.slice(0, 3).map((item: any) => (
                 <TouchableOpacity
@@ -454,10 +455,10 @@ function WebHome() {
                     </View>
                   </View>
                   {/* Title & link below card */}
-                  <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginTop: 14, lineHeight: 23 }} numberOfLines={2}>
+                  <Text style={{ color: '#F5F0EB', fontSize: 16, fontWeight: '800', marginTop: 14, lineHeight: 23 }} numberOfLines={2}>
                     {item.title}
                   </Text>
-                  <Text style={{ color: SAFFRON, fontSize: 13, fontWeight: '600', marginTop: 6 }}>Tap to watch →</Text>
+                  <Text style={{ color: GOLD, fontSize: 13, fontWeight: '600', marginTop: 6 }}>Tap to watch →</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -466,7 +467,7 @@ function WebHome() {
       )}
 
       {/* ── POPULAR DESTINATIONS ─────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Popular Destinations" sub="Sacred pilgrimage cities across India" onAll={() => router.push('/destinations' as any)} />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
@@ -479,24 +480,24 @@ function WebHome() {
                   flex: 1, minWidth: 140,
                   backgroundColor: '#fff',
                   borderRadius: 16, overflow: 'hidden',
-                  borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
-                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(74,44,42,0.1)' } as any : {}),
+                  borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
+                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(0,0,0,0.08)' } as any : {}),
                 } as any}
               >
                 <LinearGradient
-                  colors={[d.color + '22', d.color + '08']}
+                  colors={[d.color + '18', d.color + '06']}
                   style={{ padding: 18, alignItems: 'center', gap: 8 }}
                 >
                   <View style={{
                     width: 48, height: 48, borderRadius: 24,
-                    backgroundColor: d.color + '20',
-                    borderWidth: 2, borderColor: d.color + '40',
+                    backgroundColor: d.color + '18',
+                    borderWidth: 2, borderColor: d.color + '38',
                     alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Ionicons name="location" size={22} color={d.color} />
                   </View>
-                  <Text style={{ color: '#4A2C2A', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
-                  <Text style={{ color: '#7A6A5A', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
+                  <Text style={{ color: '#1A0505', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
+                  <Text style={{ color: '#666666', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             ))}
@@ -505,7 +506,7 @@ function WebHome() {
       </View>
 
       {/* ── SERVICES ─────────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#F5F0F0' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Our Services" sub="Everything you need for sacred rituals" />
           <View style={wh.servGrid}>
@@ -525,9 +526,9 @@ function WebHome() {
 
       {/* ── TEMPLES CAROUSEL ─────────────────────────────────────────────── */}
       {temples.length > 0 && (
-        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#FFF8E7' }}>
+        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#0D0305' }}>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
-            <SecHead title="Featured Temples" sub="Sacred shrines across India" onAll={() => router.push('/(tabs)/temples' as any)} />
+            <SecHead title="Featured Temples" sub="Sacred shrines across India" onAll={() => router.push('/(tabs)/temples' as any)} dark />
           </View>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%' }}>
             <TempleMultiCarousel temples={temples} innerW={Math.min(W, 1280) - 96} />
@@ -537,7 +538,7 @@ function WebHome() {
 
       {/* ── FEATURED ACCOMMODATIONS ──────────────────────────────────────── */}
       {properties.length > 0 && (
-        <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+        <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
           <View style={[wh.section, { maxWidth: innerW }]}>
             <SecHead title="Featured Accommodations" sub="Hotels & dharamshalas near sacred temples" onAll={() => router.push('/accommodation' as any)} />
             <View style={{ flexDirection: 'row', gap: 18, flexWrap: 'wrap' }}>
@@ -559,9 +560,9 @@ function WebHome() {
 
       {/* ── POOJAS CAROUSEL ──────────────────────────────────────────────── */}
       {poojas.length > 0 && (
-        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#FDF5E6' }}>
+        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#0D0305' }}>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
-            <SecHead title="Book a Pooja or Homam" sub="Performed by verified Vedic pujaris" onAll={() => router.push('/(tabs)/temples' as any)} />
+            <SecHead title="Book a Pooja or Homam" sub="Performed by verified Vedic pujaris" onAll={() => router.push('/(tabs)/temples' as any)} dark />
           </View>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%' }}>
             <PoojaCarousel poojas={poojas} innerW={Math.min(W, 1280) - 96} />
@@ -570,7 +571,7 @@ function WebHome() {
       )}
 
       {/* ── FESTIVAL HIGHLIGHTS ──────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#F7F4F1' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Festival Highlights" sub="Upcoming sacred festivals & celebrations" onAll={() => router.push('/(tabs)/calendar' as any)} />
           <View style={{ flexDirection: 'row', gap: 14, flexWrap: 'wrap' }}>
@@ -581,8 +582,8 @@ function WebHome() {
                   flex: 1, minWidth: 220,
                   backgroundColor: '#fff', borderRadius: 16, padding: 18,
                   borderLeftWidth: 4, borderLeftColor: f.color,
-                  borderWidth: 1, borderColor: 'rgba(230,126,34,0.12)',
-                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(74,44,42,0.08)' } as any : {}),
+                  borderWidth: 1, borderColor: 'rgba(139,21,21,0.08)',
+                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(0,0,0,0.07)' } as any : {}),
                 } as any}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -591,10 +592,10 @@ function WebHome() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: f.color, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>{f.date}</Text>
-                    <Text style={{ color: '#4A2C2A', fontSize: 14, fontWeight: '800', marginTop: 1 }}>{f.name}</Text>
+                    <Text style={{ color: '#1A0505', fontSize: 14, fontWeight: '800', marginTop: 1 }}>{f.name}</Text>
                   </View>
                 </View>
-                <Text style={{ color: '#7A6A5A', fontSize: 12, lineHeight: 18 }}>{f.desc}</Text>
+                <Text style={{ color: '#555555', fontSize: 12, lineHeight: 18 }}>{f.desc}</Text>
               </View>
             ))}
           </View>
@@ -602,15 +603,15 @@ function WebHome() {
       </View>
 
       {/* ── ACCOMMODATION TEASER ─────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FDF5E6' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Temple Accommodation" sub="Stay near the divine — hotels & dharamshalas near temples" />
           <View style={{
             borderRadius: 24, overflow: 'hidden', position: 'relative',
-            ...(Platform.OS === 'web' ? { boxShadow: '0 8px 40px rgba(74,44,42,0.12)' } as any : {}),
+            ...(Platform.OS === 'web' ? { boxShadow: '0 8px 40px rgba(0,0,0,0.15)' } as any : {}),
           } as any}>
             <LinearGradient
-              colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
+              colors={['#0D0305', '#4A0E0E', '#8B1515', '#C9922A']}
               start={[0, 0]} end={[1, 1]}
               style={{ padding: IS_WEB ? 56 : 32 }}
             >
@@ -681,7 +682,7 @@ function WebHome() {
       </View>
 
       {/* ── WHY CHOOSE US ────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FFF8E7' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#F7F4F1' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Why Choose Sri Pooja Homam?" sub="Trusted by thousands of devotees across India" />
           <View style={wh.whyGrid}>
@@ -746,17 +747,17 @@ function WebHome() {
 }
 
 // Section header helper
-function SecHead({ title, sub, onAll }: { title: string; sub: string; onAll?: () => void }) {
+function SecHead({ title, sub, onAll, dark }: { title: string; sub: string; onAll?: () => void; dark?: boolean }) {
   return (
     <View style={wh.secHead}>
       <View>
-        <Text style={wh.secTitle}>{title}</Text>
-        <Text style={wh.secSub}>{sub}</Text>
+        <Text style={[wh.secTitle, dark && { color: '#FFFFFF', borderLeftColor: GOLD }]}>{title}</Text>
+        <Text style={[wh.secSub, dark && { color: 'rgba(255,255,255,0.55)' }]}>{sub}</Text>
       </View>
       {onAll && (
-        <TouchableOpacity onPress={onAll} style={wh.secAllBtn}>
-          <Text style={wh.secAllText}>View All</Text>
-          <Ionicons name="arrow-forward" size={13} color={GOLD} />
+        <TouchableOpacity onPress={onAll} style={[wh.secAllBtn, dark && { borderColor: 'rgba(201,146,42,0.4)' }]}>
+          <Text style={[wh.secAllText, dark && { color: GOLD }]}>View All</Text>
+          <Ionicons name="arrow-forward" size={13} color={dark ? GOLD : SAFFRON} />
         </TouchableOpacity>
       )}
     </View>
@@ -835,13 +836,13 @@ const wh: any = {
     marginBottom: 28, flexWrap: 'wrap', gap: 12,
   },
   secTitle: {
-    color: '#4A2C2A', fontSize: 32, fontWeight: '900',
+    color: '#1A0505', fontSize: 32, fontWeight: '900',
     paddingLeft: 16, borderLeftWidth: 4, borderLeftColor: SAFFRON,
   },
-  secSub: { color: '#5A5A5A', fontSize: 14, marginTop: 5, paddingLeft: 16 },
+  secSub: { color: '#666666', fontSize: 14, marginTop: 5, paddingLeft: 16 },
   secAllBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderWidth: 1, borderColor: 'rgba(230,126,34,0.35)',
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.3)',
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999,
   },
   secAllText: { color: SAFFRON, fontSize: 13, fontWeight: '600' },
@@ -871,17 +872,17 @@ const wh: any = {
   servCard: {
     flex: 1, minWidth: 200,
     backgroundColor: '#fff',
-    borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
     borderRadius: 20, padding: 26,
-    ...(Platform.OS === 'web' ? { transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 24px rgba(74,44,42,0.08)' } as any : {}),
+    ...(Platform.OS === 'web' ? { transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 24px rgba(0,0,0,0.07)' } as any : {}),
   },
   servIcon: {
     width: 62, height: 62, borderRadius: 18,
     alignItems: 'center', justifyContent: 'center', marginBottom: 18,
-    borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
   },
-  servTitle: { color: '#4A2C2A', fontSize: 17, fontWeight: '800', marginBottom: 8 },
-  servDesc: { color: '#5A5A5A', fontSize: 13, lineHeight: 21 },
+  servTitle: { color: '#1A0505', fontSize: 17, fontWeight: '800', marginBottom: 8 },
+  servDesc: { color: '#555555', fontSize: 13, lineHeight: 21 },
   servLink: { color: SAFFRON, fontSize: 13, fontWeight: '700', marginTop: 18 },
 
   // Temples
@@ -940,27 +941,27 @@ const wh: any = {
   whyCard: {
     flex: 1, minWidth: 240,
     backgroundColor: '#fff',
-    borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
     borderTopWidth: 3, borderTopColor: SAFFRON,
     borderRadius: 16, padding: 24,
-    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(74,44,42,0.08)' } as any : {}),
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(0,0,0,0.07)' } as any : {}),
   },
   whyIcon: {
     width: 54, height: 54, borderRadius: 15,
-    backgroundColor: 'rgba(230,126,34,0.08)',
-    borderWidth: 1, borderColor: 'rgba(230,126,34,0.2)',
+    backgroundColor: 'rgba(139,21,21,0.06)',
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.15)',
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
-  whyTitle: { color: '#4A2C2A', fontSize: 15, fontWeight: '800', marginBottom: 6 },
-  whyDesc: { color: '#5A5A5A', fontSize: 13, lineHeight: 21 },
+  whyTitle: { color: '#1A0505', fontSize: 15, fontWeight: '800', marginBottom: 6 },
+  whyDesc: { color: '#555555', fontSize: 13, lineHeight: 21 },
 
   // Search widget
   searchCard: {
     backgroundColor: '#fff', borderRadius: 18, padding: 6,
     ...(Platform.OS === 'web' ? {
-      boxShadow: '0 8px 40px rgba(74,44,42,0.18)',
+      boxShadow: '0 8px 40px rgba(0,0,0,0.14)',
     } as any : {}),
-    borderWidth: 1, borderColor: 'rgba(230,126,34,0.18)',
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
   },
   searchRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   searchField: {
@@ -968,15 +969,15 @@ const wh: any = {
     paddingHorizontal: 14, paddingVertical: 10, minWidth: 120,
   },
   searchInput: {
-    flex: 1, fontSize: 14, color: '#4A2C2A', outline: 'none',
+    flex: 1, fontSize: 14, color: '#1A0505', outline: 'none',
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
   } as any,
-  searchDivider: { width: 1, height: 28, backgroundColor: 'rgba(230,126,34,0.2)' },
+  searchDivider: { width: 1, height: 28, backgroundColor: 'rgba(139,21,21,0.12)' },
   searchBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#D35400', paddingHorizontal: 22, paddingVertical: 13,
+    backgroundColor: '#8B1515', paddingHorizontal: 22, paddingVertical: 13,
     borderRadius: 12, margin: 4,
-    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 16px rgba(211,84,0,0.35)' } as any : {}),
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 16px rgba(139,21,21,0.4)' } as any : {}),
   },
   searchBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
 
@@ -1079,7 +1080,7 @@ function MobileHome() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       >
-        <LinearGradient colors={['#4A2C2A', '#B22222', '#E67E22']} style={mob.headerBg}>
+        <LinearGradient colors={['#0D0305', '#4A0E0E', '#8B1515', '#C9922A']} style={mob.headerBg}>
           <Text style={mob.omSymbol}>ॐ</Text>
           <View style={mob.headerRow}>
             <View style={{ flex: 1 }}>
@@ -1249,8 +1250,8 @@ function AccomCard({ property: p, img, onPress }: { property: any; img: string |
       style={{
         flex: 1, minWidth: 260,
         backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-        borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
-        ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(74,44,42,0.12)' } as any : {}),
+        borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
+        ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(0,0,0,0.1)' } as any : {}),
       } as any}
     >
       <View style={{ height: 180 }}>
@@ -1263,7 +1264,7 @@ function AccomCard({ property: p, img, onPress }: { property: any; img: string |
           />
         ) : (
           <LinearGradient
-            colors={['#7B1515', '#D35400']}
+            colors={['#3D0808', '#8B1515']}
             style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
           >
             <Ionicons name="bed-outline" size={48} color="rgba(255,255,255,0.7)" />
@@ -1273,21 +1274,21 @@ function AccomCard({ property: p, img, onPress }: { property: any; img: string |
           position: 'absolute', top: 12, left: 12,
           backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
         }}>
-          <Text style={{ color: '#D35400', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>
+          <Text style={{ color: SAFFRON, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>
             {p.type || 'Hotel'}
           </Text>
         </View>
         {p.min_price ? (
-          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#D35400', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#8B1515', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
             <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>₹{parseFloat(p.min_price).toFixed(0)}/night</Text>
           </View>
         ) : null}
       </View>
       <View style={{ padding: 16 }}>
-        <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{p.name}</Text>
+        <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{p.name}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
           <Ionicons name="location-outline" size={13} color={SAFFRON} />
-          <Text style={{ color: '#7A6A5A', fontSize: 12 }} numberOfLines={1}>{p.city || p.address}</Text>
+          <Text style={{ color: '#666666', fontSize: 12 }} numberOfLines={1}>{p.city || p.address}</Text>
         </View>
         {p.amenities ? (
           <Text style={{ color: '#999', fontSize: 11, marginBottom: 8 }} numberOfLines={1}>{p.amenities}</Text>
@@ -1348,12 +1349,12 @@ const mob: any = {
   liveTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
   liveSub: { color: theme.colors.secondary, fontSize: 13, marginTop: 2 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(230,126,34,0.25)' },
-  dotActive: { width: 20, backgroundColor: '#E67E22' },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(139,21,21,0.2)' },
+  dotActive: { width: 20, backgroundColor: SAFFRON },
   section: { marginTop: 26 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 14 },
-  sectionTitle: { fontSize: 15, color: '#4A2C2A', paddingHorizontal: 20, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: '#E67E22', paddingLeft: 12, fontWeight: '700' },
-  seeAll: { color: '#E67E22', fontWeight: '600', fontSize: 13 },
+  sectionTitle: { fontSize: 15, color: '#1A0505', paddingHorizontal: 20, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: SAFFRON, paddingLeft: 12, fontWeight: '700' },
+  seeAll: { color: SAFFRON, fontWeight: '600', fontSize: 13 },
   catRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10 },
   catCard: { flex: 1, borderRadius: 18, overflow: 'hidden' },
   catGrad: { padding: 16, alignItems: 'flex-start', borderRadius: 18, minHeight: 110 },
@@ -1367,20 +1368,20 @@ const mob: any = {
   templeLoc: { color: theme.colors.secondary, fontSize: 12 },
   poojaRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderRadius: 18, padding: 10, borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+    borderRadius: 18, padding: 10, borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
   },
-  poojaImgWrap: { width: 70, height: 70, borderRadius: 14, backgroundColor: '#FFF0D0', overflow: 'hidden' },
+  poojaImgWrap: { width: 70, height: 70, borderRadius: 14, backgroundColor: '#F5E8E0', overflow: 'hidden' },
   typeBadge: (type: string) => ({
     alignSelf: 'flex-start',
-    backgroundColor: type === 'homam' ? 'rgba(255,140,0,0.15)' : 'rgba(198,40,40,0.18)',
+    backgroundColor: type === 'homam' ? 'rgba(139,21,21,0.08)' : 'rgba(198,40,40,0.18)',
     borderWidth: 1,
-    borderColor: type === 'homam' ? 'rgba(255,140,0,0.4)' : 'rgba(198,40,40,0.4)',
+    borderColor: type === 'homam' ? 'rgba(139,21,21,0.35)' : 'rgba(198,40,40,0.4)',
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4,
   }),
-  typeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: '#4A2C2A' },
-  poojaName: { fontSize: 14, color: '#4A2C2A', fontWeight: '700' },
-  poojaDesc: { fontSize: 12, color: '#5A5A5A', marginTop: 2 },
+  typeBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: '#1A0505' },
+  poojaName: { fontSize: 14, color: '#1A0505', fontWeight: '700' },
+  poojaDesc: { fontSize: 12, color: '#555555', marginTop: 2 },
   poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  poojaPrice: { fontSize: 15, color: '#E67E22', fontWeight: '700' },
-  poojaDur: { fontSize: 12, color: '#8A7A6A' },
+  poojaPrice: { fontSize: 15, color: SAFFRON, fontWeight: '700' },
+  poojaDur: { fontSize: 12, color: '#888888' },
 };
