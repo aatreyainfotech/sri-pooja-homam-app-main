@@ -544,23 +544,28 @@ export default function PlatformSettings() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
-  // Load: local storage first, then try backend
+  // Load: backend first (Azure SQL), fall back to local AsyncStorage cache
   useEffect(() => {
     (async () => {
-      try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setSettings(prev => ({ ...prev, ...parsed }));
-        }
-      } catch {}
-      // Also try backend (may not exist, that's fine)
+      // Try backend (Azure SQL)
+      let backendOk = false;
       try {
         const { data } = await api.get('/admin/platform-settings');
-        if (data && typeof data === 'object') {
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           setSettings(prev => ({ ...prev, ...data }));
+          // Update local cache with latest from backend
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, ...data }));
+          backendOk = true;
         }
       } catch {}
+
+      // Fall back to local cache if backend had nothing
+      if (!backendOk) {
+        try {
+          const stored = await AsyncStorage.getItem(STORAGE_KEY);
+          if (stored) setSettings(prev => ({ ...prev, ...JSON.parse(stored) }));
+        } catch {}
+      }
       setLoading(false);
     })();
   }, []);
@@ -572,14 +577,21 @@ export default function PlatformSettings() {
   const save = async () => {
     setSaving(true);
     try {
-      // Always save locally first — works without any backend
+      // Save to Azure SQL backend
+      await api.post('/admin/platform-settings', settings);
+      // Also cache locally for offline/fast load
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      // Also try to push to backend (best effort)
-      try { await api.post('/admin/platform-settings', settings); } catch {}
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (err) {
-      Alert.alert('Save Failed', 'Could not save settings. Please try again.');
+    } catch (err: any) {
+      // If backend fails, at least save locally
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } catch {
+        Alert.alert('Save Failed', 'Could not save settings. Please try again.');
+      }
     }
     setSaving(false);
   };
