@@ -223,8 +223,8 @@ export default function Login() {
         {/* ── LEFT: Brand panel ────────────────────────────────────────── */}
         <View style={w.brand}>
           <LinearGradient
-            colors={['#0D0305', '#3D0808', '#8B1515']}
-            locations={[0, 0.55, 1]}
+            colors={['#120805', '#3D1408', '#7A3020', '#C9922A']}
+            locations={[0, 0.4, 0.75, 1]}
             start={[0, 0]} end={[1, 1]}
             style={StyleSheet.absoluteFill}
           />
@@ -279,7 +279,7 @@ export default function Login() {
 
   // ── MOBILE layout ─────────────────────────────────────────────────────────
   return (
-    <LinearGradient colors={['#0D0305', '#3D0808', '#8B1515']} style={{ flex: 1 }}>
+    <LinearGradient colors={['#120805', '#3D1408', '#7A3020']} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={m.scroll} keyboardShouldPersistTaps="handled">
@@ -396,7 +396,7 @@ export default function Login() {
 const w = StyleSheet.create({
   root: {
     position: 'absolute' as any, top: 0, left: 0, right: 0, bottom: 0,
-    flexDirection: 'row' as any, backgroundColor: '#0D0305',
+    flexDirection: 'row' as any, backgroundColor: '#120805',
   } as any,
 
   // Left brand panel
