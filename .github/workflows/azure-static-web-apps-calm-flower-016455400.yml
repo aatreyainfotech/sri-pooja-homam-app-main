@@ -36,7 +36,7 @@ jobs:
           {
             "navigationFallback": {
               "rewrite": "/index.html",
-              "exclude": ["/_expo/*", "/assets/*", "/*.js", "/*.css", "/*.json", "/*.ico", "/*.png", "/*.svg", "/*.webp", "/*.ttf", "/*.woff2"]
+              "exclude": ["/_expo/*", "/assets/*", "/img/*", "/*.js", "/*.css", "/*.json", "/*.ico", "/*.png", "/*.svg", "/*.webp", "/*.ttf", "/*.woff2"]
             },
             "globalHeaders": { "Cache-Control": "no-store" },
             "mimeTypes": { ".json": "application/json" }
