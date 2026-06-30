@@ -1,4 +1,4 @@
-import {
+import React, {
   useEffect, useState, useCallback, useRef,
 } from 'react';
 import {
@@ -394,26 +394,48 @@ function WebHome() {
               <View style={wh.searchDivider} />
               <View style={wh.searchField}>
                 <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
-                <TextInput
-                  style={[wh.searchInput, Platform.OS === 'web' ? { cursor: 'pointer', colorScheme: 'light' } as any : {}]}
-                  placeholder="Check-in Date"
-                  placeholderTextColor="#aaa"
-                  value={checkIn}
-                  onChangeText={setCheckIn}
-                  {...(Platform.OS === 'web' ? { type: 'date', min: today } as any : {})}
-                />
+                {IS_WEB ? React.createElement('input', {
+                  type: 'date',
+                  value: checkIn,
+                  min: today,
+                  onChange: (e: any) => setCheckIn(e.target.value),
+                  style: {
+                    flex: 1, fontSize: 14, border: 'none', outline: 'none',
+                    backgroundColor: 'transparent', cursor: 'pointer',
+                    color: checkIn ? '#1A0505' : '#aaa', fontFamily: 'inherit',
+                  },
+                }) : (
+                  <TextInput
+                    style={wh.searchInput}
+                    placeholder="Check-in Date"
+                    placeholderTextColor="#aaa"
+                    value={checkIn}
+                    onChangeText={setCheckIn}
+                  />
+                )}
               </View>
               <View style={wh.searchDivider} />
               <View style={wh.searchField}>
                 <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
-                <TextInput
-                  style={[wh.searchInput, Platform.OS === 'web' ? { cursor: 'pointer', colorScheme: 'light' } as any : {}]}
-                  placeholder="Check-out Date"
-                  placeholderTextColor="#aaa"
-                  value={checkOut}
-                  onChangeText={setCheckOut}
-                  {...(Platform.OS === 'web' ? { type: 'date', min: checkIn || today } as any : {})}
-                />
+                {IS_WEB ? React.createElement('input', {
+                  type: 'date',
+                  value: checkOut,
+                  min: checkIn || today,
+                  onChange: (e: any) => setCheckOut(e.target.value),
+                  style: {
+                    flex: 1, fontSize: 14, border: 'none', outline: 'none',
+                    backgroundColor: 'transparent', cursor: 'pointer',
+                    color: checkOut ? '#1A0505' : '#aaa', fontFamily: 'inherit',
+                  },
+                }) : (
+                  <TextInput
+                    style={wh.searchInput}
+                    placeholder="Check-out Date"
+                    placeholderTextColor="#aaa"
+                    value={checkOut}
+                    onChangeText={setCheckOut}
+                  />
+                )}
               </View>
               <View style={wh.searchDivider} />
               <View style={[wh.searchField, { maxWidth: 100 }]}>
