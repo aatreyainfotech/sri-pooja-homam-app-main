@@ -634,23 +634,29 @@ function WebHome() {
               </View>
             </View>
 
-            {/* RIGHT — decorative images */}
-            <View style={{ width: Math.min(480, W * 0.42), alignItems: 'center', justifyContent: 'flex-end', position: 'relative' }}>
-              {/* Pujari — main focal image */}
-              <Image
-                source={{ uri: '/img/img1.png' }}
-                style={{ width: '100%', height: Math.min(420, W * 0.38) } as any}
-                resizeMode="contain"
-              />
-              {/* Kalash — bottom-left corner of right panel */}
-              <Image
-                source={{ uri: '/img/img2.png' }}
-                style={{
-                  position: 'absolute', bottom: -10, left: -20,
-                  width: 110, height: 110, opacity: 0.92,
-                } as any}
-                resizeMode="contain"
-              />
+            {/* RIGHT — decorative images via CSS (reliable on web) */}
+            <View style={{ width: Math.min(500, W * 0.44), position: 'relative', alignSelf: 'stretch', justifyContent: 'flex-end' }}>
+              {/* Pujari performing homam — main focal image */}
+              <View style={{
+                position: 'absolute', bottom: 0, right: 0,
+                width: '100%', height: '110%',
+                backgroundImage: 'url(/img/img1.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right bottom',
+                filter: 'drop-shadow(0 8px 32px rgba(0,0,0,0.45))',
+              } as any} />
+              {/* Kalash — bottom-left accent */}
+              <View style={{
+                position: 'absolute', bottom: -10, left: -10,
+                width: 130, height: 130,
+                backgroundImage: 'url(/img/img2.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center bottom',
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.35))',
+                opacity: 0.9,
+              } as any} />
             </View>
 
           </View>
@@ -1192,8 +1198,8 @@ const wh: any = {
     overflow: 'hidden',
   },
   heroOm: {
-    position: 'absolute', right: 20, top: '10%',
-    fontSize: 320, color: 'rgba(0,0,0,0.10)',
+    position: 'absolute', left: '30%', top: '5%',
+    fontSize: 320, color: 'rgba(0,0,0,0.08)',
     fontWeight: '400', lineHeight: 360, zIndex: 1,
   },
   heroInner: { width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
