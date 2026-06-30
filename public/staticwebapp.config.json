@@ -10,6 +10,7 @@
       "/privacy-policy.html",
       "/_expo/*",
       "/assets/*",
+      "/img/*",
       "/*.js",
       "/*.css",
       "/*.json",
