@@ -486,6 +486,32 @@ function WebHome() {
         {/* Decorative OM */}
         <Text style={wh.heroOm}>ॐ</Text>
 
+        {/* Decorative images — web only */}
+        {IS_WEB && (
+          <>
+            {/* Kalash — bottom left */}
+            <Image
+              source={{ uri: '/img/img2.png' }}
+              style={{
+                position: 'absolute', bottom: 0, left: 0,
+                width: 220, height: 220, opacity: 0.9,
+                zIndex: 1,
+              } as any}
+              resizeMode="contain"
+            />
+            {/* Pujari — right side */}
+            <Image
+              source={{ uri: '/img/img1.png' }}
+              style={{
+                position: 'absolute', bottom: 0, right: 0,
+                width: 340, height: 340, opacity: 0.92,
+                zIndex: 1,
+              } as any}
+              resizeMode="contain"
+            />
+          </>
+        )}
+
         <View style={[wh.heroInner, { maxWidth: innerW }]}>
           <View style={wh.heroBadge}>
             <View style={wh.heroBadgeDot} />
