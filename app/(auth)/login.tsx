@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Image,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Image, useWindowDimensions,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,11 +12,13 @@ import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 
 const GOLD   = '#C9922A';
-const MAROON = '#8B1515';
+const MAROON = '#7A3020';
 
 export default function Login() {
   const router = useRouter();
   const { setSession } = useAuth();
+  const { width: W } = useWindowDimensions();
+  const isMobileLayout = W < 768;            // < 768px → show compact mobile card
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -65,7 +67,155 @@ export default function Login() {
     }
   };
 
-  // ── WEB: Two-column layout (aatreyanews.in model) ────────────────────────
+  // Shared form fields (used in both web layouts)
+  const FormBody = (
+    <>
+      {loginError === '__waking__' ? (
+        <View style={w.wakingBox}>
+          <ActivityIndicator size="small" color={GOLD} />
+          <View style={{ flex: 1 }}>
+            <Text style={w.wakingText}>Server is starting up…</Text>
+            <Text style={w.wakingRetry}>Auto-connecting in {retryIn}s</Text>
+          </View>
+          <TouchableOpacity onPress={onLogin}>
+            <Text style={{ color: GOLD, fontWeight: '700', fontSize: 12 }}>Now</Text>
+          </TouchableOpacity>
+        </View>
+      ) : !!loginError ? (
+        <View style={w.errorBox}>
+          <Ionicons name="alert-circle-outline" size={18} color="#E53935" />
+          <Text style={[w.errorText, { flex: 1 }]}>{loginError}</Text>
+          <TouchableOpacity onPress={() => setLoginError('')}>
+            <Ionicons name="close" size={16} color="#E53935" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      <Text style={w.fieldLabel}>Mobile number</Text>
+      <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
+        <Ionicons name="call-outline" size={18} color={focused === 'mobile' ? GOLD : '#9CA3AF'} />
+        <TextInput
+          testID="login-mobile-input"
+          value={mobile}
+          onChangeText={setMobile}
+          placeholder="Enter your mobile number"
+          placeholderTextColor="#9CA3AF"
+          keyboardType="phone-pad"
+          style={w.input}
+          maxLength={10}
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
+          onFocus={() => setFocused('mobile')}
+          onBlur={() => setFocused('')}
+        />
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <Text style={w.fieldLabel}>Password</Text>
+        <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password' as any)}>
+          <Text style={{ color: GOLD, fontSize: 13, fontWeight: '600' }}>Forgot password?</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={[w.inputWrap, focused === 'password' && w.inputWrapFocused, { marginTop: 0 }]}>
+        <Ionicons name="lock-closed-outline" size={18} color={focused === 'password' ? GOLD : '#9CA3AF'} />
+        <TextInput
+          testID="login-password-input"
+          ref={passwordRef}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Enter your password"
+          placeholderTextColor="#9CA3AF"
+          secureTextEntry={!showPw}
+          style={w.input}
+          returnKeyType="done"
+          onSubmitEditing={onLogin}
+          onFocus={() => setFocused('password')}
+          onBlur={() => setFocused('')}
+        />
+        <TouchableOpacity onPress={() => setShowPw(!showPw)}>
+          <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9CA3AF" />
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        testID="login-submit-btn"
+        style={[w.btnPrimary, loading && { opacity: 0.85 }]}
+        onPress={onLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <ActivityIndicator color="#1A0505" size="small" />
+            <Text style={w.btnPrimaryText}>{loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}</Text>
+          </View>
+        ) : (
+          <Text style={w.btnPrimaryText}>Sign In →</Text>
+        )}
+      </TouchableOpacity>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20, gap: 4 }}>
+        <Text style={{ color: '#6B7280', fontSize: 14 }}>New devotee?</Text>
+        <Link href="/(auth)/register" asChild>
+          <TouchableOpacity testID="login-register-link">
+            <Text style={{ color: '#0D1220', fontSize: 14, fontWeight: '700' }}>Register your account</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
+      <TouchableOpacity style={{ alignSelf: 'center', marginTop: 10 }} onPress={() => router.push('/' as any)}>
+        <Text style={{ color: '#9CA3AF', fontSize: 13 }}>← Back to homepage</Text>
+      </TouchableOpacity>
+      <View style={w.legalRow}>
+        <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
+          <Text style={w.legalLink}>Privacy Policy</Text>
+        </TouchableOpacity>
+        <Text style={w.legalDot}> · </Text>
+        <TouchableOpacity onPress={() => router.push('/legal/terms' as any)}>
+          <Text style={w.legalLink}>Terms</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/legal/refund' as any)}>
+          <Text style={w.legalLink}> · Refund</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+  // ── WEB MOBILE (<768px): full-screen gradient + centered card ────────────
+  if (Platform.OS === 'web' && isMobileLayout) {
+    return (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <LinearGradient
+          colors={['#C9922A', '#7A3020', '#3D1408', '#120805']}
+          locations={[0, 0.35, 0.7, 1]}
+          style={{ flex: 1, minHeight: '100vh', justifyContent: 'center', alignItems: 'center', padding: 20 } as any}
+        >
+          {/* OM watermark */}
+          <Text style={{ position: 'absolute', fontSize: 180, color: 'rgba(255,255,255,0.06)', top: -20, right: -20, fontWeight: '900' } as any}>ॐ</Text>
+
+          {/* Logo + brand */}
+          <Image source={require('../../assets/images/icon.png')} style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 10, borderWidth: 2, borderColor: 'rgba(201,146,42,0.5)' }} />
+          <Text style={{ color: GOLD, fontSize: 18, fontWeight: '900', marginBottom: 2 }}>శ్రీ పూజా హోమం</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, letterSpacing: 3, marginBottom: 24 }}>SRI POOJA HOMAM</Text>
+
+          {/* White card */}
+          <View style={{
+            width: '100%', maxWidth: 400, backgroundColor: '#FFFFFF',
+            borderRadius: 20, padding: 24,
+            ...(Platform.OS === 'web' ? { boxShadow: '0 20px 60px rgba(0,0,0,0.4)' } : {}) as any,
+          } as any}>
+            <Text style={[w.formTitle, { marginBottom: 4 }]}>Welcome back</Text>
+            <Text style={[w.formSub, { marginBottom: 20 }]}>Sign in to your account</Text>
+            {FormBody}
+          </View>
+        </LinearGradient>
+      </ScrollView>
+    );
+  }
+
+  // ── WEB DESKTOP (≥768px): Two-column layout (aatreyanews.in model) ────────
   if (Platform.OS === 'web') {
     return (
       <View style={w.root}>
@@ -120,122 +270,7 @@ export default function Login() {
           <View style={w.formInner}>
             <Text style={w.formTitle}>Welcome back</Text>
             <Text style={w.formSub}>Sign in to your account</Text>
-
-            {loginError === '__waking__' ? (
-              <View style={w.wakingBox}>
-                <ActivityIndicator size="small" color={GOLD} />
-                <View style={{ flex: 1 }}>
-                  <Text style={w.wakingText}>Server is starting up…</Text>
-                  <Text style={w.wakingRetry}>Auto-connecting in {retryIn}s</Text>
-                </View>
-                <TouchableOpacity onPress={onLogin}>
-                  <Text style={{ color: GOLD, fontWeight: '700', fontSize: 12 }}>Now</Text>
-                </TouchableOpacity>
-              </View>
-            ) : !!loginError ? (
-              <View style={w.errorBox}>
-                <Ionicons name="alert-circle-outline" size={18} color="#E53935" />
-                <Text style={[w.errorText, { flex: 1 }]}>{loginError}</Text>
-                <TouchableOpacity onPress={() => setLoginError('')}>
-                  <Ionicons name="close" size={16} color="#E53935" />
-                </TouchableOpacity>
-              </View>
-            ) : null}
-
-            {/* Mobile field */}
-            <Text style={w.fieldLabel}>Mobile number</Text>
-            <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
-              <Ionicons name="call-outline" size={18} color={focused === 'mobile' ? GOLD : '#9CA3AF'} />
-              <TextInput
-                testID="login-mobile-input"
-                value={mobile}
-                onChangeText={setMobile}
-                placeholder="Enter your mobile number"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="phone-pad"
-                style={w.input}
-                maxLength={10}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                onFocus={() => setFocused('mobile')}
-                onBlur={() => setFocused('')}
-              />
-            </View>
-
-            {/* Password field + forgot link on same row (like aatreyanews.in) */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <Text style={w.fieldLabel}>Password</Text>
-              <TouchableOpacity testID="login-forgot-link" onPress={() => router.push('/(auth)/forgot-password' as any)}>
-                <Text style={{ color: GOLD, fontSize: 13, fontWeight: '600' }}>Forgot password?</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[w.inputWrap, focused === 'password' && w.inputWrapFocused, { marginTop: 0 }]}>
-              <Ionicons name="lock-closed-outline" size={18} color={focused === 'password' ? GOLD : '#9CA3AF'} />
-              <TextInput
-                testID="login-password-input"
-                ref={passwordRef}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry={!showPw}
-                style={w.input}
-                returnKeyType="done"
-                onSubmitEditing={onLogin}
-                onFocus={() => setFocused('password')}
-                onBlur={() => setFocused('')}
-              />
-              <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-                <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9CA3AF" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Sign In button — GOLD (like aatreyanews.in) */}
-            <TouchableOpacity
-              testID="login-submit-btn"
-              style={[w.btnPrimary, loading && { opacity: 0.85 }]}
-              onPress={onLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <ActivityIndicator color="#1A0505" size="small" />
-                  <Text style={w.btnPrimaryText}>
-                    {loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={w.btnPrimaryText}>Sign In →</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Register link — inline text style like aatreyanews.in */}
-            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 22, gap: 4 }}>
-              <Text style={{ color: '#6B7280', fontSize: 14 }}>New devotee?</Text>
-              <Link href="/(auth)/register" asChild>
-                <TouchableOpacity testID="login-register-link">
-                  <Text style={{ color: '#0D1220', fontSize: 14, fontWeight: '700' }}>Register your account</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-
-            {/* Back to homepage */}
-            <TouchableOpacity style={{ alignSelf: 'center', marginTop: 12 }} onPress={() => router.push('/' as any)}>
-              <Text style={{ color: '#9CA3AF', fontSize: 13 }}>← Back to homepage</Text>
-            </TouchableOpacity>
-
-            <View style={w.legalRow}>
-              <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
-                <Text style={w.legalLink}>Privacy Policy</Text>
-              </TouchableOpacity>
-              <Text style={w.legalDot}> · </Text>
-              <TouchableOpacity onPress={() => router.push('/legal/terms' as any)}>
-                <Text style={w.legalLink}>Terms</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/legal/refund' as any)}>
-                <Text style={w.legalLink}> · Refund</Text>
-              </TouchableOpacity>
-            </View>
+            {FormBody}
           </View>
         </View>
       </View>

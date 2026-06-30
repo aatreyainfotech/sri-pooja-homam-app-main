@@ -13,8 +13,8 @@ import { theme } from '../../src/constants/theme';
 import WebFooter from '../../src/components/WebFooter';
 
 const IS_WEB = Platform.OS === 'web';
-const MAROON = '#8B1515';
-const DARK_MAROON = '#4A0E0E';
+const MAROON = '#7A3020';
+const DARK_MAROON = '#3D1408';
 const GOLD = '#C9922A';
 
 function parseImages(s: string | null | undefined): string[] {
@@ -29,10 +29,10 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, [string, string]> = {
-  hotel: ['#3D0808', '#8B1515'],
+  hotel: ['#3D1408', '#7A3020'],
   dharamshala: ['#4A148C', '#7B1FA2'],
   guesthouse: ['#1B5E20', '#2E7D32'],
-  lodge: ['#BF360C', '#E64A19'],
+  lodge: ['#7A3020', '#C9922A'],
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -183,8 +183,8 @@ export default function AccommodationBrowse() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Header ──────────────────────────────────────── */}
       <LinearGradient
-        colors={['#C9922A', '#8B1515', '#0D0305']}
-        locations={[0, 0.4, 1]}
+        colors={['#C9922A', '#7A3020', '#1A0805']}
+        locations={[0, 0.45, 1]}
         style={styles.header}
       >
         <View style={[styles.headerInner, IS_WEB && { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any]}>
@@ -221,7 +221,7 @@ export default function AccommodationBrowse() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterRow}
-        style={{ backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ECEFF1' }}
+        style={{ backgroundColor: '#FDF6EE', borderBottomWidth: 1, borderBottomColor: 'rgba(201,146,42,0.2)' }}
       >
         {[
           { label: 'All', value: '', icon: 'apps-outline' },
@@ -279,7 +279,7 @@ export default function AccommodationBrowse() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1, backgroundColor: '#FDF6EE' },
 
   header: { paddingBottom: IS_WEB ? 32 : 20 },
   headerInner: { paddingHorizontal: IS_WEB ? 48 : 16, paddingTop: IS_WEB ? 36 : 8 },
@@ -307,21 +307,21 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    backgroundColor: '#F7F4F4', borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.12)', flexShrink: 0,
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12,
+    backgroundColor: '#fff', borderWidth: 1.5, borderColor: 'rgba(122,48,32,0.18)', flexShrink: 0,
   },
   filterChipActive: { backgroundColor: MAROON, borderColor: MAROON },
-  filterText: { fontSize: 13, fontWeight: '600', color: '#666' },
+  filterText: { fontSize: 13, fontWeight: '600', color: '#5A3020' },
   filterTextActive: { color: '#fff' },
 
   listWrapWeb: { flex: 1, ...(IS_WEB ? { overflowY: 'auto' } as any : {}) } as any,
 
   card: {
     flex: 1, backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
-    shadowColor: '#8B1515', shadowOpacity: 0.08, shadowRadius: 16, elevation: 4,
+    borderWidth: 1, borderColor: 'rgba(122,48,32,0.1)',
+    shadowColor: '#7A3020', shadowOpacity: 0.08, shadowRadius: 16, elevation: 4,
   },
-  cardWeb: { ...(IS_WEB ? { boxShadow: '0 4px 24px rgba(139,21,21,0.1)' } as any : {}) },
+  cardWeb: { ...(IS_WEB ? { boxShadow: '0 4px 24px rgba(122,48,32,0.1)' } as any : {}) },
 
   cardImageWrap: { position: 'relative' },
   cardImage: {
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   location: { fontSize: 12, color: theme.colors.textMuted, flex: 1 },
 
   infoRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 },
-  infoChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFF5F5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(139,21,21,0.15)' },
+  infoChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FDF6EE', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201,146,42,0.2)' },
   infoChipText: { fontSize: 11, color: '#555', fontWeight: '500' },
 
   viewBtn: { borderRadius: 13, overflow: 'hidden' },
