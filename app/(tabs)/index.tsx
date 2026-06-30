@@ -554,8 +554,8 @@ function WebHome() {
       { backgroundColor: BG },
       Platform.OS === 'web' ? { flex: 1, overflowY: 'auto' } as any : {},
     ]}>
-      {/* Hide native calendar button — keep it full-width clickable */}
-      {React.createElement('style', { key: 'date-fix' }, `
+      {/* Styles: date fix + hero image animations */}
+      {React.createElement('style', { key: 'sph-styles' }, `
         input.sph-date { position: relative; }
         input.sph-date::-webkit-calendar-picker-indicator {
           position: absolute; left: 0; top: 0;
@@ -564,6 +564,27 @@ function WebHome() {
         }
         input.sph-date::-webkit-inner-spin-button,
         input.sph-date::-webkit-clear-button { display: none; }
+
+        @keyframes sph-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-18px); }
+        }
+        @keyframes sph-float2 {
+          0%, 100% { transform: translateY(0px) rotate(-4deg); }
+          50%       { transform: translateY(-10px) rotate(4deg); }
+        }
+        .sph-img1 {
+          width: 100%; max-height: 440px;
+          object-fit: contain; object-position: right bottom; display: block;
+          filter: drop-shadow(0 20px 48px rgba(0,0,0,0.55));
+          animation: sph-float 4.5s ease-in-out infinite;
+        }
+        .sph-img2 {
+          width: 130px; height: 130px;
+          object-fit: contain; display: block;
+          filter: drop-shadow(0 8px 20px rgba(0,0,0,0.45));
+          animation: sph-float2 3.2s ease-in-out infinite 0.6s;
+        }
       `)}
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
@@ -634,30 +655,24 @@ function WebHome() {
               </View>
             </View>
 
-            {/* RIGHT — decorative images via CSS (reliable on web) */}
-            <View style={{ width: Math.min(500, W * 0.44), position: 'relative', alignSelf: 'stretch', justifyContent: 'flex-end' }}>
-              {/* Pujari performing homam — main focal image */}
-              <View style={{
-                position: 'absolute', bottom: 0, right: 0,
-                width: '100%', height: '110%',
-                backgroundImage: 'url(/img/img1.png)',
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right bottom',
-                filter: 'drop-shadow(0 8px 32px rgba(0,0,0,0.45))',
-              } as any} />
-              {/* Kalash — bottom-left accent */}
-              <View style={{
-                position: 'absolute', bottom: -10, left: -10,
-                width: 130, height: 130,
-                backgroundImage: 'url(/img/img2.png)',
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center bottom',
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.35))',
-                opacity: 0.9,
-              } as any} />
-            </View>
+            {/* RIGHT — HTML img elements (guaranteed to load on web) */}
+            {React.createElement('div', {
+              style: {
+                position: 'relative',
+                width: Math.min(500, W * 0.44),
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
+                flexShrink: 0,
+              }
+            },
+              /* Pujari performing homam — main */
+              React.createElement('img', { src: '/img/img1.png', className: 'sph-img1', alt: 'Pujari' }),
+              /* Kalash — bottom-left accent */
+              React.createElement('div', {
+                style: { position: 'absolute', bottom: 0, left: -10 }
+              },
+                React.createElement('img', { src: '/img/img2.png', className: 'sph-img2', alt: 'Kalash' })
+              )
+            )}
 
           </View>
         ) : (
