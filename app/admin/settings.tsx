@@ -1007,12 +1007,17 @@ export default function PlatformSettings() {
       setSettings(readySettings); // update state so UI reflects compressed photos
     } catch {}
 
-    // Step 2: save to Azure SQL (this is the source of truth)
+    // Step 2: wake-up ping (public endpoint, no auth) then save with up to 3 attempts
     let backendOk = false;
-    try {
-      await api.post('/admin/platform-settings', readySettings);
-      backendOk = true;
-    } catch {}
+    try { await api.get('/platform-settings'); } catch {}
+
+    for (let attempt = 0; attempt < 3 && !backendOk; attempt++) {
+      try {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 3000 * attempt));
+        await api.post('/admin/platform-settings', readySettings);
+        backendOk = true;
+      } catch {}
+    }
 
     // Step 3: cache locally — if quota exceeded, strip photos from cache (they're in Azure SQL)
     try {
@@ -1031,7 +1036,7 @@ export default function PlatformSettings() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } else {
-      Alert.alert('Save Failed', 'Could not reach server. Please check your connection and try again.');
+      Alert.alert('Save Failed', 'Server is starting up — please wait 30 seconds and try again.');
     }
     setSaving(false);
   };
