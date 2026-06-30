@@ -370,10 +370,15 @@ function WebHome() {
   const [properties, setProperties] = useState<any[]>([]);
   const [searchDest, setSearchDest] = useState('');
   const [searchTemple, setSearchTemple] = useState('');
-  const [searchGuests, setSearchGuests] = useState('2');
+  const [rooms, setRooms] = useState(1);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [showGuestPicker, setShowGuestPicker] = useState(false);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const today = new Date().toISOString().split('T')[0];
+
+  const guestSummary = `${rooms} Room${rooms > 1 ? 's' : ''}, ${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`;
 
   const innerW = Math.min(W, 1280);
 
@@ -554,24 +559,77 @@ function WebHome() {
                 )}
               </View>
               <View style={wh.searchDivider} />
-              <View style={[wh.searchField, { gap: 6, minWidth: 120, maxWidth: 160 }]}>
-                <Ionicons name="people-outline" size={18} color={SAFFRON} />
-                <Text style={{ color: '#888', fontSize: 13, marginRight: 4 }}>Guests</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' } as any}>
-                  <TouchableOpacity
-                    onPress={() => setSearchGuests(String(Math.max(1, Number(searchGuests) - 1)))}
-                    style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.3)', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Text style={{ color: SAFFRON, fontSize: 16, lineHeight: 18, fontWeight: '700' }}>−</Text>
-                  </TouchableOpacity>
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A0505', minWidth: 18, textAlign: 'center' }}>{searchGuests}</Text>
-                  <TouchableOpacity
-                    onPress={() => setSearchGuests(String(Math.min(20, Number(searchGuests) + 1)))}
-                    style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.3)', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Text style={{ color: SAFFRON, fontSize: 16, lineHeight: 18, fontWeight: '700' }}>+</Text>
-                  </TouchableOpacity>
-                </View>
+              {/* ── Guests dropdown trigger ─────────────────────────── */}
+              <View style={{ position: 'relative', zIndex: 200 } as any}>
+                <TouchableOpacity
+                  style={[wh.searchField, { minWidth: 200, gap: 8 }]}
+                  onPress={() => setShowGuestPicker(!showGuestPicker)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="people-outline" size={18} color={SAFFRON} />
+                  <Text style={{ flex: 1, fontSize: 14, color: '#1A0505' }} numberOfLines={1}>{guestSummary}</Text>
+                  <Ionicons name={showGuestPicker ? 'chevron-up' : 'chevron-down'} size={14} color="#999" />
+                </TouchableOpacity>
+
+                {showGuestPicker && (
+                  <>
+                    {/* Backdrop */}
+                    <TouchableOpacity
+                      style={{ position: 'fixed', inset: 0, zIndex: 199 } as any}
+                      onPress={() => setShowGuestPicker(false)}
+                      activeOpacity={1}
+                    />
+                    {/* Popup card */}
+                    <View style={{
+                      position: 'absolute', top: '100%', right: 0, marginTop: 8,
+                      backgroundColor: '#fff', borderRadius: 18, padding: 24,
+                      zIndex: 300, minWidth: 310,
+                      borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
+                      ...(IS_WEB ? { boxShadow: '0 8px 40px rgba(0,0,0,0.18)' } : {}),
+                    } as any}>
+                      {[
+                        { label: 'Rooms',    sub: '',              val: rooms,    set: setRooms,    min: 1, max: 10 },
+                        { label: 'Adults',   sub: '12+ years',     val: adults,   set: setAdults,   min: 1, max: 20 },
+                        { label: 'Children', sub: '0 – 11 years',  val: children, set: setChildren, min: 0, max: 10 },
+                      ].map((row, i, arr) => (
+                        <View key={row.label} style={{
+                          flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                          paddingVertical: 14,
+                          borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+                          borderBottomColor: '#F3F4F6',
+                        }}>
+                          <View>
+                            <Text style={{ color: '#0D1220', fontSize: 15, fontWeight: '700' }}>{row.label}</Text>
+                            {!!row.sub && <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 2 }}>{row.sub}</Text>}
+                          </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                            <TouchableOpacity
+                              onPress={() => row.set(Math.max(row.min, row.val - 1))}
+                              disabled={row.val <= row.min}
+                              style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', borderColor: row.val <= row.min ? '#E5E7EB' : 'rgba(139,21,21,0.4)' }}
+                            >
+                              <Text style={{ fontSize: 20, lineHeight: 22, fontWeight: '700', color: row.val <= row.min ? '#D1D5DB' : SAFFRON }}>−</Text>
+                            </TouchableOpacity>
+                            <Text style={{ fontSize: 17, fontWeight: '800', color: '#0D1220', minWidth: 22, textAlign: 'center' }}>{row.val}</Text>
+                            <TouchableOpacity
+                              onPress={() => row.set(Math.min(row.max, row.val + 1))}
+                              disabled={row.val >= row.max}
+                              style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', borderColor: row.val >= row.max ? '#E5E7EB' : 'rgba(139,21,21,0.4)' }}
+                            >
+                              <Text style={{ fontSize: 20, lineHeight: 22, fontWeight: '700', color: row.val >= row.max ? '#D1D5DB' : SAFFRON }}>+</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ))}
+                      <TouchableOpacity
+                        onPress={() => setShowGuestPicker(false)}
+                        style={{ backgroundColor: SAFFRON, borderRadius: 12, paddingVertical: 13, alignItems: 'center', marginTop: 16 }}
+                      >
+                        <Text style={{ color: '#fff', fontWeight: '800', fontSize: 15 }}>Apply</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
               </View>
               <TouchableOpacity
                 style={wh.searchBtn}
@@ -581,7 +639,9 @@ function WebHome() {
                   if (searchTemple) params.set('temple', searchTemple);
                   if (checkIn) params.set('checkIn', checkIn);
                   if (checkOut) params.set('checkOut', checkOut);
-                  if (searchGuests) params.set('guests', searchGuests);
+                  params.set('rooms', String(rooms));
+                  params.set('adults', String(adults));
+                  if (children > 0) params.set('children', String(children));
                   const qs = params.toString();
                   router.push(('/accommodation' + (qs ? '?' + qs : '')) as any);
                 }}
