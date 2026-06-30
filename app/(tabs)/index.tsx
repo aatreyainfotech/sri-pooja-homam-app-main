@@ -451,16 +451,24 @@ function WebHome() {
                 )}
               </View>
               <View style={wh.searchDivider} />
-              <View style={[wh.searchField, { maxWidth: 100 }]}>
+              <View style={[wh.searchField, { gap: 6, minWidth: 120, maxWidth: 160 }]}>
                 <Ionicons name="people-outline" size={18} color={SAFFRON} />
-                <TextInput
-                  style={wh.searchInput}
-                  placeholder="Guests"
-                  placeholderTextColor="#aaa"
-                  value={searchGuests}
-                  onChangeText={setSearchGuests}
-                  keyboardType="numeric"
-                />
+                <Text style={{ color: '#888', fontSize: 13, marginRight: 4 }}>Guests</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' } as any}>
+                  <TouchableOpacity
+                    onPress={() => setSearchGuests(String(Math.max(1, Number(searchGuests) - 1)))}
+                    style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.3)', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Text style={{ color: SAFFRON, fontSize: 16, lineHeight: 18, fontWeight: '700' }}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A0505', minWidth: 18, textAlign: 'center' }}>{searchGuests}</Text>
+                  <TouchableOpacity
+                    onPress={() => setSearchGuests(String(Math.min(20, Number(searchGuests) + 1)))}
+                    style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.3)', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Text style={{ color: SAFFRON, fontSize: 16, lineHeight: 18, fontWeight: '700' }}>+</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
               <TouchableOpacity
                 style={wh.searchBtn}
