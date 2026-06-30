@@ -471,93 +471,134 @@ function WebHome() {
       <View style={wh.hero}>
         {/* Background gradient */}
         <LinearGradient
-          colors={['#C9922A', '#8B3520', '#3D1408', '#120805']}
+          colors={['#3D1408', '#5C1F0A', '#8B3520', '#C9922A']}
           locations={[0, 0.3, 0.65, 1]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
-        {/* Grid dot pattern overlay — aatreyanews.in style */}
+        {/* Radial glow center */}
         {IS_WEB && (
           <View style={{
             position: 'absolute', inset: 0, zIndex: 0,
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
+            background: 'radial-gradient(ellipse 60% 70% at 65% 50%, rgba(201,146,42,0.28) 0%, transparent 70%)',
           } as any} />
         )}
-        {/* Decorative OM */}
+        {/* Decorative OM — faint background */}
         <Text style={wh.heroOm}>ॐ</Text>
 
-        {/* Decorative images — web only */}
-        {IS_WEB && (
-          <>
-            {/* Kalash — bottom left */}
-            <Image
-              source={{ uri: '/img/img2.png' }}
-              style={{
-                position: 'absolute', bottom: 0, left: 0,
-                width: 220, height: 220, opacity: 0.9,
-                zIndex: 1,
-              } as any}
-              resizeMode="contain"
-            />
-            {/* Pujari — right side */}
-            <Image
-              source={{ uri: '/img/img1.png' }}
-              style={{
-                position: 'absolute', bottom: 0, right: 0,
-                width: 340, height: 340, opacity: 0.92,
-                zIndex: 1,
-              } as any}
-              resizeMode="contain"
-            />
-          </>
-        )}
+        {/* Two-column layout for desktop web */}
+        {IS_WEB && W >= 768 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', maxWidth: innerW, alignSelf: 'center', paddingHorizontal: 24, paddingVertical: 60, zIndex: 2 }}>
 
-        <View style={[wh.heroInner, { maxWidth: innerW }]}>
-          <View style={wh.heroBadge}>
-            <View style={wh.heroBadgeDot} />
-            <Text style={wh.heroBadgeText}>DIVINE DEVOTION AT YOUR FINGERTIPS</Text>
-          </View>
-
-          <Text style={wh.heroTitle}>Sri Pooja Homam</Text>
-          <Text style={wh.heroTelugu}>శ్రీ పూజా హోమం</Text>
-
-          <Text style={wh.heroSub}>
-            Book sacred poojas and homams with verified pujaris.{'\n'}
-            Experience the grace of ancient Vedic rituals from your home.
-          </Text>
-
-          <View style={wh.heroBtns}>
-            <TouchableOpacity
-              onPress={() => user ? router.push('/(tabs)/temples' as any) : router.push('/(auth)/login' as any)}
-              style={wh.heroBtn1}
-            >
-              <Text style={wh.heroBtn1Text}>Book a Pooja Now</Text>
-              <Ionicons name="arrow-forward" size={16} color="#2D0B00" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/(tabs)/live' as any)}
-              style={wh.heroBtn2}
-            >
-              <View style={wh.liveDotRed} />
-              <Text style={wh.heroBtn2Text}>Watch Live Darshan</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Stats */}
-          <View style={wh.statsBar}>
-            {[
-              { v: '500+',   l: 'Temples' },
-              { v: '1000+',  l: 'Poojas & Homams' },
-              { v: '24/7',   l: 'Live Darshan' },
-              { v: '10,000+', l: 'Devotees Served' },
-            ].map((s, i) => (
-              <View key={i} style={wh.statItem}>
-                <Text style={wh.statValue}>{s.v}</Text>
-                <Text style={wh.statLabel}>{s.l}</Text>
+            {/* LEFT — text */}
+            <View style={{ flex: 1, paddingRight: 32 }}>
+              <View style={wh.heroBadge}>
+                <View style={wh.heroBadgeDot} />
+                <Text style={wh.heroBadgeText}>DIVINE DEVOTION AT YOUR FINGERTIPS</Text>
               </View>
-            ))}
+              <Text style={wh.heroTitle}>Sri Pooja Homam</Text>
+              <Text style={wh.heroTelugu}>శ్రీ పూజా హోమం</Text>
+              <Text style={wh.heroSub}>
+                Book sacred poojas and homams with verified pujaris.{'\n'}
+                Experience the grace of ancient Vedic rituals from your home.
+              </Text>
+              <View style={wh.heroBtns}>
+                <TouchableOpacity
+                  onPress={() => user ? router.push('/(tabs)/temples' as any) : router.push('/(auth)/login' as any)}
+                  style={wh.heroBtn1}
+                >
+                  <Text style={wh.heroBtn1Text}>Book a Pooja Now</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#2D0B00" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push('/(tabs)/live' as any)}
+                  style={wh.heroBtn2}
+                >
+                  <View style={wh.liveDotRed} />
+                  <Text style={wh.heroBtn2Text}>Watch Live Darshan</Text>
+                </TouchableOpacity>
+              </View>
+              {/* Stats */}
+              <View style={[wh.statsBar, { marginTop: 36 }]}>
+                {[
+                  { v: '500+',   l: 'Temples' },
+                  { v: '1000+',  l: 'Poojas & Homams' },
+                  { v: '24/7',   l: 'Live Darshan' },
+                  { v: '10,000+', l: 'Devotees Served' },
+                ].map((s, i) => (
+                  <View key={i} style={wh.statItem}>
+                    <Text style={wh.statValue}>{s.v}</Text>
+                    <Text style={wh.statLabel}>{s.l}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* RIGHT — decorative images */}
+            <View style={{ width: Math.min(480, W * 0.42), alignItems: 'center', justifyContent: 'flex-end', position: 'relative' }}>
+              {/* Pujari — main focal image */}
+              <Image
+                source={{ uri: '/img/img1.png' }}
+                style={{ width: '100%', height: Math.min(420, W * 0.38) } as any}
+                resizeMode="contain"
+              />
+              {/* Kalash — bottom-left corner of right panel */}
+              <Image
+                source={{ uri: '/img/img2.png' }}
+                style={{
+                  position: 'absolute', bottom: -10, left: -20,
+                  width: 110, height: 110, opacity: 0.92,
+                } as any}
+                resizeMode="contain"
+              />
+            </View>
+
           </View>
-        </View>
+        ) : (
+          /* Mobile / narrow layout — centered */
+          <View style={[wh.heroInner, { maxWidth: innerW, zIndex: 2 }]}>
+            <View style={wh.heroBadge}>
+              <View style={wh.heroBadgeDot} />
+              <Text style={wh.heroBadgeText}>DIVINE DEVOTION AT YOUR FINGERTIPS</Text>
+            </View>
+            <Text style={wh.heroTitle}>Sri Pooja Homam</Text>
+            <Text style={wh.heroTelugu}>శ్రీ పూజా హోమం</Text>
+            <Text style={wh.heroSub}>
+              Book sacred poojas and homams with verified pujaris.{'\n'}
+              Experience the grace of ancient Vedic rituals from your home.
+            </Text>
+            <View style={wh.heroBtns}>
+              <TouchableOpacity
+                onPress={() => user ? router.push('/(tabs)/temples' as any) : router.push('/(auth)/login' as any)}
+                style={wh.heroBtn1}
+              >
+                <Text style={wh.heroBtn1Text}>Book a Pooja Now</Text>
+                <Ionicons name="arrow-forward" size={16} color="#2D0B00" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/live' as any)}
+                style={wh.heroBtn2}
+              >
+                <View style={wh.liveDotRed} />
+                <Text style={wh.heroBtn2Text}>Watch Live Darshan</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={wh.statsBar}>
+              {[
+                { v: '500+',   l: 'Temples' },
+                { v: '1000+',  l: 'Poojas & Homams' },
+                { v: '24/7',   l: 'Live Darshan' },
+                { v: '10,000+', l: 'Devotees Served' },
+              ].map((s, i) => (
+                <View key={i} style={wh.statItem}>
+                  <Text style={wh.statValue}>{s.v}</Text>
+                  <Text style={wh.statLabel}>{s.l}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </View>
 
       {/* ── SMART SEARCH ─────────────────────────────────────────────────── */}
@@ -1092,17 +1133,15 @@ function SecHead({ title, sub, onAll, dark }: { title: string; sub: string; onAl
 const wh: any = {
   // Hero
   hero: {
-    minHeight: '85vh',
+    minHeight: '82vh',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    paddingVertical: 80,
-    paddingHorizontal: 24,
   },
   heroOm: {
-    position: 'absolute', right: -20, top: -20,
-    fontSize: 360, color: 'rgba(0,0,0,0.12)',
-    fontWeight: '400', lineHeight: 400,
+    position: 'absolute', right: 20, top: '10%',
+    fontSize: 320, color: 'rgba(0,0,0,0.10)',
+    fontWeight: '400', lineHeight: 360, zIndex: 1,
   },
   heroInner: { width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
   heroBadge: {
