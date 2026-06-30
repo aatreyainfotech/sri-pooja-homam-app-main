@@ -294,6 +294,17 @@ function WebHome() {
       { backgroundColor: BG },
       Platform.OS === 'web' ? { flex: 1, overflowY: 'auto' } as any : {},
     ]}>
+      {/* Hide native calendar button — keep it full-width clickable */}
+      {React.createElement('style', { key: 'date-fix' }, `
+        input.sph-date { position: relative; }
+        input.sph-date::-webkit-calendar-picker-indicator {
+          position: absolute; left: 0; top: 0;
+          width: 100%; height: 100%;
+          opacity: 0; cursor: pointer;
+        }
+        input.sph-date::-webkit-inner-spin-button,
+        input.sph-date::-webkit-clear-button { display: none; }
+      `)}
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <View style={wh.hero}>
@@ -396,13 +407,14 @@ function WebHome() {
                 <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
                 {IS_WEB ? React.createElement('input', {
                   type: 'date',
+                  className: 'sph-date',
                   value: checkIn,
                   min: today,
                   onChange: (e: any) => setCheckIn(e.target.value),
                   style: {
                     flex: 1, fontSize: 14, border: 'none', outline: 'none',
                     backgroundColor: 'transparent', cursor: 'pointer',
-                    color: checkIn ? '#1A0505' : '#aaa', fontFamily: 'inherit',
+                    color: checkIn ? '#1A0505' : '#9CA3AF', fontFamily: 'inherit',
                   },
                 }) : (
                   <TextInput
@@ -419,13 +431,14 @@ function WebHome() {
                 <Ionicons name="calendar-outline" size={18} color={SAFFRON} />
                 {IS_WEB ? React.createElement('input', {
                   type: 'date',
+                  className: 'sph-date',
                   value: checkOut,
                   min: checkIn || today,
                   onChange: (e: any) => setCheckOut(e.target.value),
                   style: {
                     flex: 1, fontSize: 14, border: 'none', outline: 'none',
                     backgroundColor: 'transparent', cursor: 'pointer',
-                    color: checkOut ? '#1A0505' : '#aaa', fontFamily: 'inherit',
+                    color: checkOut ? '#1A0505' : '#9CA3AF', fontFamily: 'inherit',
                   },
                 }) : (
                   <TextInput
