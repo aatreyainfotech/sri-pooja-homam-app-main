@@ -25,6 +25,7 @@ export default function Login() {
   const [loginError, setLoginError] = useState('');
   const [retryIn, setRetryIn] = useState(0);
   const retryTimer = useRef<any>(null);
+  const passwordRef = useRef<any>(null);
 
   useEffect(() => () => { if (retryTimer.current) clearInterval(retryTimer.current); }, []);
 
@@ -154,6 +155,8 @@ export default function Login() {
                 keyboardType="phone-pad"
                 style={w.input}
                 maxLength={10}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 onFocus={() => setFocused('mobile')}
                 onBlur={() => setFocused('')}
               />
@@ -170,12 +173,15 @@ export default function Login() {
               <Ionicons name="lock-closed-outline" size={18} color={focused === 'password' ? GOLD : '#9CA3AF'} />
               <TextInput
                 testID="login-password-input"
+                ref={passwordRef}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Enter your password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPw}
                 style={w.input}
+                returnKeyType="done"
+                onSubmitEditing={onLogin}
                 onFocus={() => setFocused('password')}
                 onBlur={() => setFocused('')}
               />
