@@ -23,18 +23,21 @@ type Plan = {
   badge: string; description: string; features: string[]; popular: boolean;
 };
 type ShowcaseItem = { id: string; name: string; url: string; description: string };
-type TabId = 'general' | 'branding' | 'hero' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
+type ServiceCard = { id: string; icon: string; title: string; desc: string };
+type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'general',  label: 'General',      icon: 'settings-outline' },
-  { id: 'branding', label: 'Brand Colors', icon: 'color-palette-outline' },
-  { id: 'hero',     label: 'Hero Text',    icon: 'home-outline' },
-  { id: 'pricing',  label: 'Pricing Plans',icon: 'pricetag-outline' },
-  { id: 'showcase', label: 'Live Showcase',icon: 'star-outline' },
-  { id: 'contact',  label: 'Contact Info', icon: 'call-outline' },
-  { id: 'social',   label: 'Social Media', icon: 'share-social-outline' },
-  { id: 'seo',      label: 'SEO',          icon: 'search-outline' },
-  { id: 'features', label: 'Features',     icon: 'toggle-outline' },
+  { id: 'general',  label: 'General',        icon: 'settings-outline' },
+  { id: 'branding', label: 'Brand Colors',   icon: 'color-palette-outline' },
+  { id: 'hero',     label: 'Hero Text',      icon: 'home-outline' },
+  { id: 'sections', label: 'Home Sections',  icon: 'grid-outline' },
+  { id: 'services', label: 'Platform Features', icon: 'apps-outline' },
+  { id: 'pricing',  label: 'Pricing Plans',  icon: 'pricetag-outline' },
+  { id: 'showcase', label: 'Live Showcase',  icon: 'star-outline' },
+  { id: 'contact',  label: 'Contact Info',   icon: 'call-outline' },
+  { id: 'social',   label: 'Social Media',   icon: 'share-social-outline' },
+  { id: 'seo',      label: 'SEO',            icon: 'search-outline' },
+  { id: 'features', label: 'Feature Toggles',icon: 'toggle-outline' },
 ];
 
 const DEFAULT_SETTINGS = {
@@ -98,6 +101,33 @@ const DEFAULT_SETTINGS = {
   metaTitle: 'Sri Pooja Homam – Book Sacred Poojas & Homams Online',
   metaDesc: 'Book temple poojas, homams, and live darshan with verified pujaris across India.',
   metaKeywords: 'pooja booking, homam online, temple darshan, pujari booking, vedic rituals',
+  // Home Sections — titles & subtitles
+  secDestTitle: 'Popular Destinations',
+  secDestSub: 'Sacred pilgrimage cities across India',
+  secLiveTitle: 'Live Darshan',
+  secLiveSub: 'Sacred rituals streaming now',
+  secTemplesTitle: 'Featured Temples',
+  secTemplesSub: 'Sacred shrines across India',
+  secPoojasTitle: 'Book a Pooja or Homam',
+  secPoojasSub: 'Performed by verified Vedic pujaris',
+  secFestTitle: 'Festival Highlights',
+  secFestSub: 'Upcoming sacred festivals & celebrations',
+  secAccTitle: 'Temple Accommodation',
+  secAccSub: 'Stay near the divine — hotels & dharamshalas near temples',
+  secWhyTitle: 'Why Choose Sri Pooja Homam?',
+  secWhySub: 'Trusted by thousands of devotees across India',
+  secPlatTitle: 'PLATFORM FEATURES',
+  secPlatSub: 'Everything for Your Spiritual Journey',
+  secPlatDesc: 'One platform. Every sacred service your devotion needs.',
+
+  // Service Cards (Platform Features section)
+  services: [
+    { id: '1', icon: 'flower-outline',   title: 'Book Pooja',     desc: 'Perform sacred poojas at home or at the temple with verified Vedic pujaris.' },
+    { id: '2', icon: 'flame-outline',    title: 'Perform Homam',  desc: 'Sacred fire rituals for prosperity, health and removal of obstacles.' },
+    { id: '3', icon: 'videocam-outline', title: 'Live Darshan',   desc: 'Watch sacred rituals streaming live from temples across India.' },
+    { id: '4', icon: 'home-outline',     title: 'Pujari at Home', desc: 'Invite a qualified pujari to your home for all auspicious occasions.' },
+  ] as ServiceCard[],
+
   // Features
   enableRegistration: true,
   enableLiveStreams: true,
@@ -507,6 +537,97 @@ function SEOTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: an
 }
 
 /* ── Tab: Feature Toggles ──────────────────────────────────────────────── */
+/* ── Tab: Home Sections ────────────────────────────────────────────────── */
+function SectionsTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
+  const sections = [
+    { keyT: 'secDestTitle',    keyS: 'secDestSub',    label: 'Popular Destinations' },
+    { keyT: 'secLiveTitle',    keyS: 'secLiveSub',    label: 'Live Darshan' },
+    { keyT: 'secTemplesTitle', keyS: 'secTemplesSub', label: 'Featured Temples' },
+    { keyT: 'secPoojasTitle',  keyS: 'secPoojasSub',  label: 'Book a Pooja / Homam' },
+    { keyT: 'secFestTitle',    keyS: 'secFestSub',    label: 'Festival Highlights' },
+    { keyT: 'secAccTitle',     keyS: 'secAccSub',     label: 'Temple Accommodation' },
+    { keyT: 'secWhyTitle',     keyS: 'secWhySub',     label: 'Why Choose Us' },
+    { keyT: 'secPlatTitle',    keyS: 'secPlatSub',    label: 'Platform Features (overline)' },
+  ];
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <SectionTitle title="Home Page Section Titles" sub="Edit the heading and subtitle for each homepage section" />
+      {sections.map(({ keyT, keyS, label }) => (
+        <View key={keyT} style={f.sectionCard}>
+          <Text style={f.sectionCardLabel}>{label}</Text>
+          <Field label="Title" value={(s as any)[keyT]} onChange={v => set(keyT, v)} />
+          <Field label="Subtitle" value={(s as any)[keyS]} onChange={v => set(keyS, v)} />
+        </View>
+      ))}
+      <View style={f.divider} />
+      <SectionTitle title="Platform Features Block" sub="The description text under the overline" />
+      <Field label="Description Line" value={s.secPlatDesc} onChange={v => set('secPlatDesc', v)} multi />
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
+/* ── Tab: Service Cards (Platform Features) ────────────────────────────── */
+function ServicesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
+  const items: ServiceCard[] = s.services;
+
+  const update = (idx: number, key: keyof ServiceCard, val: string) => {
+    set('services', items.map((it, i) => i === idx ? { ...it, [key]: val } : it));
+  };
+  const add = () => set('services', [...items, { id: Date.now().toString(), icon: 'star-outline', title: '', desc: '' }]);
+  const remove = (idx: number) => set('services', items.filter((_, i) => i !== idx));
+
+  const ICONS = ['flower-outline','flame-outline','videocam-outline','home-outline','star-outline','heart-outline','people-outline','book-outline','musical-notes-outline','sunny-outline'];
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <SectionTitle title="Platform Feature Cards" sub="The icon-grid cards shown in the 'Platform Features' section" />
+      {items.map((item, idx) => (
+        <View key={item.id} style={f.showcaseCard}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: GOLD + '22', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={item.icon as any} size={18} color={GOLD} />
+              </View>
+              <Text style={{ color: DARK, fontWeight: '800', fontSize: 14 }}>Card #{idx + 1}</Text>
+            </View>
+            <TouchableOpacity onPress={() => remove(idx)}>
+              <Ionicons name="trash-outline" size={16} color="#E53935" />
+            </TouchableOpacity>
+          </View>
+          <Field label="Title" value={item.title} onChange={v => update(idx, 'title', v)} />
+          <Field label="Description" value={item.desc} onChange={v => update(idx, 'desc', v)} multi />
+          <View style={f.row}>
+            <Text style={f.label}>Icon Name</Text>
+            <Text style={f.hint}>Choose from: {ICONS.join(', ')}</Text>
+            <TextInput
+              style={f.input}
+              value={item.icon}
+              onChangeText={v => update(idx, 'icon', v)}
+              placeholder="e.g. flower-outline"
+              placeholderTextColor="#aaa"
+            />
+          </View>
+          {/* Icon preview row */}
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+            {ICONS.map(ic => (
+              <TouchableOpacity key={ic} onPress={() => update(idx, 'icon', ic)}
+                style={{ padding: 8, borderRadius: 8, borderWidth: 1.5, borderColor: item.icon === ic ? GOLD : '#DDD', backgroundColor: item.icon === ic ? GOLD + '18' : '#fff' }}>
+                <Ionicons name={ic as any} size={18} color={item.icon === ic ? GOLD : '#888'} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ))}
+      <TouchableOpacity style={f.addPlanBtn} onPress={add}>
+        <Ionicons name="add-circle" size={20} color={GOLD} />
+        <Text style={{ color: GOLD, fontSize: 14, fontWeight: '700' }}>Add Feature Card</Text>
+      </TouchableOpacity>
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
 function FeaturesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
   const toggles = [
     { key: 'enableRegistration',  label: 'User Registration',      desc: 'Allow new users to create accounts' },
@@ -609,6 +730,8 @@ export default function PlatformSettings() {
     general:  <GeneralTab  s={settings} set={set} />,
     branding: <BrandingTab s={settings} set={set} />,
     hero:     <HeroTab     s={settings} set={set} />,
+    sections: <SectionsTab s={settings} set={set} />,
+    services: <ServicesTab s={settings} set={set} />,
     pricing:  <PricingTab  s={settings} set={set} />,
     showcase: <ShowcaseTab s={settings} set={set} />,
     contact:  <ContactTab  s={settings} set={set} />,
@@ -801,6 +924,12 @@ const f = StyleSheet.create({
     backgroundColor: '#fff', borderRadius: 12, padding: 18, marginBottom: 12,
     borderWidth: 1, borderColor: '#EEE8E0',
   },
+  sectionCard: {
+    backgroundColor: '#fff', borderRadius: 12, padding: 18, marginBottom: 12,
+    borderWidth: 1, borderColor: '#EEE8E0',
+    ...(IS_WEB ? { boxShadow: '0 2px 6px rgba(0,0,0,0.04)' } as any : {}),
+  },
+  sectionCardLabel: { color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 12 },
 
   socialRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   socialIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
