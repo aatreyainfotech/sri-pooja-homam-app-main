@@ -683,7 +683,7 @@ function WebHome() {
       </View>
 
       {/* ── LIVE DARSHAN ─────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#0D0305' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#2A1208' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} dark />
           {live.length > 0 ? (
@@ -695,7 +695,7 @@ function WebHome() {
               activeOpacity={0.88}
               style={{ borderRadius: 20, overflow: 'hidden', ...(Platform.OS === 'web' ? { boxShadow: '0 8px 32px rgba(0,0,0,0.5)' } : {}) } as any}
             >
-              <LinearGradient colors={['#3D0808', '#1A0505']} style={{ padding: 48, alignItems: 'center', gap: 16 }}>
+              <LinearGradient colors={['#5A2010', '#2A1208']} style={{ padding: 48, alignItems: 'center', gap: 16 }}>
                 <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(229,57,53,0.15)', borderWidth: 1, borderColor: 'rgba(229,57,53,0.4)', alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name="radio-outline" size={34} color="#EF9A9A" />
                 </View>
@@ -783,7 +783,7 @@ function WebHome() {
 
       {/* ── TEMPLES CAROUSEL ─────────────────────────────────────────────── */}
       {temples.length > 0 && (
-        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#0D0305' }}>
+        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#3D1A0A' }}>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
             <SecHead title="Featured Temples" sub="Sacred shrines across India" onAll={() => router.push('/(tabs)/temples' as any)} dark />
           </View>
@@ -817,7 +817,7 @@ function WebHome() {
 
       {/* ── POOJAS CAROUSEL ──────────────────────────────────────────────── */}
       {poojas.length > 0 && (
-        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#0D0305' }}>
+        <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#2A1208' }}>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
             <SecHead title="Book a Pooja or Homam" sub="Performed by verified Vedic pujaris" onAll={() => router.push('/(tabs)/temples' as any)} dark />
           </View>
