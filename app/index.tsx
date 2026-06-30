@@ -14,11 +14,11 @@ export default function Index() {
   useEffect(() => {
     if (loading) return;
     const t = setTimeout(() => {
-      if (isWebDesktop) {
-        // Desktop web: always go to homepage (public WebHome handles no-auth)
+      if (Platform.OS === 'web') {
+        // Web (desktop or mobile browser): homepage is always public
         router.replace('/(tabs)');
       } else {
-        // Mobile app or mobile web: login gate
+        // Native mobile app: login gate
         if (user) router.replace('/(tabs)');
         else router.replace('/(auth)/login');
       }
