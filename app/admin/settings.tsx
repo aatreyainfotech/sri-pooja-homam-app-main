@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Switch, Alert, Platform, ActivityIndicator,
+  TextInput, Switch, Alert, Platform, ActivityIndicator, Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -24,14 +24,16 @@ type Plan = {
 };
 type ShowcaseItem = { id: string; name: string; url: string; description: string };
 type ServiceCard = { id: string; icon: string; title: string; desc: string };
-type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
+type DestItem = { id: string; name: string; state: string; color: string; route: string; photo?: string };
+type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'destinations' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'general',  label: 'General',        icon: 'settings-outline' },
   { id: 'branding', label: 'Brand Colors',   icon: 'color-palette-outline' },
   { id: 'hero',     label: 'Hero Text',      icon: 'home-outline' },
-  { id: 'sections', label: 'Home Sections',  icon: 'grid-outline' },
-  { id: 'services', label: 'Platform Features', icon: 'apps-outline' },
+  { id: 'sections',      label: 'Home Sections',     icon: 'grid-outline' },
+  { id: 'destinations',  label: 'Destinations',       icon: 'location-outline' },
+  { id: 'services',      label: 'Platform Features',  icon: 'apps-outline' },
   { id: 'pricing',  label: 'Pricing Plans',  icon: 'pricetag-outline' },
   { id: 'showcase', label: 'Live Showcase',  icon: 'star-outline' },
   { id: 'contact',  label: 'Contact Info',   icon: 'call-outline' },
@@ -119,6 +121,18 @@ const DEFAULT_SETTINGS = {
   secPlatTitle: 'PLATFORM FEATURES',
   secPlatSub: 'Everything for Your Spiritual Journey',
   secPlatDesc: 'One platform. Every sacred service your devotion needs.',
+
+  // Popular Destinations
+  destinations: [
+    { id: '1', name: 'Tirupati',   state: 'Andhra Pradesh', color: '#FF5722', route: '/destinations?state=andhra-pradesh', photo: '' },
+    { id: '2', name: 'Varanasi',   state: 'Uttar Pradesh',  color: '#9C27B0', route: '/destinations?state=uttar-pradesh',  photo: '' },
+    { id: '3', name: 'Rishikesh',  state: 'Uttarakhand',    color: '#00BCD4', route: '/destinations?state=uttarakhand',    photo: '' },
+    { id: '4', name: 'Shirdi',     state: 'Maharashtra',    color: '#FF9800', route: '/destinations?state=maharashtra',    photo: '' },
+    { id: '5', name: 'Madurai',    state: 'Tamil Nadu',     color: '#E91E63', route: '/destinations?state=tamil-nadu',     photo: '' },
+    { id: '6', name: 'Udupi',      state: 'Karnataka',      color: '#4CAF50', route: '/destinations?state=karnataka',      photo: '' },
+    { id: '7', name: 'Dwarka',     state: 'Gujarat',        color: '#2196F3', route: '/destinations?state=gujarat',        photo: '' },
+    { id: '8', name: 'Guruvayur',  state: 'Kerala',         color: '#8BC34A', route: '/destinations?state=kerala',         photo: '' },
+  ] as DestItem[],
 
   // Service Cards (Platform Features section)
   services: [
@@ -628,6 +642,124 @@ function ServicesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, 
   );
 }
 
+/* ── Tab: Destinations ─────────────────────────────────────────────────── */
+function DestinationsTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
+  const items: DestItem[] = (s as any).destinations || [];
+
+  const update = (id: string, key: string, val: string) =>
+    set('destinations', items.map(d => d.id === id ? { ...d, [key]: val } : d));
+
+  const remove = (id: string) =>
+    set('destinations', items.filter(d => d.id !== id));
+
+  const add = () => set('destinations', [...items, {
+    id: Date.now().toString(), name: 'New City', state: 'State Name',
+    color: '#C9922A', route: '/destinations', photo: '',
+  }]);
+
+  const pickPhoto = (id: string) => {
+    if (!IS_WEB) return;
+    const input = (document as any).createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      const reader = new (window as any).FileReader();
+      reader.onload = (ev: any) => update(id, 'photo', ev.target.result);
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <SectionTitle title="Popular Destinations" sub="Cities shown in the Popular Destinations section on the homepage" />
+      {items.map((item) => (
+        <View key={item.id} style={f.showcaseCard}>
+          <View style={{ flexDirection: 'row', gap: 14 }}>
+            {/* Photo upload */}
+            <TouchableOpacity onPress={() => pickPhoto(item.id)} activeOpacity={0.8} style={{ position: 'relative' }}>
+              {item.photo ? (
+                <Image source={{ uri: item.photo }} style={{ width: 88, height: 72, borderRadius: 10 }} resizeMode="cover" />
+              ) : (
+                <View style={{
+                  width: 88, height: 72, borderRadius: 10,
+                  backgroundColor: item.color + '22',
+                  borderWidth: 1.5, borderStyle: 'dashed' as any, borderColor: item.color + '66',
+                  alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}>
+                  <Ionicons name="camera-outline" size={22} color={item.color} />
+                  <Text style={{ color: item.color, fontSize: 9, fontWeight: '800' }}>ADD PHOTO</Text>
+                </View>
+              )}
+              <View style={{
+                position: 'absolute', bottom: 4, right: 4,
+                width: 20, height: 20, borderRadius: 10,
+                backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Ionicons name="pencil" size={10} color="#fff" />
+              </View>
+            </TouchableOpacity>
+
+            {/* Fields */}
+            <View style={{ flex: 1, gap: 8 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[f.label, { marginBottom: 4 }]}>City Name</Text>
+                  <TextInput
+                    style={[f.input, { marginBottom: 0 }]}
+                    value={item.name}
+                    onChangeText={v => update(item.id, 'name', v)}
+                    placeholder="e.g. Tirupati"
+                    placeholderTextColor="#aaa"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[f.label, { marginBottom: 4 }]}>State</Text>
+                  <TextInput
+                    style={[f.input, { marginBottom: 0 }]}
+                    value={item.state}
+                    onChangeText={v => update(item.id, 'state', v)}
+                    placeholder="e.g. Andhra Pradesh"
+                    placeholderTextColor="#aaa"
+                  />
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[f.label, { marginBottom: 4 }]}>Route</Text>
+                  <TextInput
+                    style={[f.input, { marginBottom: 0 }]}
+                    value={item.route}
+                    onChangeText={v => update(item.id, 'route', v)}
+                    placeholder="/destinations"
+                    placeholderTextColor="#aaa"
+                  />
+                </View>
+                <TouchableOpacity onPress={() => remove(item.id)} style={f.deleteBtn}>
+                  <Ionicons name="trash-outline" size={16} color="#E53935" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Color */}
+          <View style={{ marginTop: 12 }}>
+            <ColorField label="Theme Color (hex)" value={item.color} onChange={v => update(item.id, 'color', v)} />
+          </View>
+        </View>
+      ))}
+
+      <TouchableOpacity style={f.addPlanBtn} onPress={add}>
+        <Ionicons name="add-circle" size={20} color={GOLD} />
+        <Text style={{ color: GOLD, fontSize: 14, fontWeight: '700' }}>Add Destination</Text>
+      </TouchableOpacity>
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
 function FeaturesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
   const toggles = [
     { key: 'enableRegistration',  label: 'User Registration',      desc: 'Allow new users to create accounts' },
@@ -730,8 +862,9 @@ export default function PlatformSettings() {
     general:  <GeneralTab  s={settings} set={set} />,
     branding: <BrandingTab s={settings} set={set} />,
     hero:     <HeroTab     s={settings} set={set} />,
-    sections: <SectionsTab s={settings} set={set} />,
-    services: <ServicesTab s={settings} set={set} />,
+    sections:      <SectionsTab      s={settings} set={set} />,
+    destinations:  <DestinationsTab  s={settings} set={set} />,
+    services:      <ServicesTab      s={settings} set={set} />,
     pricing:  <PricingTab  s={settings} set={set} />,
     showcase: <ShowcaseTab s={settings} set={set} />,
     contact:  <ContactTab  s={settings} set={set} />,

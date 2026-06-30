@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
@@ -403,6 +404,7 @@ function WebHome() {
   const [showGuestPicker, setShowGuestPicker] = useState(false);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+  const [destinations, setDestinations] = useState<any[]>(DESTINATIONS);
   const today = new Date().toISOString().split('T')[0];
 
   const guestSummary = `${rooms} Room${rooms > 1 ? 's' : ''}, ${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`;
@@ -422,6 +424,30 @@ function WebHome() {
       setLive(Array.isArray(l.data) ? l.data : []);
       setProperties(Array.isArray(pr.data) ? pr.data.filter((x: any) => x.is_active !== false) : []);
     });
+  }, []);
+
+  // Load platform destinations from cache → then from backend
+  useEffect(() => {
+    (async () => {
+      try {
+        const cached = await AsyncStorage.getItem('sph_platform_settings');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed.destinations) && parsed.destinations.length > 0)
+            setDestinations(parsed.destinations);
+        }
+      } catch {}
+      try {
+        const { data } = await api.get('/platform-settings');
+        if (Array.isArray(data?.destinations) && data.destinations.length > 0) {
+          setDestinations(data.destinations);
+          // update cache
+          const cached = await AsyncStorage.getItem('sph_platform_settings').catch(() => null);
+          const prev = cached ? JSON.parse(cached) : {};
+          await AsyncStorage.setItem('sph_platform_settings', JSON.stringify({ ...prev, destinations: data.destinations }));
+        }
+      } catch {}
+    })();
   }, []);
 
   return (
@@ -720,7 +746,7 @@ function WebHome() {
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Popular Destinations" sub="Sacred pilgrimage cities across India" onAll={() => router.push('/destinations' as any)} />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
-            {DESTINATIONS.map((d) => (
+            {destinations.map((d) => (
               <TouchableOpacity
                 key={d.name}
                 onPress={() => router.push(d.route as any)}
@@ -729,25 +755,40 @@ function WebHome() {
                   flex: 1, minWidth: 140,
                   backgroundColor: '#fff',
                   borderRadius: 16, overflow: 'hidden',
-                  borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
+                  borderWidth: 1, borderColor: 'rgba(122,48,32,0.1)',
                   ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(0,0,0,0.08)' } as any : {}),
                 } as any}
               >
-                <LinearGradient
-                  colors={[d.color + '18', d.color + '06']}
-                  style={{ padding: 18, alignItems: 'center', gap: 8 }}
-                >
-                  <View style={{
-                    width: 48, height: 48, borderRadius: 24,
-                    backgroundColor: d.color + '18',
-                    borderWidth: 2, borderColor: d.color + '38',
-                    alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Ionicons name="location" size={22} color={d.color} />
+                {d.photo ? (
+                  // Photo card — image fills top, name/state overlay at bottom
+                  <View>
+                    <Image source={{ uri: d.photo }} style={{ width: '100%', height: 110 }} resizeMode="cover" />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.62)']}
+                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 10 }}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>{d.name}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10 }}>{d.state}</Text>
+                    </LinearGradient>
                   </View>
-                  <Text style={{ color: '#1A0505', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
-                  <Text style={{ color: '#666666', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
-                </LinearGradient>
+                ) : (
+                  // Icon card — gradient background
+                  <LinearGradient
+                    colors={[d.color + '18', d.color + '06']}
+                    style={{ padding: 18, alignItems: 'center', gap: 8 }}
+                  >
+                    <View style={{
+                      width: 48, height: 48, borderRadius: 24,
+                      backgroundColor: d.color + '18',
+                      borderWidth: 2, borderColor: d.color + '38',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Ionicons name="location" size={22} color={d.color} />
+                    </View>
+                    <Text style={{ color: '#1A0505', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
+                    <Text style={{ color: '#666666', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
+                  </LinearGradient>
+                )}
               </TouchableOpacity>
             ))}
           </View>
