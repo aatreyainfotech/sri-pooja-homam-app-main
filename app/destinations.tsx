@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WebFooter from '../src/components/WebFooter';
 
 const GOLD = '#C9922A';
-const SAFFRON = '#B22222';
+const SAFFRON = '#8B3520';
 const IS_WEB = Platform.OS === 'web';
 
 const STATES = [

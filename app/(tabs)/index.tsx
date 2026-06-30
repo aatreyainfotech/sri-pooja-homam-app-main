@@ -17,7 +17,7 @@ import WebFooter from '../../src/components/WebFooter';
 import WelcomePopup from '../../src/components/WelcomePopup';
 
 const GOLD    = '#C9922A';
-const SAFFRON = '#B22222';
+const SAFFRON = '#8B3520';   // warm amber-brown (was blood-red #B22222)
 const BG      = '#FFFFFF';
 const IS_WEB  = Platform.OS === 'web';
 
@@ -221,9 +221,9 @@ function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
                   style={{
                     borderRadius: 12, paddingVertical: 11, alignItems: 'center',
                     ...(Platform.OS === 'web' ? {
-                      background: 'linear-gradient(135deg, #B22222 0%, #8B1515 100%)',
-                      boxShadow: '0 4px 16px rgba(178,34,34,0.4)',
-                    } : { backgroundColor: '#B22222' }),
+                      background: 'linear-gradient(135deg, #8B3520 0%, #5A2010 100%)',
+                      boxShadow: '0 4px 16px rgba(139,53,32,0.4)',
+                    } : { backgroundColor: '#8B3520' }),
                   } as any}
                 >
                   <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 }}>Book Now →</Text>
@@ -445,7 +445,7 @@ function WebHome() {
       <View style={wh.hero}>
         {/* Background gradient */}
         <LinearGradient
-          colors={['#C9922A', '#8B1515', '#3D0808', '#0D0305']}
+          colors={['#C9922A', '#8B3520', '#3D1408', '#120805']}
           locations={[0, 0.3, 0.65, 1]}
           style={StyleSheet.absoluteFill}
         />
@@ -868,7 +868,7 @@ function WebHome() {
             ...(Platform.OS === 'web' ? { boxShadow: '0 8px 40px rgba(0,0,0,0.15)' } as any : {}),
           } as any}>
             <LinearGradient
-              colors={['#0D0305', '#4A0E0E', '#8B1515', '#C9922A']}
+              colors={['#120805', '#3D1A0A', '#7A3020', '#C9922A']}
               start={[0, 0]} end={[1, 1]}
               style={{ padding: IS_WEB ? 56 : 32 }}
             >
@@ -965,7 +965,7 @@ function WebHome() {
 
       {/* ── CTA / REGISTER ───────────────────────────────────────────────── */}
       <View style={wh.ctaSection}>
-        <LinearGradient colors={['#C42B0A', '#8B1515', '#3A0000']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['#C4722A', '#7A3020', '#2A0F07']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
         <Text style={wh.ctaOm}>ॐ</Text>
         <View style={[wh.ctaInner, { maxWidth: innerW }]}>
           <Text style={wh.ctaTitle}>Begin Your Spiritual Journey</Text>
@@ -1233,7 +1233,7 @@ const wh: any = {
   searchDivider: { width: 1, height: 28, backgroundColor: 'rgba(139,21,21,0.12)' },
   searchBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#8B1515', paddingHorizontal: 22, paddingVertical: 13,
+    backgroundColor: '#7A3020', paddingHorizontal: 22, paddingVertical: 13,
     borderRadius: 12, margin: 4,
     ...(Platform.OS === 'web' ? { boxShadow: '0 4px 16px rgba(139,21,21,0.4)' } as any : {}),
   },
@@ -1338,7 +1338,7 @@ function MobileHome() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       >
-        <LinearGradient colors={['#0D0305', '#4A0E0E', '#8B1515', '#C9922A']} style={mob.headerBg}>
+        <LinearGradient colors={['#120805', '#3D1A0A', '#7A3020', '#C9922A']} style={mob.headerBg}>
           <Text style={mob.omSymbol}>ॐ</Text>
           <View style={mob.headerRow}>
             <View style={{ flex: 1 }}>
@@ -1410,7 +1410,7 @@ function MobileHome() {
           <Text style={mob.sectionTitle}>Browse Services</Text>
           <View style={mob.catRow}>
             <CategoryCard icon="flame" title="Homam" subtitle="Fire rituals" color="#E65100" gradColors={['#E65100', '#BF360C']} onPress={() => router.push('/(tabs)/temples')} />
-            <CategoryCard icon="rose"  title="Pooja"  subtitle="Daily sevas" color="#8B1515" gradColors={['#A32A2A', '#630B0B']} onPress={() => router.push('/(tabs)/temples')} />
+            <CategoryCard icon="rose"  title="Pooja"  subtitle="Daily sevas" color="#8B3520" gradColors={['#A34020', '#5A1A0A']} onPress={() => router.push('/(tabs)/temples')} />
             <CategoryCard icon="videocam" title="Live" subtitle="Watch live" color="#D4AF37" gradColors={['#D4AF37', '#AA8721']} onPress={() => router.push('/(tabs)/live')} />
           </View>
         </View>
@@ -1522,7 +1522,7 @@ function AccomCard({ property: p, img, onPress }: { property: any; img: string |
           />
         ) : (
           <LinearGradient
-            colors={['#3D0808', '#8B1515']}
+            colors={['#3D1408', '#7A3020']}
             style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
           >
             <Ionicons name="bed-outline" size={48} color="rgba(255,255,255,0.7)" />
@@ -1537,7 +1537,7 @@ function AccomCard({ property: p, img, onPress }: { property: any; img: string |
           </Text>
         </View>
         {p.min_price ? (
-          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#8B1515', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#7A3020', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
             <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>₹{parseFloat(p.min_price).toFixed(0)}/night</Text>
           </View>
         ) : null}

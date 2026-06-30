@@ -460,7 +460,7 @@ export default function RootLayout() {
 
 // ── CMS Styles ─────────────────────────────────────────────────────────────
 const cms = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0302' } as any,
+  root: { flex: 1, backgroundColor: '#0D0807' } as any,
   layout: {
     flex: 1, flexDirection: 'row',
     ...(Platform.OS === 'web' ? { height: '100vh' } as any : {}),
@@ -529,15 +529,15 @@ const cms = StyleSheet.create({
 });
 
 // ── Website Styles ──────────────────────────────────────────────────────────
-const MAROON = '#8B1515';
-const DARK   = '#1C0505';
+const MAROON = '#7A3020';   // warm brownish-red (was blood-red #8B1515)
+const DARK   = '#1A0C07';   // warm near-black
 const GOLD   = '#D4AF37';
 
 const w = StyleSheet.create({
   root: { flex: 1, flexDirection: 'column', backgroundColor: DARK } as any,
 
   // Announcement strip
-  topStrip: { backgroundColor: '#2D0B00', paddingVertical: 7, alignItems: 'center' },
+  topStrip: { backgroundColor: '#3D1A0A', paddingVertical: 7, alignItems: 'center' },
   topStripText: { color: GOLD, fontSize: 11, letterSpacing: 1.8, fontWeight: '600' } as any,
 
   // Navbar
@@ -574,7 +574,7 @@ const w = StyleSheet.create({
   liveDotNav: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF5350' },
   megaPanel: {
     position: 'absolute', top: '100%', left: 0, right: 0,
-    backgroundColor: '#1A0404',
+    backgroundColor: '#1C0D07',
     borderBottomLeftRadius: 16, borderBottomRightRadius: 16,
     borderBottomWidth: 1, borderColor: 'rgba(212,175,55,0.15)',
     ...(Platform.OS === 'web' ? { boxShadow: '0 16px 48px rgba(0,0,0,0.65)' } as any : {}),
@@ -636,15 +636,15 @@ const w = StyleSheet.create({
   pageWrap: {
     flex: 1, position: 'relative',
     ...(Platform.OS === 'web'
-      ? { overflowY: 'auto', backgroundColor: '#0D0302' } as any
+      ? { overflowY: 'auto', backgroundColor: '#0D0807' } as any
       : { overflow: 'hidden' }),
   } as any,
   pageBg: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     ...(Platform.OS === 'web' ? {
-      background: 'radial-gradient(ellipse at 50% 40%, #4A0E0E 0%, #1C0505 50%, #0D0302 100%)',
+      background: 'radial-gradient(ellipse at 50% 40%, #5A2010 0%, #1C0C07 50%, #0D0807 100%)',
       minHeight: '100%',
-    } as any : { backgroundColor: '#2D0B00' }),
+    } as any : { backgroundColor: '#3D1A0A' }),
   } as any,
   appColumn: {
     flex: 1, width: '100%', zIndex: 1,
