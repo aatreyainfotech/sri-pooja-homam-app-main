@@ -56,6 +56,105 @@ const SERVICES = [
   { title: 'Pujari at Home',desc: 'Invite a qualified pujari to your home for all auspicious occasions.',        icon: 'home-outline',     route: '/(tabs)/temples' },
 ];
 
+// ── Destinations Auto-Slideshow ───────────────────────────────────────────
+function DestinationsCarousel({ items, innerW }: { items: any[]; innerW: number }) {
+  const router = useRouter();
+  const [idx, setIdx] = useState(0);
+  const anim = useRef(new Animated.Value(0)).current;
+
+  const VISIBLE = innerW >= 1100 ? 5 : innerW >= 800 ? 4 : innerW >= 600 ? 3 : 2;
+  const GAP = 14;
+  const cardW = Math.floor((innerW - GAP * (VISIBLE - 1)) / VISIBLE);
+  const cardH = Math.round(cardW * 0.72);
+  const step = cardW + GAP;
+  const maxIdx = Math.max(0, items.length - VISIBLE);
+
+  const goTo = useCallback((next: number) => {
+    const n = ((next % (maxIdx + 1)) + (maxIdx + 1)) % (maxIdx + 1);
+    setIdx(n);
+    Animated.timing(anim, { toValue: -n * step, duration: 650, useNativeDriver: false }).start();
+  }, [maxIdx, step, anim]);
+
+  useEffect(() => {
+    if (items.length <= VISIBLE) return;
+    const t = setInterval(() => goTo(idx + 1), 3200);
+    return () => clearInterval(t);
+  }, [idx, items.length, VISIBLE, goTo]);
+
+  if (items.length === 0) return null;
+
+  const arrowStyle: any = {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(122,48,32,0.18)',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 10px rgba(0,0,0,0.12)', cursor: 'pointer' } : {}),
+  };
+
+  return (
+    <View>
+      <View style={{ overflow: 'hidden' } as any}>
+        <Animated.View style={{ flexDirection: 'row', gap: GAP, transform: [{ translateX: anim }], width: (cardW + GAP) * items.length }}>
+          {items.map((d: any, i: number) => (
+            <TouchableOpacity
+              key={d.name + i}
+              onPress={() => router.push(d.route as any)}
+              activeOpacity={0.88}
+              style={{ width: cardW, borderRadius: 16, overflow: 'hidden', backgroundColor: '#fff',
+                borderWidth: 1, borderColor: 'rgba(122,48,32,0.08)',
+                ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(0,0,0,0.10)' } as any : {}) } as any}
+            >
+              {d.photo ? (
+                <View style={{ height: cardH }}>
+                  <Image source={{ uri: d.photo }} style={{ width: '100%', height: cardH }} resizeMode="cover" />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.78)']}
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 14, paddingVertical: 12 }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>{d.name}</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>{d.state}</Text>
+                  </LinearGradient>
+                </View>
+              ) : (
+                <LinearGradient
+                  colors={[d.color + '28', d.color + '0A']}
+                  style={{ height: cardH, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12 }}
+                >
+                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: d.color + '20',
+                    borderWidth: 2, borderColor: d.color + '50', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="location" size={22} color={d.color} />
+                  </View>
+                  <Text style={{ color: '#1A0505', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
+                  <Text style={{ color: '#666', fontSize: 12, textAlign: 'center' }}>{d.state}</Text>
+                </LinearGradient>
+              )}
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
+      </View>
+
+      {/* Controls */}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 20 }}>
+        <TouchableOpacity onPress={() => goTo(idx - 1)} style={arrowStyle}>
+          <Ionicons name="chevron-back" size={18} color={SAFFRON} />
+        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {Array.from({ length: maxIdx + 1 }).map((_, i) => (
+            <TouchableOpacity key={i} onPress={() => goTo(i)}>
+              <View style={{
+                width: i === idx ? 22 : 8, height: 8, borderRadius: 4,
+                backgroundColor: i === idx ? SAFFRON : 'rgba(122,48,32,0.2)',
+              }} />
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity onPress={() => goTo(idx + 1)} style={arrowStyle}>
+          <Ionicons name="chevron-forward" size={18} color={SAFFRON} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 // ── Temple Multi-Card Carousel (4 visible, auto-scroll) ──────────────────
 const ssArrow = {
   width: 44, height: 44, borderRadius: 22,
@@ -812,53 +911,7 @@ function WebHome() {
       <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Popular Destinations" sub="Sacred pilgrimage cities across India" onAll={() => router.push('/destinations' as any)} />
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
-            {destinations.map((d) => (
-              <TouchableOpacity
-                key={d.name}
-                onPress={() => router.push(d.route as any)}
-                activeOpacity={0.85}
-                style={{
-                  flex: 1, minWidth: 140,
-                  backgroundColor: '#fff',
-                  borderRadius: 16, overflow: 'hidden',
-                  borderWidth: 1, borderColor: 'rgba(122,48,32,0.1)',
-                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(0,0,0,0.08)' } as any : {}),
-                } as any}
-              >
-                {d.photo ? (
-                  // Photo card
-                  <View style={{ height: 130 }}>
-                    <Image source={{ uri: d.photo }} style={{ width: '100%', height: 130 }} resizeMode="cover" />
-                    <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.72)']}
-                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 12, paddingVertical: 10 }}
-                    >
-                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>{d.name}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 10 }}>{d.state}</Text>
-                    </LinearGradient>
-                  </View>
-                ) : (
-                  // Icon card — same 130px height
-                  <LinearGradient
-                    colors={[d.color + '22', d.color + '08']}
-                    style={{ height: 130, alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 10 }}
-                  >
-                    <View style={{
-                      width: 44, height: 44, borderRadius: 22,
-                      backgroundColor: d.color + '1A',
-                      borderWidth: 2, borderColor: d.color + '40',
-                      alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <Ionicons name="location" size={20} color={d.color} />
-                    </View>
-                    <Text style={{ color: '#1A0505', fontSize: 14, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
-                    <Text style={{ color: '#666666', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
-                  </LinearGradient>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+          <DestinationsCarousel items={destinations} innerW={innerW} />
         </View>
       </View>
 
