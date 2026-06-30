@@ -760,32 +760,32 @@ function WebHome() {
                 } as any}
               >
                 {d.photo ? (
-                  // Photo card — image fills top, name/state overlay at bottom
-                  <View>
-                    <Image source={{ uri: d.photo }} style={{ width: '100%', height: 110 }} resizeMode="cover" />
+                  // Photo card
+                  <View style={{ height: 130 }}>
+                    <Image source={{ uri: d.photo }} style={{ width: '100%', height: 130 }} resizeMode="cover" />
                     <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.62)']}
-                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 10 }}
+                      colors={['transparent', 'rgba(0,0,0,0.72)']}
+                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 12, paddingVertical: 10 }}
                     >
                       <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>{d.name}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10 }}>{d.state}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 10 }}>{d.state}</Text>
                     </LinearGradient>
                   </View>
                 ) : (
-                  // Icon card — gradient background
+                  // Icon card — same 130px height
                   <LinearGradient
-                    colors={[d.color + '18', d.color + '06']}
-                    style={{ padding: 18, alignItems: 'center', gap: 8 }}
+                    colors={[d.color + '22', d.color + '08']}
+                    style={{ height: 130, alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 10 }}
                   >
                     <View style={{
-                      width: 48, height: 48, borderRadius: 24,
-                      backgroundColor: d.color + '18',
-                      borderWidth: 2, borderColor: d.color + '38',
+                      width: 44, height: 44, borderRadius: 22,
+                      backgroundColor: d.color + '1A',
+                      borderWidth: 2, borderColor: d.color + '40',
                       alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Ionicons name="location" size={22} color={d.color} />
+                      <Ionicons name="location" size={20} color={d.color} />
                     </View>
-                    <Text style={{ color: '#1A0505', fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
+                    <Text style={{ color: '#1A0505', fontSize: 14, fontWeight: '800', textAlign: 'center' }}>{d.name}</Text>
                     <Text style={{ color: '#666666', fontSize: 11, textAlign: 'center' }}>{d.state}</Text>
                   </LinearGradient>
                 )}
