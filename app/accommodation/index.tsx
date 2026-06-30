@@ -13,8 +13,9 @@ import { theme } from '../../src/constants/theme';
 import WebFooter from '../../src/components/WebFooter';
 
 const IS_WEB = Platform.OS === 'web';
-const BLUE = '#0288D1';
-const DARK_BLUE = '#01579B';
+const MAROON = '#8B1515';
+const DARK_MAROON = '#4A0E0E';
+const GOLD = '#C9922A';
 
 function parseImages(s: string | null | undefined): string[] {
   if (!s) return [];
@@ -28,7 +29,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, [string, string]> = {
-  hotel: ['#1565C0', '#0288D1'],
+  hotel: ['#3D0808', '#8B1515'],
   dharamshala: ['#4A148C', '#7B1FA2'],
   guesthouse: ['#1B5E20', '#2E7D32'],
   lodge: ['#BF360C', '#E64A19'],
@@ -85,7 +86,7 @@ export default function AccommodationBrowse() {
     const iconName = TYPE_ICONS[item.type || 'hotel'] || 'bed';
     const coverPhoto = parseImages(item.images)[0] || null;
     const minPrice = item.min_price ? parseFloat(item.min_price) : null;
-    const gradColors = TYPE_COLORS[item.type || 'hotel'] || [DARK_BLUE, BLUE];
+    const gradColors = TYPE_COLORS[item.type || 'hotel'] || [DARK_MAROON, MAROON];
     const hasRating = item.rating && parseFloat(item.rating) > 0;
 
     return (
@@ -130,7 +131,7 @@ export default function AccommodationBrowse() {
 
           {item.temple_name ? (
             <View style={styles.templeRow}>
-              <Ionicons name="business-outline" size={12} color="#E67E22" />
+              <Ionicons name="business-outline" size={12} color={MAROON} />
               <Text style={styles.templeName} numberOfLines={1}>{item.temple_name}</Text>
             </View>
           ) : null}
@@ -145,7 +146,7 @@ export default function AccommodationBrowse() {
           <View style={styles.infoRow}>
             {item.check_in_time ? (
               <View style={styles.infoChip}>
-                <Ionicons name="log-in-outline" size={11} color={BLUE} />
+                <Ionicons name="log-in-outline" size={11} color={MAROON} />
                 <Text style={styles.infoChipText}>In {item.check_in_time}</Text>
               </View>
             ) : null}
@@ -168,7 +169,7 @@ export default function AccommodationBrowse() {
             onPress={() => router.push(`/accommodation/${item.id}` as any)}
             activeOpacity={0.85}
           >
-            <LinearGradient colors={[DARK_BLUE, BLUE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.viewBtnGrad}>
+            <LinearGradient colors={[DARK_MAROON, MAROON]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.viewBtnGrad}>
               <Text style={styles.viewBtnText}>View Rooms & Book</Text>
               <Ionicons name="arrow-forward" size={14} color="#fff" />
             </LinearGradient>
@@ -182,8 +183,8 @@ export default function AccommodationBrowse() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Header ──────────────────────────────────────── */}
       <LinearGradient
-        colors={['#4A2C2A', '#01579B', BLUE]}
-        locations={[0, 0.45, 1]}
+        colors={['#C9922A', '#8B1515', '#0D0305']}
+        locations={[0, 0.4, 1]}
         style={styles.header}
       >
         <View style={[styles.headerInner, IS_WEB && { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any]}>
@@ -249,7 +250,7 @@ export default function AccommodationBrowse() {
             { padding: 16, gap: 16, paddingBottom: 40 },
             IS_WEB && { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any,
           ]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BLUE} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={MAROON} />}
           renderItem={renderItem}
           numColumns={IS_WEB ? 2 : 1}
           key={IS_WEB ? 'web-2' : 'mob-1'}
@@ -257,12 +258,12 @@ export default function AccommodationBrowse() {
           ListEmptyComponent={
             loading ? (
               <View style={styles.empty}>
-                <ActivityIndicator size="large" color={BLUE} />
+                <ActivityIndicator size="large" color={MAROON} />
                 <Text style={styles.emptySub}>Finding stays near temples…</Text>
               </View>
             ) : (
               <View style={styles.empty}>
-                <LinearGradient colors={[DARK_BLUE, BLUE]} style={styles.emptyIcon}>
+                <LinearGradient colors={[DARK_MAROON, MAROON]} style={styles.emptyIcon}>
                   <Ionicons name="bed-outline" size={36} color="rgba(255,255,255,0.8)" />
                 </LinearGradient>
                 <Text style={styles.emptyTitle}>No properties available</Text>
@@ -278,7 +279,7 @@ export default function AccommodationBrowse() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
 
   header: { paddingBottom: IS_WEB ? 32 : 20 },
   headerInner: { paddingHorizontal: IS_WEB ? 48 : 16, paddingTop: IS_WEB ? 36 : 8 },
@@ -289,7 +290,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, marginBottom: 10,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  headerBadgeText: { color: '#FFD54F', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  headerBadgeText: { color: GOLD, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   headerTitle: { color: '#fff', fontSize: IS_WEB ? 40 : 26, fontWeight: '900', marginBottom: 4, letterSpacing: -0.5 },
   headerSub: { color: 'rgba(255,255,255,0.65)', fontSize: IS_WEB ? 15 : 13, marginBottom: 16 },
   searchWrap: {
@@ -307,20 +308,20 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    backgroundColor: '#F5F7FA', borderWidth: 1.5, borderColor: '#ECEFF1', flexShrink: 0,
+    backgroundColor: '#F7F4F4', borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.12)', flexShrink: 0,
   },
-  filterChipActive: { backgroundColor: BLUE, borderColor: BLUE },
-  filterText: { fontSize: 13, fontWeight: '600', color: '#78909C' },
+  filterChipActive: { backgroundColor: MAROON, borderColor: MAROON },
+  filterText: { fontSize: 13, fontWeight: '600', color: '#666' },
   filterTextActive: { color: '#fff' },
 
   listWrapWeb: { flex: 1, ...(IS_WEB ? { overflowY: 'auto' } as any : {}) } as any,
 
   card: {
     flex: 1, backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-    borderWidth: 1, borderColor: '#E8EEF4',
-    shadowColor: '#0277BD', shadowOpacity: 0.08, shadowRadius: 16, elevation: 4,
+    borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
+    shadowColor: '#8B1515', shadowOpacity: 0.08, shadowRadius: 16, elevation: 4,
   },
-  cardWeb: { ...(IS_WEB ? { boxShadow: '0 4px 24px rgba(2,119,189,0.12)' } as any : {}) },
+  cardWeb: { ...(IS_WEB ? { boxShadow: '0 4px 24px rgba(139,21,21,0.1)' } as any : {}) },
 
   cardImageWrap: { position: 'relative' },
   cardImage: {
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
   typeText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
   priceBadge: {
     position: 'absolute', top: 12, right: 12,
-    backgroundColor: '#E67E22', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
+    backgroundColor: MAROON, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
     flexDirection: 'row', alignItems: 'baseline', gap: 1,
   },
   priceText: { color: '#fff', fontSize: 13, fontWeight: '900' },
@@ -351,15 +352,15 @@ const styles = StyleSheet.create({
 
   cardBody: { padding: 14 },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 8 },
-  propName: { fontSize: 16, fontWeight: '800', color: '#1A1A1A', flex: 1 },
+  propName: { fontSize: 16, fontWeight: '800', color: '#1A0505', flex: 1 },
   templeRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
-  templeName: { fontSize: 12, color: '#E67E22', fontWeight: '600', flex: 1 },
+  templeName: { fontSize: 12, color: MAROON, fontWeight: '600', flex: 1 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
   location: { fontSize: 12, color: theme.colors.textMuted, flex: 1 },
 
   infoRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 },
-  infoChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F0F7FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: '#BBDEFB' },
-  infoChipText: { fontSize: 11, color: '#546E7A', fontWeight: '500' },
+  infoChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFF5F5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(139,21,21,0.15)' },
+  infoChipText: { fontSize: 11, color: '#555', fontWeight: '500' },
 
   viewBtn: { borderRadius: 13, overflow: 'hidden' },
   viewBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
@@ -367,6 +368,6 @@ const styles = StyleSheet.create({
 
   empty: { alignItems: 'center', marginTop: 80, padding: 24 },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#1A1A1A', marginBottom: 8 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#1A0505', marginBottom: 8 },
   emptySub: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center', lineHeight: 22, maxWidth: 280 },
 });

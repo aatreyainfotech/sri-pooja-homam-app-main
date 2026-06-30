@@ -18,7 +18,7 @@ function AppStack() {
   return (
     <Stack screenOptions={{
       headerShown: false, animation: 'fade',
-      ...(Platform.OS === 'web' ? { contentStyle: { backgroundColor: '#0D0302' } } : {}),
+      ...(Platform.OS === 'web' ? { contentStyle: { backgroundColor: 'transparent' } } : {}),
     }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />

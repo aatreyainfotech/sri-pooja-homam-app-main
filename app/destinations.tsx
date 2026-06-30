@@ -9,8 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebFooter from '../src/components/WebFooter';
 
-const GOLD = '#D4AF37';
-const SAFFRON = '#E67E22';
+const GOLD = '#C9922A';
+const SAFFRON = '#B22222';
 const IS_WEB = Platform.OS === 'web';
 
 const STATES = [
@@ -76,9 +76,9 @@ export default function DestinationsPage() {
 
   if (IS_WEB) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#FFF8E7', ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}) }}>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}) }}>
         {/* Hero */}
-        <LinearGradient colors={['#4A2C2A', '#B22222', '#E67E22']} style={s.hero}>
+        <LinearGradient colors={['#C9922A', '#8B1515', '#3D0808', '#0D0305']} locations={[0, 0.3, 0.65, 1]} style={s.hero}>
           <Text style={s.heroOm}>ॐ</Text>
           <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
@@ -103,7 +103,7 @@ export default function DestinationsPage() {
 
         {/* State Detail (if state selected) */}
         {selected && (
-          <View style={{ backgroundColor: '#fff4e6', borderBottomWidth: 1, borderBottomColor: 'rgba(230,126,34,0.2)' }}>
+          <View style={{ backgroundColor: '#F9F4F4', borderBottomWidth: 1, borderBottomColor: 'rgba(139,21,21,0.12)' }}>
             <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', padding: 32 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap' }}>
                 <View style={{ flex: 1, minWidth: 280 }}>
@@ -111,16 +111,16 @@ export default function DestinationsPage() {
                     <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: selected.color + '20', alignItems: 'center', justifyContent: 'center' }}>
                       <Ionicons name="location" size={24} color={selected.color} />
                     </View>
-                    <Text style={{ color: '#4A2C2A', fontSize: 28, fontWeight: '900' }}>{selected.name}</Text>
+                    <Text style={{ color: '#1A0505', fontSize: 28, fontWeight: '900' }}>{selected.name}</Text>
                   </View>
                   <Text style={{ color: '#5A5A5A', fontSize: 15, lineHeight: 24, marginBottom: 16 }}>{selected.highlights}</Text>
                 </View>
                 <View style={{ flex: 1, minWidth: 240 }}>
-                  <Text style={{ color: '#4A2C2A', fontSize: 14, fontWeight: '800', marginBottom: 12, letterSpacing: 0.8 }}>FAMOUS TEMPLES</Text>
+                  <Text style={{ color: '#1A0505', fontSize: 14, fontWeight: '800', marginBottom: 12, letterSpacing: 0.8 }}>FAMOUS TEMPLES</Text>
                   {selected.temples.map((t) => (
-                    <TouchableOpacity key={t} onPress={() => router.push('/(tabs)/temples' as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(230,126,34,0.1)' }}>
+                    <TouchableOpacity key={t} onPress={() => router.push('/(tabs)/temples' as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(139,21,21,0.08)' }}>
                       <Ionicons name="business-outline" size={14} color={selected.color} />
-                      <Text style={{ color: '#4A2C2A', fontSize: 14, flex: 1 }}>{t}</Text>
+                      <Text style={{ color: '#1A0505', fontSize: 14, flex: 1 }}>{t}</Text>
                       <Ionicons name="chevron-forward" size={14} color="rgba(74,44,42,0.35)" />
                     </TouchableOpacity>
                   ))}
@@ -138,7 +138,7 @@ export default function DestinationsPage() {
 
         {/* All States Grid */}
         <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', padding: 40 }}>
-          <Text style={{ color: '#4A2C2A', fontSize: 22, fontWeight: '900', marginBottom: 24, borderLeftWidth: 4, borderLeftColor: SAFFRON, paddingLeft: 14 }}>
+          <Text style={{ color: '#1A0505', fontSize: 22, fontWeight: '900', marginBottom: 24, borderLeftWidth: 4, borderLeftColor: SAFFRON, paddingLeft: 14 }}>
             {selected ? 'All Destinations' : 'Explore All States'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
@@ -153,16 +153,16 @@ export default function DestinationsPage() {
                   borderRadius: 18, padding: 22,
                   borderWidth: dest.id === state ? 2 : 1,
                   borderColor: dest.id === state ? dest.color : 'rgba(230,126,34,0.15)',
-                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(74,44,42,0.1)' } as any : {}),
+                  ...(Platform.OS === 'web' ? { boxShadow: '0 4px 20px rgba(0,0,0,0.08)' } as any : {}),
                 } as any}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: dest.color + '20', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="location" size={20} color={dest.color} />
                   </View>
-                  <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', flex: 1 }}>{dest.name}</Text>
+                  <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', flex: 1 }}>{dest.name}</Text>
                 </View>
-                <Text style={{ color: '#7A6A5A', fontSize: 12, lineHeight: 18 }} numberOfLines={2}>{dest.highlights}</Text>
+                <Text style={{ color: '#666666', fontSize: 12, lineHeight: 18 }} numberOfLines={2}>{dest.highlights}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12 }}>
                   <Text style={{ color: dest.color, fontSize: 12, fontWeight: '700' }}>{dest.temples.length}+ temples</Text>
                   <Ionicons name="arrow-forward" size={12} color={dest.color} />
@@ -177,8 +177,8 @@ export default function DestinationsPage() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF8E7' }} edges={['top']}>
-      <LinearGradient colors={['#4A2C2A', '#B22222', '#E67E22']} style={{ paddingBottom: 20 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
+      <LinearGradient colors={['#C9922A', '#8B1515', '#0D0305']} style={{ paddingBottom: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8 }}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={26} color="#fff" />
@@ -191,10 +191,10 @@ export default function DestinationsPage() {
           <TouchableOpacity
             key={dest.id}
             onPress={() => router.push('/(tabs)/temples' as any)}
-            style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: dest.color, borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)' }}
+            style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: dest.color, borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)' }}
           >
-            <Text style={{ color: '#4A2C2A', fontSize: 16, fontWeight: '800', marginBottom: 4 }}>{dest.name}</Text>
-            <Text style={{ color: '#7A6A5A', fontSize: 12 }} numberOfLines={1}>{dest.highlights}</Text>
+            <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', marginBottom: 4 }}>{dest.name}</Text>
+            <Text style={{ color: '#666666', fontSize: 12 }} numberOfLines={1}>{dest.highlights}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -204,7 +204,7 @@ export default function DestinationsPage() {
 
 const s = StyleSheet.create({
   hero: { paddingVertical: 56, paddingHorizontal: 24, overflow: 'hidden' },
-  heroOm: { position: 'absolute', right: -10, top: -10, fontSize: 220, color: 'rgba(255,140,0,0.07)', fontWeight: '400' } as any,
+  heroOm: { position: 'absolute', right: -10, top: -10, fontSize: 220, color: 'rgba(0,0,0,0.1)', fontWeight: '400' } as any,
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 20, alignSelf: 'flex-start' },
   backText: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
   heroTitle: { color: '#fff', fontSize: 44, fontWeight: '900', lineHeight: 52 },
@@ -215,5 +215,5 @@ const s = StyleSheet.create({
     maxWidth: 520,
     ...(Platform.OS === 'web' ? { boxShadow: '0 4px 24px rgba(0,0,0,0.2)' } as any : {}),
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#4A2C2A', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) } as any,
+  searchInput: { flex: 1, fontSize: 15, color: '#1A0505', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) } as any,
 });

@@ -44,8 +44,8 @@ export default function Live() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <LinearGradient
-        colors={['#B22222', '#D35400', '#E67E22', '#F39C12']}
-        locations={[0, 0.35, 0.7, 1]}
+        colors={['#C9922A', '#8B1515', '#3D0808', '#0D0305']}
+        locations={[0, 0.3, 0.65, 1]}
         start={[0, 0]} end={[1, 1]}
         style={styles.header}
       >
@@ -258,14 +258,14 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
   tabActive: IS_WEB
-    ? { backgroundColor: 'rgba(211,84,0,0.9)', borderColor: 'rgba(255,255,255,0.35)' }
+    ? { backgroundColor: 'rgba(139,21,21,0.9)', borderColor: 'rgba(255,255,255,0.35)' }
     : { backgroundColor: '#fff' },
   tabText: { color: 'rgba(255,255,255,0.7)', fontWeight: '600', fontSize: IS_WEB ? 14 : 13 },
   tabTextActive: { color: '#FFF8F0', fontWeight: '800' },
   redDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E53935' },
 
   // List wrappers — constrain to 1280px on web
-  listWrapWeb: { flex: 1, maxWidth: 1280, alignSelf: 'center', width: '100%' } as any,
+  listWrapWeb: { flex: 1, maxWidth: 1280, alignSelf: 'center', width: '100%', ...(IS_WEB ? { overflowY: 'auto' } as any : {}) } as any,
   listWrapMobile: { flex: 1 },
   contentLiveWeb: { padding: 48, gap: 28, paddingBottom: 0 } as any,
   contentLiveMobile: { padding: 20, gap: 20, paddingBottom: 20 },

@@ -441,10 +441,10 @@ function WebHome() {
       </View>
 
       {/* ── LIVE DARSHAN ─────────────────────────────────────────────────── */}
-      {live.length > 0 && (
-        <View style={[wh.sectionBg, { backgroundColor: '#0D0305' }]}>
-          <View style={[wh.section, { maxWidth: innerW }]}>
-            <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} dark />
+      <View style={[wh.sectionBg, { backgroundColor: '#0D0305' }]}>
+        <View style={[wh.section, { maxWidth: innerW }]}>
+          <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} dark />
+          {live.length > 0 ? (
             <View style={wh.liveGrid}>
               {live.slice(0, 3).map((item: any) => (
                 <TouchableOpacity
@@ -453,7 +453,6 @@ function WebHome() {
                   style={{ flex: 1, minWidth: 260 }}
                   activeOpacity={0.88}
                 >
-                  {/* Image card */}
                   <View style={{
                     height: 300, borderRadius: 16, overflow: 'hidden',
                     backgroundColor: '#1A0505', position: 'relative',
@@ -464,33 +463,43 @@ function WebHome() {
                       style={StyleSheet.absoluteFill}
                       resizeMode="cover"
                     />
-                    {/* Dark vignette at bottom */}
-                    <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.5)']}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* LIVE NOW badge */}
-                    <View style={{
-                      position: 'absolute', bottom: 14, left: 14,
-                      flexDirection: 'row', alignItems: 'center', gap: 6,
-                      backgroundColor: '#E53935',
-                      paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999,
-                    }}>
+                    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.5)']} style={StyleSheet.absoluteFill} />
+                    <View style={{ position: 'absolute', bottom: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E53935', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999 }}>
                       <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#fff' }} />
                       <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
                     </View>
                   </View>
-                  {/* Title & link below card */}
-                  <Text style={{ color: '#F5F0EB', fontSize: 16, fontWeight: '800', marginTop: 14, lineHeight: 23 }} numberOfLines={2}>
-                    {item.title}
-                  </Text>
+                  <Text style={{ color: '#F5F0EB', fontSize: 16, fontWeight: '800', marginTop: 14, lineHeight: 23 }} numberOfLines={2}>{item.title}</Text>
                   <Text style={{ color: GOLD, fontSize: 13, fontWeight: '600', marginTop: 6 }}>Tap to watch →</Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
+          ) : (
+            /* Placeholder when no live streams active */
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/live' as any)}
+              activeOpacity={0.88}
+              style={{ borderRadius: 20, overflow: 'hidden', ...(Platform.OS === 'web' ? { boxShadow: '0 8px 32px rgba(0,0,0,0.5)' } : {}) } as any}
+            >
+              <LinearGradient colors={['#3D0808', '#1A0505']} style={{ padding: 48, alignItems: 'center', gap: 16 }}>
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(229,57,53,0.15)', borderWidth: 1, borderColor: 'rgba(229,57,53,0.4)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="radio-outline" size={34} color="#EF9A9A" />
+                </View>
+                <View style={{ alignItems: 'center', gap: 8 }}>
+                  <Text style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>No Active Streams</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center', maxWidth: 420 }}>
+                    Our pujaris will go live soon. Tap to see past streams and devotional reels.
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(229,57,53,0.2)', borderWidth: 1, borderColor: 'rgba(229,57,53,0.45)', paddingHorizontal: 24, paddingVertical: 10, borderRadius: 999 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF5350' }} />
+                  <Text style={{ color: '#EF9A9A', fontWeight: '700', fontSize: 14 }}>Watch Past Darshans & Reels</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </View>
-      )}
+      </View>
 
       {/* ── POPULAR DESTINATIONS ─────────────────────────────────────────── */}
       <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
