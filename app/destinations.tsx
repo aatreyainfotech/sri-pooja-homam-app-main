@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform,
   useWindowDimensions, TextInput,
@@ -7,6 +7,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '../src/services/api';
 import WebFooter from '../src/components/WebFooter';
 
 const GOLD = '#C9922A';
@@ -66,13 +68,36 @@ export default function DestinationsPage() {
   const { state } = useLocalSearchParams<{ state?: string }>();
   const { width: W } = useWindowDimensions();
   const [search, setSearch] = useState('');
+  const [states, setStates] = useState(STATES);
   const innerW = Math.min(W, 1280);
 
-  const filtered = STATES.filter(s =>
+  // Load states from platform settings (cache → backend)
+  useEffect(() => {
+    (async () => {
+      try {
+        const cached = await AsyncStorage.getItem('sph_platform_settings');
+        if (cached) {
+          const p = JSON.parse(cached);
+          if (Array.isArray(p.states) && p.states.length > 0) setStates(p.states);
+        }
+      } catch {}
+      try {
+        const { data } = await api.get('/platform-settings');
+        if (Array.isArray(data?.states) && data.states.length > 0) {
+          setStates(data.states);
+          const cached = await AsyncStorage.getItem('sph_platform_settings').catch(() => null);
+          const prev = cached ? JSON.parse(cached) : {};
+          await AsyncStorage.setItem('sph_platform_settings', JSON.stringify({ ...prev, states: data.states }));
+        }
+      } catch {}
+    })();
+  }, []);
+
+  const filtered = states.filter(s =>
     !search || s.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selected = state ? STATES.find(s => s.id === state) : null;
+  const selected = state ? states.find(s => s.id === state) : null;
 
   if (IS_WEB) {
     return (
@@ -187,7 +212,7 @@ export default function DestinationsPage() {
         </View>
       </LinearGradient>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {STATES.map((dest) => (
+        {states.map((dest) => (
           <TouchableOpacity
             key={dest.id}
             onPress={() => router.push('/(tabs)/temples' as any)}

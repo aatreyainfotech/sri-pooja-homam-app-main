@@ -25,7 +25,8 @@ type Plan = {
 type ShowcaseItem = { id: string; name: string; url: string; description: string };
 type ServiceCard = { id: string; icon: string; title: string; desc: string };
 type DestItem = { id: string; name: string; state: string; color: string; route: string; photo?: string };
-type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'destinations' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
+type StateItem = { id: string; name: string; color: string; highlights: string; temples: string[] };
+type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'destinations' | 'states' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'general',  label: 'General',        icon: 'settings-outline' },
@@ -33,6 +34,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'hero',     label: 'Hero Text',      icon: 'home-outline' },
   { id: 'sections',      label: 'Home Sections',     icon: 'grid-outline' },
   { id: 'destinations',  label: 'Destinations',       icon: 'location-outline' },
+  { id: 'states',        label: 'All States',         icon: 'map-outline' },
   { id: 'services',      label: 'Platform Features',  icon: 'apps-outline' },
   { id: 'pricing',  label: 'Pricing Plans',  icon: 'pricetag-outline' },
   { id: 'showcase', label: 'Live Showcase',  icon: 'star-outline' },
@@ -133,6 +135,37 @@ const DEFAULT_SETTINGS = {
     { id: '7', name: 'Dwarka',     state: 'Gujarat',        color: '#2196F3', route: '/destinations?state=gujarat',        photo: '' },
     { id: '8', name: 'Guruvayur',  state: 'Kerala',         color: '#8BC34A', route: '/destinations?state=kerala',         photo: '' },
   ] as DestItem[],
+
+  // All States (Explore All States section)
+  states: [
+    { id: 'andhra-pradesh', name: 'Andhra Pradesh', color: '#FF5722',
+      highlights: 'Home to the richest temple in the world – Tirumala Tirupati Devasthanams.',
+      temples: ['Tirupati Balaji', 'Srisailam Mallikarjuna', 'Kanaka Durga – Vijayawada', 'Simhachalam Temple', 'Annavaram Satyanarayana'] },
+    { id: 'telangana', name: 'Telangana', color: '#9C27B0',
+      highlights: 'Rich in Shaivite and Vaishnavite traditions with ancient rock-cut temples.',
+      temples: ['Yadagirigutta Narasimha', 'Bhadrachalam Sita Ramachandra', 'Dharmapuri Narasimha', 'Keesaragutta Ramalingeswara', 'Vemulawada Rajarajeshwara'] },
+    { id: 'tamil-nadu', name: 'Tamil Nadu', color: '#E91E63',
+      highlights: 'Land of Dravidian architecture with towering gopurams and ancient Divya Desams.',
+      temples: ['Meenakshi Amman – Madurai', 'Ramanathaswamy – Rameswaram', 'Brihadeeswarar – Thanjavur', 'Nataraja – Chidambaram', 'Murugan – Palani'] },
+    { id: 'karnataka', name: 'Karnataka', color: '#4CAF50',
+      highlights: 'Karnataka blends coastal temples with Deccan plateau shrines.',
+      temples: ['Udupi Sri Krishna', 'Kukke Subramanya', 'Chamundeshwari – Mysore', 'Murdeshwar Shiva', 'Dharmasthala Manjunatha'] },
+    { id: 'kerala', name: 'Kerala', color: '#8BC34A',
+      highlights: "God's Own Country — serene temples set amid lush green backwaters.",
+      temples: ['Guruvayur Krishna', 'Sabarimala Ayyappa', 'Padmanabhaswamy – Thiruvananthapuram', 'Ettumanoor Mahadeva', 'Kodungallur Bhagavathy'] },
+    { id: 'maharashtra', name: 'Maharashtra', color: '#FF9800',
+      highlights: 'Maharashtra holds 3 of the 12 Jyotirlingas and the beloved Shirdi Sai Baba.',
+      temples: ['Shirdi Sai Baba', 'Trimbakeshwar Jyotirlinga', 'Pandharpur Vitthal', 'Kolhapur Mahalaxmi', 'Ashtavinayak Circuit'] },
+    { id: 'gujarat', name: 'Gujarat', color: '#2196F3',
+      highlights: 'Gujarat has 2 of the 12 Jyotirlingas and the sacred Char Dham city of Dwarka.',
+      temples: ['Somnath Jyotirlinga', 'Dwarkadhish – Dwarka', 'Ambaji Devi', 'Akshardham – Gandhinagar', 'Bahucharaji Mata'] },
+    { id: 'uttarakhand', name: 'Uttarakhand', color: '#00BCD4',
+      highlights: 'Dev Bhoomi — the sacred land of gods, home to Char Dham yatra.',
+      temples: ['Badrinath', 'Kedarnath', 'Gangotri', 'Yamunotri', 'Haridwar & Rishikesh'] },
+    { id: 'uttar-pradesh', name: 'Uttar Pradesh', color: '#FF7043',
+      highlights: 'UP is the spiritual heartland — Varanasi, Mathura, Ayodhya: all are here.',
+      temples: ['Kashi Vishwanath – Varanasi', 'Krishna Janmabhoomi – Mathura', 'Ram Janmabhoomi – Ayodhya', 'Vindhyavasini Devi', 'Chitrakoot Dham'] },
+  ] as StateItem[],
 
   // Service Cards (Platform Features section)
   services: [
@@ -775,6 +808,102 @@ function DestinationsTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: stri
   );
 }
 
+/* ── Tab: All States ───────────────────────────────────────────────────── */
+function StatesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
+  const items: StateItem[] = (s as any).states || [];
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+
+  const update = (idx: number, key: keyof StateItem, val: any) =>
+    set('states', items.map((st, i) => i === idx ? { ...st, [key]: val } : st));
+
+  const updateTemple = (stIdx: number, tIdx: number, val: string) => {
+    const updated = items.map((st, i) => {
+      if (i !== stIdx) return st;
+      return { ...st, temples: st.temples.map((t, ti) => ti === tIdx ? val : t) };
+    });
+    set('states', updated);
+  };
+
+  const addTemple = (stIdx: number) =>
+    set('states', items.map((st, i) => i === stIdx ? { ...st, temples: [...st.temples, ''] } : st));
+
+  const removeTemple = (stIdx: number, tIdx: number) =>
+    set('states', items.map((st, i) => i === stIdx ? { ...st, temples: st.temples.filter((_, ti) => ti !== tIdx) } : st));
+
+  const remove = (idx: number) => { set('states', items.filter((_, i) => i !== idx)); setOpenIdx(null); };
+
+  const add = () => {
+    set('states', [...items, { id: Date.now().toString(), name: 'New State', color: '#C9922A', highlights: '', temples: ['Temple 1'] }]);
+    setOpenIdx(items.length);
+  };
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <SectionTitle title="Explore All States" sub="States shown in the Explore All States section on the Destinations page" />
+      {items.map((item, idx) => (
+        <View key={item.id} style={f.planCard}>
+          {/* Header row */}
+          <TouchableOpacity style={f.planHeader} onPress={() => setOpenIdx(openIdx === idx ? null : idx)}>
+            <View style={f.planHeaderLeft}>
+              <View style={{ width: 18, height: 18, borderRadius: 4, backgroundColor: item.color, marginRight: 4 }} />
+              <Text style={f.planName}>{item.name}</Text>
+              <Text style={[f.planPrice, { fontSize: 11 }]}>{item.temples.length} temples</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TouchableOpacity onPress={() => remove(idx)} style={f.deleteBtn}>
+                <Ionicons name="trash-outline" size={15} color="#E53935" />
+              </TouchableOpacity>
+              <Ionicons name={openIdx === idx ? 'chevron-up' : 'chevron-down'} size={18} color="#666" />
+            </View>
+          </TouchableOpacity>
+
+          {openIdx === idx && (
+            <View style={f.planBody}>
+              <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+                <View style={{ flex: 2, minWidth: 180 }}>
+                  <Field label="State Name" value={item.name} onChange={v => update(idx, 'name', v)} />
+                </View>
+                <View style={{ flex: 1, minWidth: 120 }}>
+                  <Field label="URL Slug" value={item.id} onChange={v => update(idx, 'id', v)} hint="e.g. andhra-pradesh" />
+                </View>
+              </View>
+              <Field label="Highlights / Description" value={item.highlights} onChange={v => update(idx, 'highlights', v)} multi />
+              <ColorField label="Theme Color (hex)" value={item.color} onChange={v => update(idx, 'color', v)} />
+
+              <Text style={[f.label, { marginTop: 16, marginBottom: 8 }]}>FEATURED TEMPLES</Text>
+              {item.temples.map((t, ti) => (
+                <View key={ti} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <Ionicons name="business-outline" size={14} color={GOLD} />
+                  <TextInput
+                    style={[f.input, { flex: 1, marginBottom: 0 }]}
+                    value={t}
+                    onChangeText={v => updateTemple(idx, ti, v)}
+                    placeholder="Temple name"
+                    placeholderTextColor="#aaa"
+                  />
+                  <TouchableOpacity onPress={() => removeTemple(idx, ti)}>
+                    <Ionicons name="close-circle" size={18} color="#E53935" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+              <TouchableOpacity style={f.addFeatureBtn} onPress={() => addTemple(idx)}>
+                <Ionicons name="add" size={16} color={GOLD} />
+                <Text style={{ color: GOLD, fontSize: 13, fontWeight: '700' }}>Add Temple</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      ))}
+
+      <TouchableOpacity style={f.addPlanBtn} onPress={add}>
+        <Ionicons name="add-circle" size={20} color={GOLD} />
+        <Text style={{ color: GOLD, fontSize: 14, fontWeight: '700' }}>Add State</Text>
+      </TouchableOpacity>
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
 function FeaturesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
   const toggles = [
     { key: 'enableRegistration',  label: 'User Registration',      desc: 'Allow new users to create accounts' },
@@ -922,6 +1051,7 @@ export default function PlatformSettings() {
     hero:     <HeroTab     s={settings} set={set} />,
     sections:      <SectionsTab      s={settings} set={set} />,
     destinations:  <DestinationsTab  s={settings} set={set} />,
+    states:        <StatesTab        s={settings} set={set} />,
     services:      <ServicesTab      s={settings} set={set} />,
     pricing:  <PricingTab  s={settings} set={set} />,
     showcase: <ShowcaseTab s={settings} set={set} />,
