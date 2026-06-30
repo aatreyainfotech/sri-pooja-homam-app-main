@@ -502,11 +502,12 @@ function WebHome() {
       </View>
 
       {/* ── SMART SEARCH ─────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF', paddingTop: 0, paddingBottom: 24 }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF', paddingTop: 0, paddingBottom: 24, overflow: 'visible' as any, zIndex: 90 }]}>
         <View style={{
           maxWidth: innerW, alignSelf: 'center', width: '100%',
           paddingHorizontal: 24, marginTop: -48,
-        }}>
+          overflow: 'visible' as any, zIndex: 95,
+        } as any}>
           <View style={wh.searchCard}>
             <View style={wh.searchRow}>
               <View style={wh.searchField}>
@@ -1208,10 +1209,12 @@ const wh: any = {
     backgroundColor: '#fff', borderRadius: 18, padding: 6,
     ...(Platform.OS === 'web' ? {
       boxShadow: '0 8px 40px rgba(0,0,0,0.14)',
+      overflow: 'visible',
     } as any : {}),
     borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
+    zIndex: 100,
   },
-  searchRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', overflow: 'visible' as any },
   searchField: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 14, paddingVertical: 10, minWidth: 120,
