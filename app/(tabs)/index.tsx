@@ -58,9 +58,9 @@ const SERVICES = [
 // ── Temple Multi-Card Carousel (4 visible, auto-scroll) ──────────────────
 const ssArrow = {
   width: 44, height: 44, borderRadius: 22,
-  backgroundColor: '#FFFFFF', alignItems: 'center' as const,
-  justifyContent: 'center' as const, borderWidth: 1, borderColor: 'rgba(178,34,34,0.25)',
-  ...(Platform.OS === 'web' ? { boxShadow: '0 2px 8px rgba(0,0,0,0.12)' } : {}),
+  backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center' as const,
+  justifyContent: 'center' as const, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+  ...(Platform.OS === 'web' ? { boxShadow: '0 2px 8px rgba(0,0,0,0.4)' } : {}),
 };
 
 function TempleMultiCarousel({ temples, innerW }: { temples: any[]; innerW: number }) {
@@ -256,103 +256,123 @@ function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
   );
 }
 
-// ── Live Darshan Auto-Slideshow ───────────────────────────────────────────
-function LiveSlideshow({ items, innerW }: { items: any[]; innerW: number }) {
+// ── Live Darshan Grid — Hotstar-style hover popup ─────────────────────────
+function LiveGrid({ items, innerW }: { items: any[]; innerW: number }) {
   const router = useRouter();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
   const anim = useRef(new Animated.Value(0)).current;
 
+  const COLS   = Math.min(3, items.length);
+  const GAP    = 16;
+  const cardW  = Math.floor((innerW - GAP * (COLS - 1)) / COLS);
+  const cardH  = Math.floor(cardW * 9 / 16);
+  const pageW  = innerW;
+  const maxIdx = Math.max(0, items.length - COLS);
+
   const goTo = useCallback((next: number) => {
-    const n = ((next % items.length) + items.length) % items.length;
+    const n = Math.max(0, Math.min(next, maxIdx));
     setIdx(n);
-    Animated.timing(anim, { toValue: -n * innerW, duration: 600, useNativeDriver: false }).start();
-  }, [items.length, innerW, anim]);
+    Animated.timing(anim, { toValue: -n * (cardW + GAP), duration: 550, useNativeDriver: false }).start();
+  }, [maxIdx, cardW, GAP, anim]);
 
   useEffect(() => {
-    if (items.length <= 1) return;
-    const t = setInterval(() => goTo(idx + 1), 4500);
+    if (items.length <= COLS) return;
+    const t = setInterval(() => goTo(idx < maxIdx ? idx + 1 : 0), 4000);
     return () => clearInterval(t);
-  }, [idx, items.length, goTo]);
+  }, [idx, items.length, COLS, maxIdx, goTo]);
 
   if (items.length === 0) return null;
 
-  const arrowBtn = (side: 'left' | 'right') => ({
-    position: 'absolute' as const,
-    top: '50%' as any,
-    [side]: 16,
-    transform: [{ translateY: -22 }],
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center' as const, justifyContent: 'center' as const,
-    zIndex: 10,
-    ...(IS_WEB ? { cursor: 'pointer', backdropFilter: 'blur(8px)' } : {}),
-  });
+  const FALLBACK = 'https://images.pexels.com/photos/30679068/pexels-photo-30679068.jpeg?auto=compress&cs=tinysrgb&w=800';
 
   return (
     <View>
-      <View style={{ borderRadius: 20, overflow: 'hidden', position: 'relative' } as any}>
-        {/* Sliding strip */}
-        <Animated.View style={{
-          flexDirection: 'row',
-          width: innerW * items.length,
-          transform: [{ translateX: anim }],
-        }}>
-          {items.map((item: any) => (
-            <TouchableOpacity
-              key={item.id}
-              activeOpacity={0.92}
-              onPress={() => router.push(`/live-stream/${item.id}` as any)}
-              style={{ width: innerW, height: 400, position: 'relative' }}
-            >
-              <Image
-                source={{ uri: item.thumbnail || 'https://images.pexels.com/photos/30679068/pexels-photo-30679068.jpeg?auto=compress&cs=tinysrgb&w=1200' }}
-                style={StyleSheet.absoluteFill}
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.85)']}
-                locations={[0.3, 0.65, 1]}
-                style={StyleSheet.absoluteFill}
-              />
-              {/* LIVE badge */}
-              <View style={{ position: 'absolute', top: 20, left: 20, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#E53935', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 }}>
-                <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#fff' }} />
-                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
-              </View>
-              {/* Title area */}
-              <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 28 }}>
-                <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900', lineHeight: 34, marginBottom: 8 }}>{item.title}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ color: GOLD, fontSize: 14, fontWeight: '700' }}>Tap to watch →</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </Animated.View>
+      {/* Scrolling row */}
+      <View style={{ overflow: 'hidden' } as any}>
+        <Animated.View style={{ flexDirection: 'row', gap: GAP, transform: [{ translateX: anim }], width: (cardW + GAP) * items.length }}>
+          {items.map((item: any) => {
+            const hov = hoveredId === item.id;
+            return (
+              <View
+                key={item.id}
+                style={{ width: cardW, position: 'relative', zIndex: hov ? 50 : 1 } as any}
+                {...(IS_WEB ? {
+                  onMouseEnter: () => setHoveredId(item.id),
+                  onMouseLeave: () => setHoveredId(null),
+                } : {})}
+              >
+                {/* Thumbnail */}
+                <TouchableOpacity
+                  onPress={() => router.push(`/live-stream/${item.id}` as any)}
+                  activeOpacity={0.88}
+                  style={{
+                    height: cardH, borderRadius: 14, overflow: 'hidden',
+                    borderWidth: 2, borderColor: hov ? GOLD : 'transparent',
+                    ...(IS_WEB && hov ? { boxShadow: '0 0 0 2px rgba(201,146,42,0.4), 0 16px 40px rgba(0,0,0,0.8)' } : {}),
+                  } as any}
+                >
+                  <Image source={{ uri: item.thumbnail || FALLBACK }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                  <LinearGradient colors={['rgba(0,0,0,0.04)', 'rgba(0,0,0,0.72)']} style={StyleSheet.absoluteFill} />
+                  {/* LIVE badge */}
+                  <View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E53935', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
+                  </View>
+                </TouchableOpacity>
 
-        {/* Left arrow */}
-        {items.length > 1 && (
-          <TouchableOpacity style={arrowBtn('left') as any} onPress={() => goTo(idx - 1)}>
-            <Ionicons name="chevron-back" size={22} color="#fff" />
-          </TouchableOpacity>
-        )}
-        {/* Right arrow */}
-        {items.length > 1 && (
-          <TouchableOpacity style={arrowBtn('right') as any} onPress={() => goTo(idx + 1)}>
-            <Ionicons name="chevron-forward" size={22} color="#fff" />
-          </TouchableOpacity>
-        )}
+                {/* Title below card (always visible) */}
+                <Text style={{ color: '#F5F0EB', fontSize: 13, fontWeight: '700', marginTop: 10, paddingHorizontal: 2 }} numberOfLines={1}>
+                  {item.title}
+                </Text>
+
+                {/* ── Hotstar-style hover popup ── */}
+                {hov && IS_WEB && (
+                  <View style={{
+                    position: 'absolute', top: cardH + 2, left: -10, right: -10,
+                    backgroundColor: '#1C0606', borderRadius: 14, padding: 16, zIndex: 60,
+                    borderWidth: 1, borderColor: 'rgba(201,146,42,0.22)',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+                  } as any}>
+                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', marginBottom: 12 }} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => router.push(`/live-stream/${item.id}` as any)}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start', marginBottom: 10 }}
+                    >
+                      <Ionicons name="play" size={13} color="#1C0606" />
+                      <Text style={{ color: '#1C0606', fontWeight: '800', fontSize: 13 }}>Watch Live</Text>
+                    </TouchableOpacity>
+                    {!!item.description && (
+                      <Text style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12, lineHeight: 18 }} numberOfLines={2}>
+                        {item.description}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </Animated.View>
       </View>
 
-      {/* Dot indicators */}
-      {items.length > 1 && (
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16 }}>
-          {items.map((_, i) => (
-            <TouchableOpacity key={i} onPress={() => goTo(i)}>
-              <View style={{ width: i === idx ? 28 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
-            </TouchableOpacity>
-          ))}
+      {/* Arrow + dots */}
+      {items.length > COLS && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 24 }}>
+          <TouchableOpacity onPress={() => goTo(idx - 1)} style={ssArrow}>
+            <Ionicons name="chevron-back" size={18} color="#fff" />
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {Array.from({ length: maxIdx + 1 }).map((_, i) => (
+              <TouchableOpacity key={i} onPress={() => goTo(i)}>
+                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity onPress={() => goTo(idx + 1)} style={ssArrow}>
+            <Ionicons name="chevron-forward" size={18} color="#fff" />
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -659,7 +679,7 @@ function WebHome() {
         <View style={[wh.section, { maxWidth: innerW }]}>
           <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} dark />
           {live.length > 0 ? (
-            <LiveSlideshow items={live} innerW={Math.min(W, 1280) - 96} />
+            <LiveGrid items={live} innerW={Math.min(W, 1280) - 96} />
           ) : (
             /* Placeholder when no live streams active */
             <TouchableOpacity
