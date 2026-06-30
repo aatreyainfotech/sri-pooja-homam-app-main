@@ -33,6 +33,7 @@ function AppStack() {
       <Stack.Screen name="legal/refund" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="notification-settings" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="hotel-manager" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="admin/settings" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="accommodation" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="accommodation/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="destinations" options={{ animation: 'slide_from_right' }} />
@@ -232,16 +233,17 @@ function WebNavbar() {
 
 // ── Admin CMS Sidebar ──────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { label: 'Dashboard',    icon: 'grid-outline',         route: '/admin' },
-  { label: 'Temples',      icon: 'business-outline',     route: '/admin/temples' },
-  { label: 'Poojas',       icon: 'flower-outline',       route: '/admin/poojas' },
-  { label: 'Live Streams', icon: 'radio-outline',        route: '/admin/live-streams' },
-  { label: 'Videos',       icon: 'videocam-outline',     route: '/admin/videos' },
-  { label: 'Bookings',     icon: 'receipt-outline',      route: '/admin/bookings' },
-  { label: 'Add Pujari',   icon: 'person-add-outline',   route: '/admin/create-pujari' },
-  { label: 'Pujari Stats', icon: 'bar-chart-outline',    route: '/admin/pujari-stats' },
-  { label: 'Payouts',      icon: 'send-outline',         route: '/admin/payouts' },
-  { label: 'Accommodation', icon: 'bed-outline',          route: '/admin/properties' },
+  { label: 'Dashboard',         icon: 'grid-outline',         route: '/admin' },
+  { label: 'Temples',           icon: 'business-outline',     route: '/admin/temples' },
+  { label: 'Poojas',            icon: 'flower-outline',       route: '/admin/poojas' },
+  { label: 'Live Streams',      icon: 'radio-outline',        route: '/admin/live-streams' },
+  { label: 'Videos',            icon: 'videocam-outline',     route: '/admin/videos' },
+  { label: 'Bookings',          icon: 'receipt-outline',      route: '/admin/bookings' },
+  { label: 'Add Pujari',        icon: 'person-add-outline',   route: '/admin/create-pujari' },
+  { label: 'Pujari Stats',      icon: 'bar-chart-outline',    route: '/admin/pujari-stats' },
+  { label: 'Payouts',           icon: 'send-outline',         route: '/admin/payouts' },
+  { label: 'Accommodation',     icon: 'bed-outline',          route: '/admin/properties' },
+  { label: 'Platform Settings', icon: 'settings-outline',     route: '/admin/settings' },
 ];
 const SUPER_ITEMS = [
   { label: 'Users',        icon: 'people-outline',       route: '/admin/users' },
