@@ -842,24 +842,67 @@ export default function PlatformSettings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   }, []);
 
+  // Compress a base64 dataUrl to max 400×280 JPEG at 65% quality (web only)
+  const compressDataUrl = (dataUrl: string): Promise<string> =>
+    new Promise((resolve) => {
+      if (!IS_WEB || !dataUrl || !dataUrl.startsWith('data:image')) { resolve(dataUrl); return; }
+      const img = new (window as any).Image();
+      img.onload = () => {
+        const MAX_W = 400, MAX_H = 280;
+        let { width: w, height: h } = img;
+        if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+        if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+        const canvas = (document as any).createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.65));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+
   const save = async () => {
     setSaving(true);
+
+    // Step 1: compress all destination photos before saving
+    let readySettings: typeof settings = settings;
     try {
-      // Save to Azure SQL backend
-      await api.post('/admin/platform-settings', settings);
-      // Also cache locally for offline/fast load
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      const dests: any[] = (settings as any).destinations || [];
+      const compressed = await Promise.all(
+        dests.map(async (d: any) => ({
+          ...d,
+          photo: d.photo ? await compressDataUrl(d.photo) : '',
+        }))
+      );
+      readySettings = { ...settings, destinations: compressed } as any;
+      setSettings(readySettings); // update state so UI reflects compressed photos
+    } catch {}
+
+    // Step 2: save to Azure SQL (this is the source of truth)
+    let backendOk = false;
+    try {
+      await api.post('/admin/platform-settings', readySettings);
+      backendOk = true;
+    } catch {}
+
+    // Step 3: cache locally — if quota exceeded, strip photos from cache (they're in Azure SQL)
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(readySettings));
+    } catch {
+      try {
+        const stripped = {
+          ...readySettings,
+          destinations: ((readySettings as any).destinations || []).map((d: any) => ({ ...d, photo: '' })),
+        };
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
+      } catch {}
+    }
+
+    if (backendOk) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (err: any) {
-      // If backend fails, at least save locally
-      try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      } catch {
-        Alert.alert('Save Failed', 'Could not save settings. Please try again.');
-      }
+    } else {
+      Alert.alert('Save Failed', 'Could not reach server. Please check your connection and try again.');
     }
     setSaving(false);
   };
