@@ -49,10 +49,10 @@ const FESTIVALS = [
 ];
 
 const SERVICES = [
-  { title: 'Book Pooja',     desc: 'Perform sacred poojas at home or at the temple with verified Vedic pujaris.', icon: 'flower-outline',   color: '#FF8C00', bg: 'rgba(255,140,0,0.14)', route: '/(tabs)/temples' },
-  { title: 'Perform Homam', desc: 'Sacred fire rituals for prosperity, health and removal of obstacles.',          icon: 'flame-outline',    color: '#FF5722', bg: 'rgba(255,87,34,0.14)',  route: '/(tabs)/temples' },
-  { title: 'Live Darshan',  desc: 'Watch sacred rituals streaming live from temples across India.',                icon: 'videocam-outline', color: '#29B6F6', bg: 'rgba(41,182,246,0.13)', route: '/(tabs)/live' },
-  { title: 'Pujari at Home',desc: 'Invite a qualified pujari to your home for all auspicious occasions.',         icon: 'home-outline',     color: '#66BB6A', bg: 'rgba(102,187,106,0.13)',route: '/(tabs)/temples' },
+  { title: 'Book Pooja',    desc: 'Perform sacred poojas at home or at the temple with verified Vedic pujaris.', icon: 'flower-outline',   route: '/(tabs)/temples' },
+  { title: 'Perform Homam', desc: 'Sacred fire rituals for prosperity, health and removal of obstacles.',         icon: 'flame-outline',    route: '/(tabs)/temples' },
+  { title: 'Live Darshan',  desc: 'Watch sacred rituals streaming live from temples across India.',               icon: 'videocam-outline', route: '/(tabs)/live' },
+  { title: 'Pujari at Home',desc: 'Invite a qualified pujari to your home for all auspicious occasions.',        icon: 'home-outline',     route: '/(tabs)/temples' },
 ];
 
 // ── Temple Multi-Card Carousel (4 visible, auto-scroll) ──────────────────
@@ -303,6 +303,14 @@ function WebHome() {
           locations={[0, 0.3, 0.65, 1]}
           style={StyleSheet.absoluteFill}
         />
+        {/* Grid dot pattern overlay — aatreyanews.in style */}
+        {IS_WEB && (
+          <View style={{
+            position: 'absolute', inset: 0, zIndex: 0,
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          } as any} />
+        )}
         {/* Decorative OM */}
         <Text style={wh.heroOm}>ॐ</Text>
 
@@ -541,14 +549,22 @@ function WebHome() {
       </View>
 
       {/* ── SERVICES ─────────────────────────────────────────────────────── */}
-      <View style={[wh.sectionBg, { backgroundColor: '#F5F0F0' }]}>
+      <View style={[wh.sectionBg, { backgroundColor: '#F2F0EF' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
-          <SecHead title="Our Services" sub="Everything you need for sacred rituals" />
+          {/* Centered header with gold overline — aatreyanews.in style */}
+          <View style={{ alignItems: 'center', marginBottom: 40 }}>
+            <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 3, marginBottom: 10 }}>PLATFORM FEATURES</Text>
+            <Text style={{ color: '#0D1220', fontSize: 32, fontWeight: '900', textAlign: 'center' }}>Everything for Your Spiritual Journey</Text>
+            <Text style={{ color: '#6B7280', fontSize: 15, textAlign: 'center', marginTop: 8, maxWidth: 500 }}>
+              One platform. Every sacred service your devotion needs.
+            </Text>
+          </View>
           <View style={wh.servGrid}>
             {SERVICES.map((s) => (
               <TouchableOpacity key={s.title} onPress={() => router.push(s.route as any)} style={wh.servCard}>
-                <View style={[wh.servIcon, { backgroundColor: s.bg }]}>
-                  <Ionicons name={s.icon as any} size={30} color={s.color} />
+                {/* Dark square icon box — aatreyanews.in style */}
+                <View style={wh.servIcon}>
+                  <Ionicons name={s.icon as any} size={28} color={GOLD} />
                 </View>
                 <Text style={wh.servTitle}>{s.title}</Text>
                 <Text style={wh.servDesc}>{s.desc}</Text>
@@ -912,9 +928,9 @@ const wh: any = {
     ...(Platform.OS === 'web' ? { transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 24px rgba(0,0,0,0.07)' } as any : {}),
   },
   servIcon: {
-    width: 62, height: 62, borderRadius: 18,
+    width: 58, height: 58, borderRadius: 16,
+    backgroundColor: '#1A0505',
     alignItems: 'center', justifyContent: 'center', marginBottom: 18,
-    borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
   },
   servTitle: { color: '#1A0505', fontSize: 17, fontWeight: '800', marginBottom: 8 },
   servDesc: { color: '#555555', fontSize: 13, lineHeight: 21 },
@@ -983,8 +999,7 @@ const wh: any = {
   },
   whyIcon: {
     width: 54, height: 54, borderRadius: 15,
-    backgroundColor: 'rgba(139,21,21,0.06)',
-    borderWidth: 1, borderColor: 'rgba(139,21,21,0.15)',
+    backgroundColor: '#1A0505',
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
   whyTitle: { color: '#1A0505', fontSize: 15, fontWeight: '800', marginBottom: 6 },

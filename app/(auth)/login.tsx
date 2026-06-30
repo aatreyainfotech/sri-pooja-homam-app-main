@@ -11,7 +11,8 @@ import { api, apiError } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 
-const GOLD = '#D4AF37';
+const GOLD   = '#C9922A';
+const MAROON = '#8B1515';
 
 export default function Login() {
   const router = useRouter();
@@ -31,11 +32,7 @@ export default function Login() {
     setRetryIn(30);
     retryTimer.current = setInterval(() => {
       setRetryIn((prev) => {
-        if (prev <= 1) {
-          clearInterval(retryTimer.current);
-          cb();
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(retryTimer.current); cb(); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -58,10 +55,8 @@ export default function Login() {
       const msg = apiError(e);
       const isDbError = /database|unavailable|server|starting/i.test(msg);
       if (isDbError) {
-        // Keep spinner running — show calm "waking up" state, not an error
         setLoginError('__waking__');
         startRetryCountdown(onLogin);
-        // Do NOT setLoading(false) — button stays in loading/connecting state
       } else {
         setLoginError(msg);
         setLoading(false);
@@ -69,29 +64,25 @@ export default function Login() {
     }
   };
 
-  // ── WEB: Two-column professional layout ──────────────────────────────────
+  // ── WEB: Two-column layout (aatreyanews.in model) ────────────────────────
   if (Platform.OS === 'web') {
     return (
       <View style={w.root}>
 
-        {/* ── LEFT: Brand panel ── */}
+        {/* ── LEFT: Brand panel ────────────────────────────────────────── */}
         <View style={w.brand}>
           <LinearGradient
-            colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
-            locations={[0, 0.3, 0.6, 1]}
-            start={[0.1, 0]}
-            end={[0.9, 1]}
+            colors={['#0D0305', '#3D0808', '#8B1515']}
+            locations={[0, 0.55, 1]}
+            start={[0, 0]} end={[1, 1]}
             style={StyleSheet.absoluteFill}
           />
-          {/* Warm radial glow */}
-          {Platform.OS === 'web' && (
-            <View style={{
-              position: 'absolute', top: '5%', left: '0%',
-              width: '100%', height: '55%', zIndex: 0,
-              background: 'radial-gradient(ellipse at 40% 40%, rgba(220,80,15,0.28) 0%, rgba(160,35,10,0.12) 45%, transparent 70%)',
-            } as any} />
-          )}
-          {/* Decorative OM */}
+          {/* Subtle grid dot pattern like aatreyanews.in */}
+          <View style={{
+            position: 'absolute', inset: 0, zIndex: 0,
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          } as any} />
           <Text style={w.brandOm}>ॐ</Text>
 
           <View style={w.brandContent}>
@@ -102,133 +93,143 @@ export default function Login() {
             <Text style={w.brandSub}>
               Connect with verified Vedic pujaris. Book sacred poojas, homams & live temple darshan.
             </Text>
-            {[
-              '500+ Sacred Temples across India',
-              'Verified Vedic Pujaris',
-              'Live Temple Darshan 24/7',
-              '10,000+ Devotees Served',
-            ].map((pt) => (
-              <View key={pt} style={w.trustRow}>
-                <View style={w.trustDot}>
-                  <Ionicons name="checkmark" size={12} color={GOLD} />
+
+            {/* 2×2 feature grid — aatreyanews.in style */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
+              {[
+                { title: 'Book Poojas',   sub: 'Vedic rituals online' },
+                { title: 'Live Darshan',  sub: 'Sacred streams 24/7' },
+                { title: '500+ Temples',  sub: 'Across India' },
+                { title: 'Vedic Pujaris', sub: 'Verified & certified' },
+              ].map((f) => (
+                <View key={f.title} style={w.featureCard}>
+                  <Text style={w.featureTitle}>{f.title}</Text>
+                  <Text style={w.featureSub}>{f.sub}</Text>
                 </View>
-                <Text style={w.trustText}>{pt}</Text>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
 
           <Text style={w.brandCopy}>© 2026 Aatreya Infotech Systems LLP</Text>
         </View>
 
-        {/* ── RIGHT: Form panel ── */}
+        {/* ── RIGHT: Form panel (white, clean) ────────────────────────── */}
         <View style={w.panel}>
-          <Text style={w.label}>WELCOME BACK, DEVOTEE</Text>
-          <Text style={w.title}>Sign In</Text>
-          <Text style={w.sub}>Enter your mobile number and password</Text>
 
-          {loginError === '__waking__' ? (
-            <View style={w.wakingBox}>
-              <ActivityIndicator size="small" color={GOLD} />
-              <View style={{ flex: 1 }}>
-                <Text style={w.wakingText}>Server is starting up…</Text>
-                <Text style={w.wakingRetry}>Auto-connecting in {retryIn}s</Text>
+          <View style={w.formInner}>
+            <Text style={w.formTitle}>Welcome back</Text>
+            <Text style={w.formSub}>Sign in to your account</Text>
+
+            {loginError === '__waking__' ? (
+              <View style={w.wakingBox}>
+                <ActivityIndicator size="small" color={GOLD} />
+                <View style={{ flex: 1 }}>
+                  <Text style={w.wakingText}>Server is starting up…</Text>
+                  <Text style={w.wakingRetry}>Auto-connecting in {retryIn}s</Text>
+                </View>
+                <TouchableOpacity onPress={onLogin}>
+                  <Text style={{ color: GOLD, fontWeight: '700', fontSize: 12 }}>Now</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={onLogin}>
-                <Text style={{ color: GOLD, fontWeight: '700', fontSize: 12 }}>Now</Text>
+            ) : !!loginError ? (
+              <View style={w.errorBox}>
+                <Ionicons name="alert-circle-outline" size={18} color="#E53935" />
+                <Text style={[w.errorText, { flex: 1 }]}>{loginError}</Text>
+                <TouchableOpacity onPress={() => setLoginError('')}>
+                  <Ionicons name="close" size={16} color="#E53935" />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {/* Mobile field */}
+            <Text style={w.fieldLabel}>Mobile number</Text>
+            <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
+              <Ionicons name="call-outline" size={18} color={focused === 'mobile' ? GOLD : '#9CA3AF'} />
+              <TextInput
+                testID="login-mobile-input"
+                value={mobile}
+                onChangeText={setMobile}
+                placeholder="Enter your mobile number"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="phone-pad"
+                style={w.input}
+                maxLength={10}
+                onFocus={() => setFocused('mobile')}
+                onBlur={() => setFocused('')}
+              />
+            </View>
+
+            {/* Password field + forgot link on same row (like aatreyanews.in) */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={w.fieldLabel}>Password</Text>
+              <TouchableOpacity testID="login-forgot-link" onPress={() => router.push('/(auth)/forgot-password' as any)}>
+                <Text style={{ color: GOLD, fontSize: 13, fontWeight: '600' }}>Forgot password?</Text>
               </TouchableOpacity>
             </View>
-          ) : !!loginError ? (
-            <View style={w.errorBox}>
-              <Ionicons name="alert-circle-outline" size={18} color="#E53935" />
-              <Text style={[w.errorText, { flex: 1 }]}>{loginError}</Text>
-              <TouchableOpacity onPress={() => setLoginError('')}>
-                <Ionicons name="close" size={16} color="#E53935" />
+            <View style={[w.inputWrap, focused === 'password' && w.inputWrapFocused, { marginTop: 0 }]}>
+              <Ionicons name="lock-closed-outline" size={18} color={focused === 'password' ? GOLD : '#9CA3AF'} />
+              <TextInput
+                testID="login-password-input"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
+                placeholderTextColor="#9CA3AF"
+                secureTextEntry={!showPw}
+                style={w.input}
+                onFocus={() => setFocused('password')}
+                onBlur={() => setFocused('')}
+              />
+              <TouchableOpacity onPress={() => setShowPw(!showPw)}>
+                <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
-          ) : null}
 
-          <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
-            <Ionicons name="call-outline" size={19} color={focused === 'mobile' ? GOLD : 'rgba(212,175,55,0.5)'} />
-            <TextInput
-              testID="login-mobile-input"
-              value={mobile}
-              onChangeText={setMobile}
-              placeholder="Mobile number"
-              placeholderTextColor="rgba(255,248,240,0.25)"
-              keyboardType="phone-pad"
-              style={w.input}
-              maxLength={10}
-              onFocus={() => setFocused('mobile')}
-              onBlur={() => setFocused('')}
-            />
-          </View>
-
-          <View style={[w.inputWrap, focused === 'password' && w.inputWrapFocused]}>
-            <Ionicons name="lock-closed-outline" size={19} color={focused === 'password' ? GOLD : 'rgba(212,175,55,0.5)'} />
-            <TextInput
-              testID="login-password-input"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Password"
-              placeholderTextColor="rgba(255,248,240,0.25)"
-              secureTextEntry={!showPw}
-              style={w.input}
-              onFocus={() => setFocused('password')}
-              onBlur={() => setFocused('')}
-            />
-            <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-              <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={19} color="rgba(255,248,240,0.35)" />
+            {/* Sign In button — GOLD (like aatreyanews.in) */}
+            <TouchableOpacity
+              testID="login-submit-btn"
+              style={[w.btnPrimary, loading && { opacity: 0.85 }]}
+              onPress={onLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <ActivityIndicator color="#1A0505" size="small" />
+                  <Text style={w.btnPrimaryText}>
+                    {loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={w.btnPrimaryText}>Sign In →</Text>
+              )}
             </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity testID="login-submit-btn" style={[w.btnPrimary, loading && { opacity: 0.85 }]} onPress={onLogin} disabled={loading}>
-            {loading ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text style={w.btnPrimaryText}>
-                  {loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}
-                </Text>
-              </View>
-            ) : (
-              <>
-                <Text style={w.btnPrimaryText}>Sign In</Text>
-                <Ionicons name="arrow-forward" size={18} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
+            {/* Register link — inline text style like aatreyanews.in */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 22, gap: 4 }}>
+              <Text style={{ color: '#6B7280', fontSize: 14 }}>New devotee?</Text>
+              <Link href="/(auth)/register" asChild>
+                <TouchableOpacity testID="login-register-link">
+                  <Text style={{ color: '#0D1220', fontSize: 14, fontWeight: '700' }}>Register your account</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
 
-          <TouchableOpacity
-            testID="login-forgot-link"
-            style={w.forgotBtn}
-            onPress={() => router.push('/(auth)/forgot-password' as any)}
-          >
-            <Text style={w.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <View style={w.divider}>
-            <View style={w.divLine} />
-            <Text style={w.divText}>NEW DEVOTEE?</Text>
-            <View style={w.divLine} />
-          </View>
-
-          <Link href="/(auth)/register" asChild>
-            <TouchableOpacity testID="login-register-link" style={w.btnSecondary}>
-              <Text style={w.btnSecondaryText}>Create Free Account</Text>
+            {/* Back to homepage */}
+            <TouchableOpacity style={{ alignSelf: 'center', marginTop: 12 }} onPress={() => router.push('/' as any)}>
+              <Text style={{ color: '#9CA3AF', fontSize: 13 }}>← Back to homepage</Text>
             </TouchableOpacity>
-          </Link>
 
-          <View style={w.legalRow}>
-            <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
-              <Text style={w.legalLink}>Privacy Policy</Text>
-            </TouchableOpacity>
-            <Text style={w.legalDot}> · </Text>
-            <TouchableOpacity onPress={() => router.push('/legal/terms' as any)}>
-              <Text style={w.legalLink}>Terms</Text>
-            </TouchableOpacity>
-            <Text style={w.legalDot}> · </Text>
-            <TouchableOpacity onPress={() => router.push('/legal/refund' as any)}>
-              <Text style={w.legalLink}>Refund Policy</Text>
-            </TouchableOpacity>
+            <View style={w.legalRow}>
+              <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
+                <Text style={w.legalLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+              <Text style={w.legalDot}> · </Text>
+              <TouchableOpacity onPress={() => router.push('/legal/terms' as any)}>
+                <Text style={w.legalLink}>Terms</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/legal/refund' as any)}>
+                <Text style={w.legalLink}> · Refund</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -237,7 +238,7 @@ export default function Login() {
 
   // ── MOBILE layout ─────────────────────────────────────────────────────────
   return (
-    <LinearGradient colors={['#4A2C2A', '#B22222', '#E67E22']} style={{ flex: 1 }}>
+    <LinearGradient colors={['#0D0305', '#3D0808', '#8B1515']} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={m.scroll} keyboardShouldPersistTaps="handled">
@@ -350,11 +351,11 @@ export default function Login() {
   );
 }
 
-// ── Web styles ───────────────────────────────────────────────────────────────
+// ── Web styles ────────────────────────────────────────────────────────────────
 const w = StyleSheet.create({
   root: {
     position: 'absolute' as any, top: 0, left: 0, right: 0, bottom: 0,
-    flexDirection: 'row' as any, backgroundColor: '#4A2C2A',
+    flexDirection: 'row' as any, backgroundColor: '#0D0305',
   } as any,
 
   // Left brand panel
@@ -364,7 +365,7 @@ const w = StyleSheet.create({
   },
   brandOm: {
     position: 'absolute', right: -60, bottom: -60,
-    fontSize: 420, color: 'rgba(255,150,30,0.07)',
+    fontSize: 420, color: 'rgba(255,255,255,0.04)',
     fontWeight: '400', lineHeight: 460, zIndex: 0,
   } as any,
   brandContent: {
@@ -372,155 +373,145 @@ const w = StyleSheet.create({
     paddingHorizontal: 56, paddingTop: 48, paddingBottom: 24, zIndex: 1,
   },
   brandLogo: {
-    width: 84, height: 84, borderRadius: 22, marginBottom: 22,
-    borderWidth: 2.5, borderColor: 'rgba(212,175,55,0.55)',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 0 24px rgba(212,175,55,0.2)' } as any : {}),
+    width: 72, height: 72, borderRadius: 18, marginBottom: 20,
+    borderWidth: 2, borderColor: 'rgba(201,146,42,0.5)',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 20px rgba(201,146,42,0.15)' } as any : {}),
   } as any,
-  brandTelugu: { color: GOLD, fontSize: 30, fontWeight: '900', letterSpacing: 0.4, marginBottom: 4 },
-  brandLatin: { color: 'rgba(212,175,55,0.5)', fontSize: 10, letterSpacing: 5, marginBottom: 26 },
-  brandHeading: { color: '#fff', fontSize: 34, fontWeight: '900', lineHeight: 44, marginBottom: 12, maxWidth: 340 },
-  brandSub: { color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 26, maxWidth: 340, marginBottom: 30 },
-  trustRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 13 },
-  trustDot: {
-    width: 24, height: 24, borderRadius: 12,
-    backgroundColor: 'rgba(212,175,55,0.1)', borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.5)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  trustText: { color: 'rgba(255,255,255,0.75)', fontSize: 14 },
-  brandCopy: { color: 'rgba(255,255,255,0.2)', fontSize: 11, paddingHorizontal: 56, paddingBottom: 28, zIndex: 1 },
+  brandTelugu: { color: GOLD, fontSize: 26, fontWeight: '900', letterSpacing: 0.4, marginBottom: 2 },
+  brandLatin: { color: 'rgba(201,146,42,0.45)', fontSize: 10, letterSpacing: 5, marginBottom: 22 },
+  brandHeading: { color: '#fff', fontSize: 30, fontWeight: '900', lineHeight: 40, marginBottom: 10, maxWidth: 300 },
+  brandSub: { color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 24, maxWidth: 320, marginBottom: 20 },
 
-  // Right form panel
+  // 2×2 feature grid
+  featureCard: {
+    width: '47%',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+    borderRadius: 12, padding: 14,
+  },
+  featureTitle: { color: GOLD, fontSize: 13, fontWeight: '700', marginBottom: 4 },
+  featureSub: { color: 'rgba(255,255,255,0.45)', fontSize: 11, lineHeight: 16 },
+  brandCopy: { color: 'rgba(255,255,255,0.18)', fontSize: 11, paddingHorizontal: 56, paddingBottom: 28, zIndex: 1 },
+
+  // Right form panel — WHITE (aatreyanews.in style)
   panel: {
-    width: 460,
-    backgroundColor: '#2D1410',
-    borderLeftWidth: 1, borderLeftColor: 'rgba(212,175,55,0.15)',
-    paddingHorizontal: 44, paddingVertical: 52,
+    width: 480,
+    backgroundColor: '#FFFFFF',
+    borderLeftWidth: 1, borderLeftColor: '#E5E7EB',
+    ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}),
     justifyContent: 'center',
-    ...(Platform.OS === 'web' ? { overflowY: 'auto', boxShadow: '-8px 0 40px rgba(0,0,0,0.5)' } as any : {}),
   } as any,
-  label: { color: GOLD, fontSize: 10, fontWeight: '800', letterSpacing: 3.5, marginBottom: 12 },
-  title: { color: '#FFF8F0', fontSize: 34, fontWeight: '900', marginBottom: 6 },
-  sub: { color: 'rgba(255,248,240,0.38)', fontSize: 14, marginBottom: 30 },
+  formInner: {
+    paddingHorizontal: 48, paddingVertical: 52,
+  },
+  formTitle: { color: '#0D1220', fontSize: 34, fontWeight: '900', marginBottom: 6 },
+  formSub: { color: '#6B7280', fontSize: 15, marginBottom: 32 },
+
+  fieldLabel: { color: '#374151', fontSize: 14, fontWeight: '600', marginBottom: 8 },
 
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.18)',
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 2,
-    marginBottom: 14,
-    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s, background 0.2s' } as any : {}),
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5, borderColor: '#D1D5DB',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 2,
+    marginBottom: 18,
+    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s' } as any : {}),
   },
   inputWrapFocused: {
-    borderColor: 'rgba(212,175,55,0.7)',
-    backgroundColor: 'rgba(212,175,55,0.06)',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(212,175,55,0.08)' } as any : {}),
+    borderColor: GOLD,
+    backgroundColor: 'rgba(201,146,42,0.03)',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(201,146,42,0.1)' } as any : {}),
   },
   input: {
-    flex: 1, paddingVertical: 14, fontSize: 15, color: '#FFF8F0',
+    flex: 1, paddingVertical: 13, fontSize: 15, color: '#111827',
     ...(Platform.OS === 'web' ? { outline: 'none' } as any : {}),
   } as any,
 
+  // Gold Sign In button (aatreyanews.in style)
   btnPrimary: {
-    borderRadius: 14, paddingVertical: 16,
+    borderRadius: 12, paddingVertical: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginTop: 6,
+    marginTop: 8,
     ...(Platform.OS === 'web' ? {
-      background: 'linear-gradient(135deg, #D35400 0%, #B22222 100%)',
-      boxShadow: '0 6px 28px rgba(211,84,0,0.55)',
-    } as any : { backgroundColor: '#D35400' }),
+      background: 'linear-gradient(135deg, #C9922A 0%, #A07520 100%)',
+      boxShadow: '0 6px 24px rgba(201,146,42,0.4)',
+    } as any : { backgroundColor: GOLD }),
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.4 },
+  btnPrimaryText: { color: '#1A0505', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
 
   wakingBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: 'rgba(212,175,55,0.1)', borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)', marginBottom: 14,
+    backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#FDE68A', marginBottom: 16,
   },
-  wakingText: { color: GOLD, fontSize: 13, fontWeight: '700' },
-  wakingRetry: { color: 'rgba(212,175,55,0.65)', fontSize: 11, marginTop: 2 },
+  wakingText: { color: '#92400E', fontSize: 13, fontWeight: '700' },
+  wakingRetry: { color: '#B45309', fontSize: 11, marginTop: 2 },
 
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: 'rgba(229,57,53,0.08)', borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: 'rgba(229,57,53,0.25)', marginBottom: 14,
+    backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#FECACA', marginBottom: 16,
   },
-  errorText: { color: '#E53935', fontSize: 13, fontWeight: '600', lineHeight: 18 },
-
-  forgotBtn: { alignSelf: 'center', paddingVertical: 14, marginTop: 4 },
-  forgotText: { color: GOLD, fontSize: 13, fontWeight: '600' },
-
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 6 },
-  divLine: { flex: 1, height: 1, backgroundColor: 'rgba(212,175,55,0.1)' },
-  divText: { color: 'rgba(255,248,240,0.25)', fontSize: 10, letterSpacing: 2.5 },
-
-  btnSecondary: {
-    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.55)', borderRadius: 14, paddingVertical: 14,
-    alignItems: 'center', marginTop: 16,
-    ...(Platform.OS === 'web' ? { transition: 'all 0.2s' } as any : {}),
-  },
-  btnSecondaryText: { color: GOLD, fontSize: 15, fontWeight: '700' },
+  errorText: { color: '#DC2626', fontSize: 13, fontWeight: '600', lineHeight: 18 },
 
   legalRow: {
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
-    marginTop: 22, flexWrap: 'wrap', gap: 2,
+    marginTop: 20, flexWrap: 'wrap', gap: 2,
   },
-  legalLink: { color: 'rgba(212,175,55,0.5)', fontSize: 12, fontWeight: '600' },
-  legalDot: { color: 'rgba(255,248,240,0.15)', fontSize: 12 },
+  legalLink: { color: '#9CA3AF', fontSize: 12, fontWeight: '500' },
+  legalDot: { color: '#D1D5DB', fontSize: 12 },
 });
 
-// ── Mobile styles ────────────────────────────────────────────────────────────
+// ── Mobile styles ─────────────────────────────────────────────────────────────
 const m = StyleSheet.create({
   scroll: { flexGrow: 1, padding: 24, paddingBottom: 40, paddingTop: 24 },
   header: { alignItems: 'center', marginTop: 10, marginBottom: 24 },
-  logoWrap: { width: 96, height: 96, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.secondary, marginBottom: 12 },
+  logoWrap: { width: 96, height: 96, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: GOLD, marginBottom: 12 },
   logo: { width: '100%', height: '100%' } as any,
-  brand: { fontSize: 26, fontWeight: '800', color: theme.colors.secondary, letterSpacing: 0.6 },
-  brandLatin: { fontSize: 12, color: theme.colors.secondary, letterSpacing: 3, marginTop: 4, opacity: 0.85 },
-  brandSub: { fontSize: 13, color: 'rgba(253,251,247,0.7)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' },
+  brand: { fontSize: 26, fontWeight: '800', color: GOLD, letterSpacing: 0.6 },
+  brandLatin: { fontSize: 12, color: GOLD, letterSpacing: 3, marginTop: 4, opacity: 0.85 },
+  brandSub: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' },
   card: {
-    backgroundColor: theme.colors.bgPaper, borderRadius: 24, padding: 24,
-    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.4)',
-    shadowColor: theme.colors.secondary, shadowOpacity: 0.15, shadowRadius: 24, shadowOffset: { width: 0, height: 8 },
+    backgroundColor: '#fff', borderRadius: 24, padding: 24,
+    borderWidth: 1.5, borderColor: 'rgba(201,146,42,0.35)',
   },
-  cardTitle: { fontSize: 24, fontWeight: '800', color: theme.colors.text },
-  cardSub: { fontSize: 14, color: theme.colors.textMuted, marginTop: 4, marginBottom: 20 },
+  cardTitle: { fontSize: 24, fontWeight: '800', color: '#0D1220' },
+  cardSub: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderColor: theme.colors.border,
-    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 4,
+    borderWidth: 1.5, borderColor: '#D1D5DB',
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 4,
     marginBottom: 14, backgroundColor: '#fff',
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: theme.colors.text },
+  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: '#111827' },
   btnPrimary: {
-    backgroundColor: theme.colors.primary, borderRadius: 999, paddingVertical: 15,
+    backgroundColor: GOLD, borderRadius: 999, paddingVertical: 15,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  btnPrimaryText: { color: '#1A0505', fontSize: 16, fontWeight: '700' },
   wakingBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FFF8E1', borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: '#FFE082', marginBottom: 12,
+    backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#FDE68A', marginBottom: 12,
   },
-  wakingText: { color: '#E65100', fontSize: 13, fontWeight: '700' },
-  wakingRetry: { color: '#BF8A0B', fontSize: 11, marginTop: 2 },
-
+  wakingText: { color: '#92400E', fontSize: 13, fontWeight: '700' },
+  wakingRetry: { color: '#B45309', fontSize: 11, marginTop: 2 },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: '#FFCDD2', marginBottom: 12,
+    backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#FECACA', marginBottom: 12,
   },
-  errorText: { color: '#C62828', fontSize: 13, fontWeight: '600', lineHeight: 18 },
-
+  errorText: { color: '#DC2626', fontSize: 13, fontWeight: '600', lineHeight: 18 },
   forgotBtn: { alignSelf: 'flex-end', paddingVertical: 10, paddingHorizontal: 4, marginTop: 4 },
-  forgotText: { color: theme.colors.primary, fontSize: 13, fontWeight: '600' },
+  forgotText: { color: GOLD, fontSize: 13, fontWeight: '600' },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
-  divLine: { flex: 1, height: 1, backgroundColor: theme.colors.border },
-  divText: { color: theme.colors.textMuted, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
+  divLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
+  divText: { color: '#9CA3AF', fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
   btnSecondary: {
-    borderWidth: 1.5, borderColor: theme.colors.primary, borderRadius: 999, paddingVertical: 14, alignItems: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.4)', borderRadius: 999, paddingVertical: 14, alignItems: 'center',
   },
-  btnSecondaryText: { color: theme.colors.primary, fontSize: 15, fontWeight: '600' },
+  btnSecondaryText: { color: MAROON, fontSize: 15, fontWeight: '600' },
   legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, flexWrap: 'wrap' },
-  legalLink: { color: theme.colors.primary, fontSize: 12, fontWeight: '600' },
-  legalDot: { color: theme.colors.textMuted, fontSize: 12 },
+  legalLink: { color: '#9CA3AF', fontSize: 12, fontWeight: '500' },
+  legalDot: { color: '#D1D5DB', fontSize: 12 },
 });
