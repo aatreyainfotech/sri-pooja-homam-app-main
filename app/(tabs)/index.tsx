@@ -313,18 +313,25 @@ function LiveGrid({ items, innerW }: { items: any[]; innerW: number }) {
                   } as any}
                 >
                   <Image source={{ uri: item.thumbnail || FALLBACK }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                  <LinearGradient colors={['rgba(0,0,0,0.04)', 'rgba(0,0,0,0.72)']} style={StyleSheet.absoluteFill} />
-                  {/* LIVE badge */}
+                  {/* Strong gradient at bottom for text readability */}
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.88)']}
+                    locations={[0.35, 0.6, 1]}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* LIVE badge — top left */}
                   <View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E53935', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
                     <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
                     <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
                   </View>
+                  {/* Title overlaid at bottom of image */}
+                  <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12 }}>
+                    <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', lineHeight: 18 }} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ color: GOLD, fontSize: 11, fontWeight: '600', marginTop: 4 }}>Tap to watch →</Text>
+                  </View>
                 </TouchableOpacity>
-
-                {/* Title below card (always visible) */}
-                <Text style={{ color: '#F5F0EB', fontSize: 13, fontWeight: '700', marginTop: 10, paddingHorizontal: 2 }} numberOfLines={1}>
-                  {item.title}
-                </Text>
 
                 {/* ── Hotstar-style hover popup ── */}
                 {hov && IS_WEB && (
