@@ -30,6 +30,9 @@ jobs:
           EXPO_PUBLIC_BACKEND_URL: https://sripoojahomam-f7bvaqfxgreghkeu.centralindia-01.azurewebsites.net
           CI: "false"
 
+      - name: Copy public img assets to dist
+        run: mkdir -p dist/img && cp -r public/img/. dist/img/
+
       - name: Add SWA routing config
         run: |
           cat > dist/staticwebapp.config.json << 'EOF'
