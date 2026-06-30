@@ -666,7 +666,22 @@ function DestinationsTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: stri
       const file = e.target?.files?.[0];
       if (!file) return;
       const reader = new (window as any).FileReader();
-      reader.onload = (ev: any) => update(id, 'photo', ev.target.result);
+      reader.onload = (ev: any) => {
+        // Compress to max 400×280 JPEG at 0.65 quality so localStorage stays under 5MB
+        const img = new (window as any).Image();
+        img.onload = () => {
+          const MAX_W = 400, MAX_H = 280;
+          let { width: w, height: h } = img;
+          if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+          if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+          const canvas = (document as any).createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.65);
+          update(id, 'photo', compressed);
+        };
+        img.src = ev.target.result;
+      };
       reader.readAsDataURL(file);
     };
     input.click();

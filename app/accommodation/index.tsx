@@ -221,7 +221,7 @@ export default function AccommodationBrowse() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterRow}
-        style={{ backgroundColor: '#FDF6EE', borderBottomWidth: 1, borderBottomColor: 'rgba(201,146,42,0.2)' }}
+        style={{ backgroundColor: '#FDF6EE', borderBottomWidth: 1, borderBottomColor: 'rgba(201,146,42,0.2)', height: 54 }}
       >
         {[
           { label: 'All', value: '', icon: 'apps-outline' },
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: 7, borderRadius: 999,
     backgroundColor: '#fff', borderWidth: 1.5, borderColor: 'rgba(122,48,32,0.18)', flexShrink: 0,
   },
   filterChipActive: { backgroundColor: MAROON, borderColor: MAROON },
