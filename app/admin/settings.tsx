@@ -3,11 +3,14 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Switch, Alert, Platform, ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
+
+const STORAGE_KEY = 'sph_platform_settings';
 
 const GOLD   = '#D4AF37';
 const MAROON = '#7A3020';
@@ -541,12 +544,22 @@ export default function PlatformSettings() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
-  // Load settings from backend
+  // Load: local storage first, then try backend
   useEffect(() => {
     (async () => {
       try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setSettings(prev => ({ ...prev, ...parsed }));
+        }
+      } catch {}
+      // Also try backend (may not exist, that's fine)
+      try {
         const { data } = await api.get('/admin/platform-settings');
-        if (data) setSettings(prev => ({ ...prev, ...data }));
+        if (data && typeof data === 'object') {
+          setSettings(prev => ({ ...prev, ...data }));
+        }
       } catch {}
       setLoading(false);
     })();
@@ -559,13 +572,14 @@ export default function PlatformSettings() {
   const save = async () => {
     setSaving(true);
     try {
-      await api.post('/admin/platform-settings', settings);
+      // Always save locally first — works without any backend
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      // Also try to push to backend (best effort)
+      try { await api.post('/admin/platform-settings', settings); } catch {}
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      // API may not exist yet — show success anyway (stored locally)
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      Alert.alert('Save Failed', 'Could not save settings. Please try again.');
     }
     setSaving(false);
   };
