@@ -620,6 +620,14 @@ async def _startup_init():
                created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
                CONSTRAINT PK_accommodation_bookings PRIMARY KEY (id)
            )""",
+        # ─── Platform Settings (key-value store for admin panel) ────────────
+        """IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'platform_settings' AND schema_id = SCHEMA_ID('dbo'))
+           CREATE TABLE dbo.platform_settings (
+               setting_key   NVARCHAR(100) NOT NULL,
+               setting_value NVARCHAR(MAX) NULL,
+               updated_at    DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+               CONSTRAINT PK_platform_settings PRIMARY KEY (setting_key)
+           )""",
     ]
     for stmt in alters:
         try:
@@ -2539,6 +2547,60 @@ async def create_hotel_manager(data: HotelManagerCreateIn, user: dict = Depends(
          hash_password(data.password), "hotel_manager", now_naive())
     )
     return {"id": uid, "ok": True, "full_name": data.full_name, "mobile": mobile}
+
+# ─────────────────────── Platform Settings ───────────────────────────────────
+@api.get("/admin/platform-settings")
+async def get_platform_settings(user: dict = Depends(require_super_admin)):
+    """Return all platform settings as a flat key→value dict (values are JSON-decoded)."""
+    rows = await sql_fetch_all("SELECT setting_key, setting_value FROM dbo.platform_settings")
+    result = {}
+    for row in rows:
+        k = row["setting_key"]
+        v = row["setting_value"]
+        try:
+            result[k] = json.loads(v)
+        except Exception:
+            result[k] = v
+    return result
+
+
+@api.post("/admin/platform-settings")
+async def save_platform_settings(request: Request, user: dict = Depends(require_super_admin)):
+    """Upsert every key in the request body into platform_settings."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected a JSON object")
+    for k, v in body.items():
+        serialised = json.dumps(v) if not isinstance(v, str) else v
+        await sql_execute(
+            """MERGE dbo.platform_settings AS target
+               USING (SELECT %s AS setting_key, %s AS setting_value) AS src
+                   ON target.setting_key = src.setting_key
+               WHEN MATCHED THEN
+                   UPDATE SET setting_value = src.setting_value, updated_at = GETUTCDATE()
+               WHEN NOT MATCHED THEN
+                   INSERT (setting_key, setting_value, updated_at)
+                   VALUES (src.setting_key, src.setting_value, GETUTCDATE());""",
+            (k, serialised),
+        )
+    return {"ok": True, "saved": len(body)}
+
+
+# Public endpoint — returns settings without auth so frontend can read them
+@api.get("/platform-settings")
+async def public_platform_settings():
+    """Public read of platform settings (no auth required)."""
+    rows = await sql_fetch_all("SELECT setting_key, setting_value FROM dbo.platform_settings")
+    result = {}
+    for row in rows:
+        k = row["setting_key"]
+        v = row["setting_value"]
+        try:
+            result[k] = json.loads(v)
+        except Exception:
+            result[k] = v
+    return result
+
 
 # ----------------------------- Wire up ---------------------------------------
 app.include_router(api)

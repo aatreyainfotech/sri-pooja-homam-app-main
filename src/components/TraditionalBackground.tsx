@@ -17,8 +17,8 @@ import Svg, { Defs, Pattern, Path, Circle, G, Rect, LinearGradient, Stop } from 
 
 const CREAM_TOP = '#FDF5E4';
 const CREAM_BOTTOM = '#F7E9CF';
-const GOLD = '#D4AF37';
-const MAROON = '#8B1515';
+const GOLD = '#C9922A';
+const MAROON = '#7A3020';
 
 // ---------- Small motif primitives ----------
 

@@ -58,9 +58,9 @@ function buildHtml(opts: RazorpayOptions): string {
 </head>
 <body>
   <div class="loader">
-    <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#8B1515"
+    <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#7A3020"
       stroke-width="4" stroke-dasharray="60 20"/></svg>
-    <p style="margin-top:12px;color:#8B1515;font-size:14px">Opening payment...</p>
+    <p style="margin-top:12px;color:#7A3020;font-size:14px">Opening payment...</p>
   </div>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
@@ -98,7 +98,7 @@ function buildHtml(opts: RazorpayOptions): string {
             preferences: { show_default_blocks: true }
           }
         },
-        theme: { color: "#8B1515" },
+        theme: { color: "#7A3020" },
         modal: { ondismiss: function() { postMsg({ type: 'dismiss' }); } },
         handler: function(response) {
           postMsg({
@@ -149,7 +149,7 @@ function WebRazorpay({ options, onSuccess, onFailure, onDismiss }: Omit<Props, '
           email: options.prefillEmail || '',
         },
         config: { display: { preferences: { show_default_blocks: true } } },
-        theme: { color: '#8B1515' },
+        theme: { color: '#7A3020' },
         modal: { ondismiss: onDismiss },
         handler: (response: any) => {
           onSuccess(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature || '');
@@ -225,7 +225,7 @@ export default function RazorpayCheckout({ visible, options, onSuccess, onFailur
             allowsInlineMediaPlayback
             renderLoading={() => (
               <View style={styles.loading}>
-                <ActivityIndicator size="large" color="#8B1515" />
+                <ActivityIndicator size="large" color="#7A3020" />
               </View>
             )}
             style={{ flex: 1 }}

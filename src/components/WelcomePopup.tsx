@@ -6,8 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-const SAFFRON = '#E67E22';
-const GOLD    = '#D4AF37';
+const SAFFRON = '#8B3520';
+const GOLD    = '#C9922A';
 const DARK    = '#4A2C2A';
 
 const FEATURES = [
@@ -51,7 +51,7 @@ export default function WelcomePopup() {
         <TouchableOpacity style={StyleSheet.absoluteFill} onPress={close} activeOpacity={1} />
         <View style={s.card}>
           {/* Header */}
-          <LinearGradient colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']} style={s.header}>
+          <LinearGradient colors={['#3D1408', '#7A3020', '#8B3520', '#C9922A']} style={s.header}>
             <Text style={s.om}>ॐ</Text>
             <TouchableOpacity style={s.closeBtn} onPress={close}>
               <Ionicons name="close" size={20} color="rgba(255,255,255,0.85)" />
@@ -181,9 +181,9 @@ const s = StyleSheet.create({
     flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 14, borderRadius: 14,
     ...(IS_WEB ? {
-      background: 'linear-gradient(135deg, #D35400 0%, #B22222 100%)',
-      boxShadow: '0 4px 16px rgba(211,84,0,0.4)',
-    } as any : { backgroundColor: '#D35400' }),
+      background: 'linear-gradient(135deg, #C9922A 0%, #7A3020 100%)',
+      boxShadow: '0 4px 16px rgba(122,48,32,0.4)',
+    } as any : { backgroundColor: '#7A3020' }),
   },
   btn1Text: { color: '#fff', fontWeight: '800', fontSize: 15 },
   btn2: {

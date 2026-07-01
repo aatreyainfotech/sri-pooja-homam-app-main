@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { api, apiError } from '../../src/services/api';
 
-const GOLD   = '#D4AF37';
+const GOLD   = '#C9922A';
 const IS_WEB = Platform.OS === 'web';
 
 export default function ResetPasswordOtp() {
@@ -83,7 +83,7 @@ export default function ResetPasswordOtp() {
 
   return (
     <LinearGradient
-      colors={['#4A2C2A', '#B22222', '#D35400', '#E67E22']}
+      colors={['#C9922A', '#7A3020', '#3D1408', '#120805']}
       locations={[0, 0.3, 0.6, 1]}
       start={[0, 0]} end={[1, 1]}
       style={IS_WEB ? w.rootWeb : w.rootMobile}
@@ -255,7 +255,7 @@ const w = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.7)',
     backgroundColor: 'rgba(212,175,55,0.06)',
     boxShadow: '0 0 0 3px rgba(212,175,55,0.08)',
-  } as any : { borderColor: '#D4AF37' },
+  } as any : { borderColor: '#C9922A' },
   input: {
     flex: 1, paddingVertical: 14, fontSize: 15, color: '#FFF8F0',
     ...(IS_WEB ? { outline: 'none' } as any : {}),

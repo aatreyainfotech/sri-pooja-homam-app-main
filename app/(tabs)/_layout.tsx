@@ -4,7 +4,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { View, Text, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 
 const BRAND = '#8B1515';
-const GOLD = '#D4AF37';
+const GOLD = '#C9922A';
 const MUTED = '#B0B0B0';
 const PILL_BG = '#FFEBEE';
 

@@ -7,8 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebFooter from '../src/components/WebFooter';
 
-const GOLD = '#D4AF37';
-const SAFFRON = '#E67E22';
+const GOLD = '#C9922A';
+const SAFFRON = '#8B3520';
 const IS_WEB = Platform.OS === 'web';
 
 const CATEGORIES = [
@@ -71,7 +71,7 @@ export default function BlogsPage() {
   if (IS_WEB) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFF8E7', ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}) }}>
-        <LinearGradient colors={['#4A2C2A', '#2D0B00', '#4A2C2A']} style={s.hero}>
+        <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={s.hero}>
           <Text style={s.heroOm}>ॐ</Text>
           <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
@@ -160,7 +160,7 @@ export default function BlogsPage() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF8E7' }} edges={['top']}>
-      <LinearGradient colors={['#4A2C2A', '#B22222', '#E67E22']} style={{ paddingBottom: 20 }}>
+      <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={{ paddingBottom: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8 }}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={26} color="#fff" />

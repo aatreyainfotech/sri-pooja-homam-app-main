@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebFooter from '../src/components/WebFooter';
 
-const GOLD = '#D4AF37';
+const GOLD = '#C9922A';
 const IS_WEB = Platform.OS === 'web';
 
 const FEATURES = [
@@ -45,7 +45,7 @@ export default function YatraPassPage() {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFF8E7', ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}) }}>
         {/* Hero */}
-        <LinearGradient colors={['#0D0D2B', '#1A237E', '#283593']} style={s.hero}>
+        <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={s.hero}>
           <Text style={s.heroOm}>ॐ</Text>
           <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
@@ -148,7 +148,7 @@ export default function YatraPassPage() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF8E7' }} edges={['top']}>
-      <LinearGradient colors={['#0D0D2B', '#1A237E', '#283593']} style={{ paddingBottom: 20 }}>
+      <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={{ paddingBottom: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8 }}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={26} color="#fff" />
@@ -187,5 +187,5 @@ const s = StyleSheet.create({
   badgeText: { color: GOLD, fontSize: 10, fontWeight: '800', letterSpacing: 2 },
   heroTitle: { color: '#fff', fontSize: 52, fontWeight: '900', lineHeight: 60 },
   heroSub: { color: 'rgba(255,255,255,0.72)', fontSize: 17, marginTop: 12, maxWidth: 520, lineHeight: 27 },
-  sectionTitle: { color: '#4A2C2A', fontSize: 28, fontWeight: '900', borderLeftWidth: 4, borderLeftColor: '#E67E22', paddingLeft: 14 },
+  sectionTitle: { color: '#4A2C2A', fontSize: 28, fontWeight: '900', borderLeftWidth: 4, borderLeftColor: '#7A3020', paddingLeft: 14 },
 });

@@ -125,7 +125,7 @@ export default function Notifications() {
             <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
             {item.is_pro && (
               <View style={styles.proBadge}>
-                <Ionicons name="star" size={10} color="#D4AF37" />
+                <Ionicons name="star" size={10} color="#C9922A" />
                 <Text style={styles.proBadgeText}>PRO</Text>
               </View>
             )}
@@ -141,7 +141,7 @@ export default function Notifications() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
-      <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
+      <LinearGradient colors={['#7A3020', '#3D1408']} style={styles.header}>
         <Text style={styles.headerTitle}>Notifications</Text>
         {!isPro && (
           <TouchableOpacity style={styles.proChip} onPress={() => setShowProModal(true)}>
@@ -154,7 +154,7 @@ export default function Notifications() {
       {/* PRO banner for free users */}
       {!isPro && (
         <TouchableOpacity style={styles.proBanner} activeOpacity={0.85} onPress={() => setShowProModal(true)}>
-          <LinearGradient colors={['#D4AF37', '#AA8721']} style={styles.proBannerGrad}>
+          <LinearGradient colors={['#C9922A', '#A67A1E']} style={styles.proBannerGrad}>
             <Ionicons name="star" size={20} color="#fff" />
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.proBannerTitle}>Upgrade to PRO</Text>
@@ -189,7 +189,7 @@ export default function Notifications() {
           <Pressable style={styles.proSheet} onPress={() => {}}>
             <View style={styles.proSheetHandle} />
 
-            <LinearGradient colors={['#D4AF37', '#8B6914']} style={styles.proSheetHeader}>
+            <LinearGradient colors={['#C9922A', '#8B6914']} style={styles.proSheetHeader}>
               <Ionicons name="star" size={40} color="#fff" />
               <Text style={styles.proSheetTitle}>Sri Pooja Homam PRO</Text>
               <Text style={styles.proSheetSub}>Elevate your spiritual experience</Text>
@@ -206,7 +206,7 @@ export default function Notifications() {
               ].map(({ icon, text }) => (
                 <View key={text} style={styles.proFeatureRow}>
                   <View style={styles.proFeatureIcon}>
-                    <Ionicons name={icon as any} size={16} color="#D4AF37" />
+                    <Ionicons name={icon as any} size={16} color="#C9922A" />
                   </View>
                   <Text style={styles.proFeatureText}>{text}</Text>
                 </View>
@@ -221,7 +221,7 @@ export default function Notifications() {
                 router.push('/(tabs)/bookings');
               }}
             >
-              <LinearGradient colors={['#D4AF37', '#AA8721']} style={styles.proUpgradeBtnGrad}>
+              <LinearGradient colors={['#C9922A', '#A67A1E']} style={styles.proUpgradeBtnGrad}>
                 <Ionicons name="star" size={18} color="#fff" />
                 <Text style={styles.proUpgradeBtnText}>Upgrade Now</Text>
               </LinearGradient>
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '800' },
   proChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#D4AF37', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: '#C9922A', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
   },
   proChipText: { color: '#2D1B19', fontSize: 12, fontWeight: '800' },
 
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     borderWidth: 1, borderColor: theme.colors.border,
   },
-  proCard: { borderColor: '#D4AF37', borderWidth: 1.5 },
+  proCard: { borderColor: '#C9922A', borderWidth: 1.5 },
   iconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   proBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 2,
     backgroundColor: '#FFF8E1', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
-    borderWidth: 1, borderColor: '#D4AF37',
+    borderWidth: 1, borderColor: '#C9922A',
   },
   proBadgeText: { fontSize: 9, fontWeight: '800', color: '#8B6914' },
   cardBody2: { fontSize: 12, color: theme.colors.textSecondary, lineHeight: 17 },

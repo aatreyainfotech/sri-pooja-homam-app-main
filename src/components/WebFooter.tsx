@@ -2,8 +2,8 @@ import { View, Text, TouchableOpacity, Image, Linking, Platform, StyleSheet } fr
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const GOLD = '#D4AF37';
-const DARK = '#4A2C2A';
+const GOLD = '#C9922A';
+const DARK = '#1A0C07';
 
 export default function WebFooter() {
   const router = useRouter();
@@ -101,11 +101,11 @@ export default function WebFooter() {
           <View style={s.trustBadges}>
             {[
               { icon: 'shield-checkmark', color: '#4CAF50', title: '256-bit SSL',    sub: 'Encrypted' },
-              { icon: 'ribbon',           color: '#D4AF37', title: 'ISO 27001',       sub: 'Certified Security' },
+              { icon: 'ribbon',           color: '#C9922A', title: 'ISO 27001',       sub: 'Certified Security' },
               { icon: 'card',             color: '#528FF0', title: 'Razorpay',        sub: 'Secure Payments' },
               { icon: 'globe',            color: '#FF6B00', title: 'Digital India',   sub: 'Compliant' },
               { icon: 'phone-portrait',   color: '#2E3A8A', title: 'UPI / IMPS',      sub: 'Payments Accepted' },
-              { icon: 'people',           color: '#E67E22', title: '10,000+ Devotees', sub: 'Served' },
+              { icon: 'people',           color: '#8B3520', title: '10,000+ Devotees', sub: 'Served' },
             ].map((b) => (
               <View key={b.title} style={s.trustBadge}>
                 <Ionicons name={b.icon as any} size={22} color={b.color} />
@@ -174,8 +174,8 @@ const s = StyleSheet.create({
 
   // Trust strip
   trustStrip: {
-    backgroundColor: 'rgba(230,126,34,0.08)',
-    borderTopWidth: 1, borderTopColor: 'rgba(230,126,34,0.18)',
+    backgroundColor: 'rgba(201,146,42,0.08)',
+    borderTopWidth: 1, borderTopColor: 'rgba(201,146,42,0.2)',
     paddingVertical: 20, paddingHorizontal: 32,
   },
   trustInner: {

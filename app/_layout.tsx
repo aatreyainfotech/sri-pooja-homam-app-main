@@ -154,7 +154,7 @@ function WebNavbar() {
             )}
             {isAdmin && (
               <TouchableOpacity onPress={() => go('/admin')} style={w.adminPill}>
-                <Ionicons name="shield-checkmark" size={13} color="#D4AF37" />
+                <Ionicons name="shield-checkmark" size={13} color="#C9922A" />
                 <Text style={w.adminLabel}>Admin CMS</Text>
               </TouchableOpacity>
             )}
@@ -165,7 +165,7 @@ function WebNavbar() {
             <View style={w.authRow}>
               {isHotelMgr && (
                 <TouchableOpacity onPress={() => go('/hotel-manager')} style={w.adminPill}>
-                  <Ionicons name="business-outline" size={13} color="#D4AF37" />
+                  <Ionicons name="business-outline" size={13} color="#C9922A" />
                   <Text style={w.adminLabel}>My Hotel</Text>
                 </TouchableOpacity>
               )}
@@ -185,7 +185,7 @@ function WebNavbar() {
             </View>
           ) : (
             <TouchableOpacity onPress={() => go('/(auth)/login')} style={w.loginBtn}>
-              <Ionicons name="person-circle-outline" size={17} color="#D4AF37" />
+              <Ionicons name="person-circle-outline" size={17} color="#C9922A" />
               <Text style={w.loginBtnText}>Sign In</Text>
             </TouchableOpacity>
           )}
@@ -285,7 +285,7 @@ function AdminSidebar() {
               <Ionicons
                 name={item.icon as any}
                 size={17}
-                color={active ? '#D4AF37' : 'rgba(255,255,255,0.45)'}
+                color={active ? '#C9922A' : 'rgba(255,255,255,0.45)'}
                 style={{ width: 22 }}
               />
               <Text style={[cms.navLabel, active && cms.navLabelActive]}>{item.label}</Text>
@@ -341,7 +341,7 @@ function AdminTopBar() {
         <Text style={cms.breadPage}>{pageName}</Text>
       </View>
       <View style={cms.cmsBadge}>
-        <Ionicons name="shield-checkmark" size={13} color="#D4AF37" />
+        <Ionicons name="shield-checkmark" size={13} color="#C9922A" />
         <Text style={cms.cmsBadgeText}>CMS</Text>
       </View>
     </View>
@@ -476,7 +476,7 @@ const cms = StyleSheet.create({
     width: 40, height: 40, borderRadius: 10,
     ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 2px rgba(212,175,55,0.45)' } as any : {}),
   },
-  sidebarTitle: { color: '#D4AF37', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 },
+  sidebarTitle: { color: '#C9922A', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 },
   sidebarSub: { color: 'rgba(212,175,55,0.42)', fontSize: 10, letterSpacing: 1.5, marginTop: 1 },
   divider: { height: 1, backgroundColor: 'rgba(212,175,55,0.1)', marginHorizontal: 16, marginVertical: 4 },
   navItem: {
@@ -485,7 +485,7 @@ const cms = StyleSheet.create({
     marginHorizontal: 8, borderRadius: 10, position: 'relative', marginBottom: 2,
   },
   navItemActive: { backgroundColor: 'rgba(212,175,55,0.08)' },
-  activeBar: { position: 'absolute', left: 0, top: 6, bottom: 6, width: 3, backgroundColor: '#D4AF37', borderRadius: 2 },
+  activeBar: { position: 'absolute', left: 0, top: 6, bottom: 6, width: 3, backgroundColor: '#C9922A', borderRadius: 2 },
   navLabel: { fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: '500' },
   navLabelActive: { color: '#E8D5A3', fontWeight: '700' },
   sectionHead: { fontSize: 9, color: 'rgba(212,175,55,0.3)', fontWeight: '800', letterSpacing: 2 },
@@ -500,7 +500,7 @@ const cms = StyleSheet.create({
     backgroundColor: '#8B1515', alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.4)',
   },
-  avatarText: { color: '#D4AF37', fontSize: 15, fontWeight: '800' },
+  avatarText: { color: '#C9922A', fontSize: 15, fontWeight: '800' },
   userName: { color: '#fff', fontSize: 12, fontWeight: '700' },
   userRole: { color: 'rgba(212,175,55,0.55)', fontSize: 9, letterSpacing: 1, marginTop: 1 },
   footerBtn: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 7, paddingHorizontal: 4 },
@@ -519,7 +519,7 @@ const cms = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.1)', paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 999, borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)',
   },
-  cmsBadgeText: { color: '#D4AF37', fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  cmsBadgeText: { color: '#C9922A', fontSize: 11, fontWeight: '700', letterSpacing: 1 },
   mainArea: {
     flex: 1, flexDirection: 'column', backgroundColor: '#F7F2EC',
     ...(Platform.OS === 'web' ? { overflow: 'hidden' } as any : {}),
@@ -533,7 +533,7 @@ const cms = StyleSheet.create({
 // ── Website Styles ──────────────────────────────────────────────────────────
 const MAROON = '#7A3020';   // warm brownish-red (was blood-red #8B1515)
 const DARK   = '#1A0C07';   // warm near-black
-const GOLD   = '#D4AF37';
+const GOLD   = '#C9922A';
 
 const w = StyleSheet.create({
   root: { flex: 1, flexDirection: 'column', backgroundColor: DARK } as any,
@@ -586,7 +586,7 @@ const w = StyleSheet.create({
     width: '33%', flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8,
   },
-  megaDestDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#D4AF37', flexShrink: 0 },
+  megaDestDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#C9922A', flexShrink: 0 },
   megaItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16,
     paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, minWidth: 260,
@@ -599,7 +599,7 @@ const w = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.15)', paddingHorizontal: 11, paddingVertical: 6,
     borderRadius: 999, borderWidth: 1, borderColor: 'rgba(212,175,55,0.4)', marginLeft: 4,
   },
-  adminLabel: { color: '#D4AF37', fontSize: 13, fontWeight: '700' },
+  adminLabel: { color: '#C9922A', fontSize: 13, fontWeight: '700' },
 
   // Auth area (right side of navbar)
   authRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

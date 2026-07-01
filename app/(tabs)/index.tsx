@@ -1591,7 +1591,7 @@ function MobileHome() {
           <View style={mob.catRow}>
             <CategoryCard icon="flame" title="Homam" subtitle="Fire rituals" color="#E65100" gradColors={['#E65100', '#BF360C']} onPress={() => router.push('/(tabs)/temples')} />
             <CategoryCard icon="rose"  title="Pooja"  subtitle="Daily sevas" color="#8B3520" gradColors={['#A34020', '#5A1A0A']} onPress={() => router.push('/(tabs)/temples')} />
-            <CategoryCard icon="videocam" title="Live" subtitle="Watch live" color="#D4AF37" gradColors={['#D4AF37', '#AA8721']} onPress={() => router.push('/(tabs)/live')} />
+            <CategoryCard icon="videocam" title="Live" subtitle="Watch live" color="#C9922A" gradColors={['#C9922A', '#A67A1E']} onPress={() => router.push('/(tabs)/live')} />
           </View>
         </View>
 

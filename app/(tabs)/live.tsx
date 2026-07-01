@@ -123,11 +123,11 @@ export default function Live() {
                   <>
                     <Text style={styles.liveTitleWeb} numberOfLines={2}>{item.title}</Text>
                     <View style={styles.liveSubRow}>
-                      <Ionicons name="play-circle" size={14} color="#D4AF37" />
+                      <Ionicons name="play-circle" size={14} color="#C9922A" />
                       <Text style={styles.liveSubWeb}>Tap to watch</Text>
                       {item.is_paid_only && (
                         <View style={styles.paidBadge}>
-                          <Ionicons name="lock-closed" size={10} color="#D4AF37" />
+                          <Ionicons name="lock-closed" size={10} color="#C9922A" />
                           <Text style={styles.paidText}>Members only</Text>
                         </View>
                       )}
@@ -139,7 +139,7 @@ export default function Live() {
             ListEmptyComponent={
               loading ? (
                 <View style={styles.empty}>
-                  <ActivityIndicator size="large" color="#D4AF37" />
+                  <ActivityIndicator size="large" color="#C9922A" />
                   <Text style={styles.emptySub}>Loading live streams…</Text>
                 </View>
               ) : error ? (
@@ -191,7 +191,7 @@ export default function Live() {
             ListEmptyComponent={
               loading ? (
                 <View style={styles.empty}>
-                  <ActivityIndicator size="large" color="#D4AF37" />
+                  <ActivityIndicator size="large" color="#C9922A" />
                   <Text style={styles.emptySub}>Loading videos…</Text>
                 </View>
               ) : error ? (
@@ -304,13 +304,13 @@ const styles = StyleSheet.create({
     marginTop: 14, lineHeight: 23,
   },
   liveSubRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  liveSubWeb: { color: '#E67E22', fontSize: 13, fontWeight: '600' },
+  liveSubWeb: { color: '#8B3520', fontSize: 13, fontWeight: '600' },
   paidBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 8,
     backgroundColor: 'rgba(230,126,34,0.08)', borderWidth: 1, borderColor: 'rgba(230,126,34,0.3)',
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
   },
-  paidText: { color: '#E67E22', fontSize: 10, fontWeight: '700' },
+  paidText: { color: '#8B3520', fontSize: 10, fontWeight: '700' },
 
   // Reel card
   reelCard: { flex: 1, aspectRatio: 9 / 14, borderRadius: 18, overflow: 'hidden', backgroundColor: '#000' },

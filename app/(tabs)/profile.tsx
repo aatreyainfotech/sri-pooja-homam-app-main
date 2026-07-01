@@ -186,7 +186,7 @@ export default function Profile() {
             onPress={() => router.push('/admin')}
             style={styles.adminCard}
           >
-            <LinearGradient colors={['#D4AF37', '#AA8721']} style={styles.adminGrad}>
+            <LinearGradient colors={['#C9922A', '#A67A1E']} style={styles.adminGrad}>
               <Ionicons name="shield-checkmark" size={32} color="#fff" />
               <View style={{ flex: 1, marginLeft: 14 }}>
                 <Text style={styles.adminTitle}>Admin Panel</Text>
