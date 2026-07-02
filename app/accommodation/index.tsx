@@ -183,8 +183,8 @@ export default function AccommodationBrowse() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Header ──────────────────────────────────────── */}
       <LinearGradient
-        colors={['#C9922A', '#7A3020', '#1A0805']}
-        locations={[0, 0.45, 1]}
+        colors={['#1A0C07', '#3D1408', '#7A3020']}
+        locations={[0, 0.5, 1]}
         style={styles.header}
       >
         <View style={[styles.headerInner, IS_WEB && { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any]}>
@@ -192,7 +192,7 @@ export default function AccommodationBrowse() {
             <Ionicons name="chevron-back" size={22} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerBadge}>
-            <Ionicons name="bed" size={11} color="#FFD54F" />
+            <Ionicons name="bed" size={11} color="#E3B85C" />
             <Text style={styles.headerBadgeText}>TEMPLE ACCOMMODATION</Text>
           </View>
           <Text style={styles.headerTitle}>Stay Near Temples</Text>
@@ -286,11 +286,11 @@ const styles = StyleSheet.create({
   backBtn: { marginBottom: 12 },
   headerBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.15)',
+    alignSelf: 'flex-start', backgroundColor: 'rgba(201,146,42,0.18)',
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, marginBottom: 10,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1, borderColor: 'rgba(227,184,92,0.35)',
   },
-  headerBadgeText: { color: GOLD, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  headerBadgeText: { color: '#E3B85C', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   headerTitle: { color: '#fff', fontSize: IS_WEB ? 40 : 26, fontWeight: '900', marginBottom: 4, letterSpacing: -0.5 },
   headerSub: { color: 'rgba(255,255,255,0.65)', fontSize: IS_WEB ? 15 : 13, marginBottom: 16 },
   searchWrap: {

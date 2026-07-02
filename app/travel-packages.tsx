@@ -64,7 +64,7 @@ export default function TravelPackagesPage() {
   if (IS_WEB) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFF8E7', ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}) }}>
-        <LinearGradient colors={['#1A0C07', '#7A3020', '#C9922A']} style={s.hero}>
+        <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={s.hero}>
           <Text style={s.heroOm}>ॐ</Text>
           <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>

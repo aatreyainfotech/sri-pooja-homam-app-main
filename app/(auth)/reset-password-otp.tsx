@@ -236,7 +236,7 @@ const w = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.2)',
     textAlign: 'center', fontSize: 22, fontWeight: '800',
     color: '#FFF8F0', backgroundColor: 'rgba(255,255,255,0.04)',
-    ...(IS_WEB ? { outline: 'none' } as any : {}),
+    ...(IS_WEB ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
   } as any,
   otpBoxFilled: {
     borderColor: 'rgba(212,175,55,0.65)',
@@ -258,7 +258,7 @@ const w = StyleSheet.create({
   } as any : { borderColor: '#C9922A' },
   input: {
     flex: 1, paddingVertical: 14, fontSize: 15, color: '#FFF8F0',
-    ...(IS_WEB ? { outline: 'none' } as any : {}),
+    ...(IS_WEB ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
   } as any,
 
   btn: {

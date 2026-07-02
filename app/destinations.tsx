@@ -103,7 +103,7 @@ export default function DestinationsPage() {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFFFFF', ...(Platform.OS === 'web' ? { overflowY: 'auto' } as any : {}) }}>
         {/* Hero */}
-        <LinearGradient colors={['#C9922A', '#8B1515', '#3D0808', '#0D0305']} locations={[0, 0.3, 0.65, 1]} style={s.hero}>
+        <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} locations={[0, 0.5, 1]} style={s.hero}>
           <Text style={s.heroOm}>ॐ</Text>
           <View style={{ maxWidth: innerW, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
@@ -203,7 +203,7 @@ export default function DestinationsPage() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
-      <LinearGradient colors={['#C9922A', '#8B1515', '#0D0305']} style={{ paddingBottom: 20 }}>
+      <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={{ paddingBottom: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8 }}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={26} color="#fff" />

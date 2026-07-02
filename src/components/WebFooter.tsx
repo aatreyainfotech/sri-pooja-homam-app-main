@@ -1,14 +1,16 @@
 import { View, Text, TouchableOpacity, Image, Linking, Platform, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 const GOLD = '#C9922A';
+const GOLD_LIGHT = '#E3B85C';
 const DARK = '#1A0C07';
 
 export default function WebFooter() {
   const router = useRouter();
   return (
-    <View style={s.footer}>
+    <LinearGradient colors={['#3D1408', '#25100A', DARK]} style={s.footer}>
       <View style={s.footerRow}>
 
         {/* Brand */}
@@ -73,7 +75,7 @@ export default function WebFooter() {
         <View style={s.col}>
           <Text style={s.colHead}>Contact Us</Text>
           <TouchableOpacity style={s.contactRow} onPress={() => Linking.openURL('tel:+918644297366')}>
-            <Ionicons name="call-outline" size={13} color="rgba(212,175,55,0.6)" />
+            <Ionicons name="call-outline" size={13} color={GOLD} />
             <Text style={s.link}>+91 86442 97366</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.contactRow} onPress={() => Linking.openURL('https://wa.me/918309067121')}>
@@ -127,14 +129,13 @@ export default function WebFooter() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const s = StyleSheet.create({
   footer: {
-    backgroundColor: DARK,
-    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.15)',
+    borderTopWidth: 3, borderTopColor: GOLD,
     flexShrink: 0,
   },
   footerRow: {
@@ -146,43 +147,43 @@ const s = StyleSheet.create({
   brandCol: { flexDirection: 'column', gap: 12, flex: 1.5, minWidth: 220 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logo: { width: 40, height: 40, borderRadius: 10 },
-  telugu: { color: GOLD, fontSize: 15, fontWeight: '800' },
-  tagline: { color: 'rgba(253,251,247,0.38)', fontSize: 11, marginTop: 2 },
-  about: { color: 'rgba(253,251,247,0.42)', fontSize: 12, lineHeight: 20, maxWidth: 280 },
+  telugu: { color: GOLD_LIGHT, fontSize: 15, fontWeight: '800' },
+  tagline: { color: 'rgba(253,251,247,0.6)', fontSize: 11, marginTop: 2 },
+  about: { color: 'rgba(253,251,247,0.62)', fontSize: 12, lineHeight: 20, maxWidth: 280 },
   socialRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   socialBtn: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(227,184,92,0.18)',
   },
   col: { gap: 8, minWidth: 140 },
-  colHead: { color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 4 },
-  link: { color: 'rgba(253,251,247,0.6)', fontSize: 13, paddingVertical: 1 },
-  item: { color: 'rgba(253,251,247,0.35)', fontSize: 13, paddingVertical: 1 },
+  colHead: { color: GOLD_LIGHT, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 4 },
+  link: { color: 'rgba(253,251,247,0.8)', fontSize: 13, paddingVertical: 1 },
+  item: { color: 'rgba(253,251,247,0.62)', fontSize: 13, paddingVertical: 1 },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   storeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  storeTxt: { color: 'rgba(253,251,247,0.55)', fontSize: 13 },
+  storeTxt: { color: 'rgba(253,251,247,0.72)', fontSize: 13 },
   bottom: {
-    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.1)',
+    borderTopWidth: 1, borderTopColor: 'rgba(201,146,42,0.25)',
     paddingVertical: 14, paddingHorizontal: 32,
     flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6,
     ...(Platform.OS === 'web' ? { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any : {}),
   },
-  copyright: { color: 'rgba(212,175,55,0.25)', fontSize: 11 },
-  devTxt: { color: 'rgba(253,251,247,0.28)', fontSize: 11 } as any,
-  devName: { color: 'rgba(212,175,55,0.5)', fontWeight: '700' },
+  copyright: { color: 'rgba(227,184,92,0.6)', fontSize: 11 },
+  devTxt: { color: 'rgba(253,251,247,0.5)', fontSize: 11 } as any,
+  devName: { color: GOLD_LIGHT, fontWeight: '700' },
 
   // Trust strip
   trustStrip: {
-    backgroundColor: 'rgba(201,146,42,0.08)',
-    borderTopWidth: 1, borderTopColor: 'rgba(201,146,42,0.2)',
+    backgroundColor: 'rgba(201,146,42,0.1)',
+    borderTopWidth: 1, borderTopColor: 'rgba(201,146,42,0.25)',
     paddingVertical: 20, paddingHorizontal: 32,
   },
   trustInner: {
     ...(Platform.OS === 'web' ? { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any : {}),
   },
   trustHeading: {
-    color: 'rgba(212,175,55,0.5)', fontSize: 10, fontWeight: '800',
+    color: 'rgba(227,184,92,0.75)', fontSize: 10, fontWeight: '800',
     letterSpacing: 2, textAlign: 'center' as const, marginBottom: 14,
   },
   trustBadges: {
@@ -190,11 +191,11 @@ const s = StyleSheet.create({
   },
   trustBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(212,175,55,0.15)',
+    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(201,146,42,0.25)',
     minWidth: 140,
   },
-  trustTitle: { color: 'rgba(253,251,247,0.75)', fontSize: 12, fontWeight: '700' },
-  trustSub: { color: 'rgba(253,251,247,0.35)', fontSize: 10, marginTop: 1 },
+  trustTitle: { color: 'rgba(253,251,247,0.9)', fontSize: 12, fontWeight: '700' },
+  trustSub: { color: 'rgba(253,251,247,0.6)', fontSize: 10, marginTop: 1 },
 });

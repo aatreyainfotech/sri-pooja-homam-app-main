@@ -33,8 +33,7 @@ function AppStack() {
       <Stack.Screen name="legal/refund" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="notification-settings" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="hotel-manager" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen name="admin/settings" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen name="accommodation" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="accommodation/index" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="accommodation/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="destinations" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="travel-packages" options={{ animation: 'slide_from_right' }} />

@@ -142,7 +142,14 @@ export default function Login() {
         style={[w.btnPrimary, loading && { opacity: 0.85 }]}
         onPress={onLogin}
         disabled={loading}
+        activeOpacity={0.85}
       >
+        <LinearGradient
+          colors={['#E3B85C', '#C9922A', '#A07520']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={w.btnPrimaryFill}
+        >
         {loading ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <ActivityIndicator color="#1A0505" size="small" />
@@ -151,6 +158,7 @@ export default function Login() {
         ) : (
           <Text style={w.btnPrimaryText}>Sign In →</Text>
         )}
+        </LinearGradient>
       </TouchableOpacity>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20, gap: 4 }}>
@@ -452,31 +460,32 @@ const w = StyleSheet.create({
 
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5, borderColor: '#D1D5DB',
+    backgroundColor: '#FBFAF7',
+    borderWidth: 1.5, borderColor: '#E5E1D8',
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 2,
     marginBottom: 18,
-    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s' } as any : {}),
+    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s' } as any : {}),
   },
   inputWrapFocused: {
     borderColor: GOLD,
-    backgroundColor: 'rgba(201,146,42,0.03)',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(201,146,42,0.1)' } as any : {}),
+    backgroundColor: '#FFFFFF',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(201,146,42,0.12)' } as any : {}),
   },
   input: {
     flex: 1, paddingVertical: 13, fontSize: 15, color: '#111827',
-    ...(Platform.OS === 'web' ? { outline: 'none' } as any : {}),
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
   } as any,
 
   // Gold Sign In button (aatreyanews.in style)
   btnPrimary: {
-    borderRadius: 12, paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginTop: 8,
+    borderRadius: 12, marginTop: 8, overflow: 'hidden',
     ...(Platform.OS === 'web' ? {
-      background: 'linear-gradient(135deg, #C9922A 0%, #A07520 100%)',
-      boxShadow: '0 6px 24px rgba(201,146,42,0.4)',
-    } as any : { backgroundColor: GOLD }),
+      boxShadow: '0 8px 24px rgba(201,146,42,0.35)',
+    } as any : {}),
+  },
+  btnPrimaryFill: {
+    paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   btnPrimaryText: { color: '#1A0505', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
 

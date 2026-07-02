@@ -24,42 +24,42 @@ const BLOGS = [
   {
     category: 'Temple Stories', title: 'The Divine Legend of Tirupati Balaji', date: 'June 10, 2025',
     excerpt: 'Discover the ancient mythology and spiritual significance of Sri Venkateswara — the most visited temple in the world.',
-    readTime: '5 min read', color: '#FF5722',
+    readTime: '5 min read', color: '#7A3020',
   },
   {
     category: 'Pilgrimage', title: 'Complete Guide to Char Dham Yatra 2025', date: 'May 28, 2025',
     excerpt: 'Everything you need to know about the Char Dham yatra — best time to visit, how to register, and what to carry.',
-    readTime: '8 min read', color: '#00BCD4',
+    readTime: '8 min read', color: '#A67A1E',
   },
   {
     category: 'Spiritual', title: 'The Science Behind Vedic Homam Rituals', date: 'May 15, 2025',
     excerpt: 'Homams are not just rituals — modern science confirms the air-purifying and health benefits of sacred fire ceremonies.',
-    readTime: '6 min read', color: '#FF9800',
+    readTime: '6 min read', color: '#8B3520',
   },
   {
     category: 'Festivals', title: 'How to Celebrate Ganesh Chaturthi at Home', date: 'Apr 30, 2025',
     excerpt: 'A step-by-step guide to performing Ganesh puja at home with proper rituals, mantras, and prasad preparation.',
-    readTime: '7 min read', color: '#4CAF50',
+    readTime: '7 min read', color: '#3D1408',
   },
   {
     category: 'Travel Tips', title: 'Varanasi on a Pilgrim Budget — 5 Days', date: 'Apr 18, 2025',
     excerpt: 'Explore the eternal city of Kashi without breaking the bank. Best ghats, dharamshalas, and hidden gems revealed.',
-    readTime: '6 min read', color: '#9C27B0',
+    readTime: '6 min read', color: '#7A3020',
   },
   {
     category: 'Spiritual', title: 'Understanding the 12 Jyotirlingas of Lord Shiva', date: 'Apr 5, 2025',
     excerpt: 'The 12 Jyotirlingas are the most sacred abodes of Lord Shiva. Learn the stories and significance of each one.',
-    readTime: '9 min read', color: '#E91E63',
+    readTime: '9 min read', color: '#8B3520',
   },
   {
     category: 'Temple Stories', title: 'Shirdi Sai Baba — The Saint Who Transcended Religion', date: 'Mar 22, 2025',
     excerpt: 'How a simple fakir from Shirdi became the most beloved saint worshipped by millions across all religions.',
-    readTime: '5 min read', color: '#F44336',
+    readTime: '5 min read', color: '#A67A1E',
   },
   {
     category: 'Travel Tips', title: 'Sabarimala Yatra — Preparation and Protocol', date: 'Mar 10, 2025',
     excerpt: 'The 41-day Mandala Deeksham, the Irumudi, and what to expect on the Sabarimala pilgrimage to Lord Ayyappa.',
-    readTime: '8 min read', color: '#2196F3',
+    readTime: '8 min read', color: '#3D1408',
   },
 ];
 

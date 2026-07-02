@@ -181,8 +181,8 @@ export default function Temples() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Header ── */}
       <LinearGradient
-        colors={[GOLD, MAROON, DMAROON]}
-        locations={[0, 0.45, 1]}
+        colors={['#1A0C07', DMAROON, MAROON]}
+        locations={[0, 0.5, 1]}
         style={styles.header}
       >
         <View style={[styles.headerInner, IS_WEB && { maxWidth: innerW, alignSelf: 'center', width: '100%' } as any]}>

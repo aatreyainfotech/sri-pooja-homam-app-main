@@ -16,19 +16,19 @@ const IS_WEB = Platform.OS === 'web';
 const CONTACTS = [
   {
     icon: 'call-outline', label: 'Phone', value: '+91 86442 97366',
-    action: () => Linking.openURL('tel:+918644297366'), color: '#4CAF50',
+    action: () => Linking.openURL('tel:+918644297366'), color: '#7A3020',
   },
   {
     icon: 'logo-whatsapp', label: 'WhatsApp', value: '+91 83090 67121',
     action: () => Linking.openURL('https://wa.me/918309067121?text=Namaste%2C%20I%20need%20help%20with%20Sri%20Pooja%20Homam'), color: '#25D366',
   },
   {
-    icon: 'mail-outline', label: 'Email', value: 'info@sripoojahoam.com',
-    action: () => Linking.openURL('mailto:info@sripoojahomam.com'), color: '#2196F3',
+    icon: 'mail-outline', label: 'Email', value: 'info@sripoojahomam.com',
+    action: () => Linking.openURL('mailto:info@sripoojahomam.com'), color: '#A67A1E',
   },
   {
     icon: 'time-outline', label: 'Support Hours', value: 'Mon–Sat, 9 AM – 7 PM IST',
-    action: undefined, color: '#FF9800',
+    action: undefined, color: '#C9922A',
   },
 ];
 

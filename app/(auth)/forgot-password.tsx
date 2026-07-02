@@ -174,7 +174,7 @@ const w = StyleSheet.create({
   } as any : { borderColor: GOLD },
   input: {
     flex: 1, paddingVertical: 14, fontSize: 15, color: '#FFF8F0',
-    ...(IS_WEB ? { outline: 'none' } as any : {}),
+    ...(IS_WEB ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
   } as any,
 
   btn: {

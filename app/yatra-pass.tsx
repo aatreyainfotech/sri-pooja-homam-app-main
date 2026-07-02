@@ -23,15 +23,15 @@ const FEATURES = [
 
 const PLANS = [
   {
-    name: 'Seva Pass', price: '₹299', period: '/year', color: '#4CAF50',
+    name: 'Seva Pass', price: '₹299', period: '/year', color: '#A67A1E',
     features: ['Basic QR temple entry', 'Digital pilgrim ID', 'Crowd alerts', '10 temple network'],
   },
   {
-    name: 'Yatra Pass', price: '₹599', period: '/year', color: '#FF9800', recommended: true,
+    name: 'Yatra Pass', price: '₹599', period: '/year', color: '#C9922A', recommended: true,
     features: ['QR entry + gate scanning', 'Digital wallet ₹500 credit', 'Crowd alerts + live dashboard', '50+ temple network', 'Puja booking priority'],
   },
   {
-    name: 'Divya Pass', price: '₹1499', period: '/year', color: '#9C27B0',
+    name: 'Divya Pass', price: '₹1499', period: '/year', color: '#7A3020',
     features: ['All Yatra Pass features', 'VIP darshan slots', '200+ temples nationwide', 'Personal seva coordinator', 'Family group (up to 5)', 'Annual pilgrimage package discount'],
   },
 ];
@@ -63,8 +63,8 @@ export default function YatraPassPage() {
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: GOLD, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 999 }}
                 onPress={() => router.push('/(auth)/register' as any)}
               >
-                <Ionicons name="card-outline" size={18} color="#1A237E" />
-                <Text style={{ color: '#1A237E', fontWeight: '800', fontSize: 15 }}>Get Your Pass</Text>
+                <Ionicons name="card-outline" size={18} color="#3D1408" />
+                <Text style={{ color: '#3D1408', fontWeight: '800', fontSize: 15 }}>Get Your Pass</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
@@ -85,11 +85,11 @@ export default function YatraPassPage() {
                 <View key={f.title} style={{
                   flex: 1, minWidth: 220,
                   backgroundColor: '#FFF8E7', borderRadius: 16, padding: 22,
-                  borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)',
+                  borderWidth: 1, borderColor: 'rgba(201,146,42,0.18)',
                   ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(74,44,42,0.07)' } as any : {}),
                 } as any}>
-                  <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(26,35,126,0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                    <Ionicons name={f.icon as any} size={24} color="#1A237E" />
+                  <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(201,146,42,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                    <Ionicons name={f.icon as any} size={24} color="#7A3020" />
                   </View>
                   <Text style={{ color: '#4A2C2A', fontSize: 15, fontWeight: '800', marginBottom: 6 }}>{f.title}</Text>
                   <Text style={{ color: '#7A6A5A', fontSize: 13, lineHeight: 20 }}>{f.desc}</Text>
@@ -109,7 +109,7 @@ export default function YatraPassPage() {
                   flex: 1, minWidth: 260, borderRadius: 20,
                   backgroundColor: '#fff', overflow: 'hidden',
                   borderWidth: plan.recommended ? 2 : 1,
-                  borderColor: plan.recommended ? plan.color : 'rgba(230,126,34,0.15)',
+                  borderColor: plan.recommended ? plan.color : 'rgba(201,146,42,0.18)',
                   ...(Platform.OS === 'web' ? { boxShadow: plan.recommended ? `0 12px 40px ${plan.color}40` : '0 6px 24px rgba(74,44,42,0.1)' } as any : {}),
                 } as any}>
                   {plan.recommended && (
@@ -159,7 +159,7 @@ export default function YatraPassPage() {
       </LinearGradient>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {PLANS.map((plan) => (
-          <View key={plan.name} style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 14, borderLeftWidth: 4, borderLeftColor: plan.color, borderWidth: 1, borderColor: 'rgba(230,126,34,0.15)' }}>
+          <View key={plan.name} style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 14, borderLeftWidth: 4, borderLeftColor: plan.color, borderWidth: 1, borderColor: 'rgba(201,146,42,0.18)' }}>
             <Text style={{ color: '#4A2C2A', fontSize: 18, fontWeight: '800' }}>{plan.name}</Text>
             <Text style={{ color: plan.color, fontSize: 24, fontWeight: '900', marginTop: 4 }}>{plan.price}<Text style={{ fontSize: 13, color: '#999' }}>{plan.period}</Text></Text>
             {plan.features.map((f) => (
