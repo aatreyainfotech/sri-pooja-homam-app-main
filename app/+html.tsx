@@ -12,6 +12,11 @@ export default function Root({ children }: PropsWithChildren) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
+        <title>Sri Pooja Homam</title>
+        <meta
+          name="description"
+          content="Sri Pooja Homam — India's trusted platform to book sacred poojas, homams, live temple darshan and temple accommodation with verified pujaris."
+        />
         <ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{
