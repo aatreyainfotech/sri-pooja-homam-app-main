@@ -248,7 +248,7 @@ export default function AccommodationBrowse() {
           keyExtractor={(i) => i.id}
           contentContainerStyle={[
             { padding: 16, gap: 16, paddingBottom: 40 },
-            IS_WEB && { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any,
+            IS_WEB && { maxWidth: 1280, alignSelf: 'center', width: '100%', flexGrow: 1 } as any,
           ]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={MAROON} />}
           renderItem={renderItem}
@@ -272,7 +272,7 @@ export default function AccommodationBrowse() {
             )
           }
           ListFooterComponent={IS_WEB ? (
-            <View style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)' } as any}>
+            <View style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: 'auto' } as any}>
               <WebFooter />
             </View>
           ) : null}
