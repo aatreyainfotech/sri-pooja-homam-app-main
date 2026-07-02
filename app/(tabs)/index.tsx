@@ -1015,19 +1015,7 @@ function WebHome() {
         <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
           <View style={[wh.section, { maxWidth: innerW }]}>
             <SecHead title={settings.secAccTitle || "Featured Accommodations"} sub={settings.secAccSub || "Hotels & dharamshalas near sacred temples"} onAll={() => router.push('/accommodation' as any)} />
-            <View style={{ flexDirection: 'row', gap: 18, flexWrap: 'wrap' }}>
-              {properties.slice(0, 3).map((p: any) => {
-                const img = parseImages(p.images)[0] || null;
-                return (
-                  <AccomCard
-                    key={p.id}
-                    property={p}
-                    img={img}
-                    onPress={() => router.push(`/accommodation/${p.id}` as any)}
-                  />
-                );
-              })}
-            </View>
+            <AccomCarousel properties={properties} innerW={Math.min(innerW, 1280) - 96} />
           </View>
         </View>
       )}
@@ -1711,6 +1699,178 @@ function CategoryCard({ icon, title, subtitle, gradColors, onPress }: any) {
         <Text style={mob.catSub}>{subtitle}</Text>
       </LinearGradient>
     </TouchableOpacity>
+  );
+}
+
+function AccomCarousel({ properties, innerW }: { properties: any[]; innerW: number }) {
+  const router = useRouter();
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const fade = useRef(new Animated.Value(1)).current;
+
+  const active = properties[idx] || properties[0];
+  const heroH = Math.max(300, Math.min(460, Math.round(innerW * 0.42)));
+
+  const goTo = useCallback((next: number) => {
+    const n = ((next % properties.length) + properties.length) % properties.length;
+    Animated.timing(fade, { toValue: 0, duration: 220, useNativeDriver: false }).start(() => {
+      setIdx(n);
+      Animated.timing(fade, { toValue: 1, duration: 320, useNativeDriver: false }).start();
+    });
+  }, [properties.length, fade]);
+
+  useEffect(() => {
+    if (properties.length <= 1 || paused) return;
+    const t = setInterval(() => goTo(idx + 1), 4000);
+    return () => clearInterval(t);
+  }, [idx, properties.length, paused, goTo]);
+
+  if (properties.length === 0) return null;
+
+  const heroImg = parseImages(active.images)[0] || null;
+  const open = () => router.push(`/accommodation/${active.id}` as any);
+  const hoverProps = Platform.OS === 'web'
+    ? { onMouseEnter: () => setPaused(true), onMouseLeave: () => setPaused(false) }
+    : {};
+
+  return (
+    <View {...(hoverProps as any)}>
+      {/* Hero */}
+      <View style={{
+        height: heroH, borderRadius: 24, overflow: 'hidden', position: 'relative',
+        backgroundColor: '#1A0A05',
+        ...(Platform.OS === 'web' ? { boxShadow: '0 10px 44px rgba(0,0,0,0.28)' } as any : {}),
+      } as any}>
+        <Animated.View style={{ ...StyleSheet.absoluteFillObject, opacity: fade } as any}>
+          {heroImg ? (
+            <Image source={{ uri: heroImg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={['#3D1408', '#7A3020', '#C9922A']} style={StyleSheet.absoluteFill} />
+          )}
+          {/* left + bottom scrim for text legibility */}
+          <LinearGradient
+            colors={['rgba(10,4,2,0.85)', 'rgba(10,4,2,0.25)', 'transparent']}
+            start={[0, 0]} end={[1, 0]}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(10,4,2,0.6)', 'rgba(10,4,2,0.95)']}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+
+        {/* Overlay content */}
+        <Animated.View style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0,
+          padding: innerW >= 800 ? 36 : 22, opacity: fade,
+          maxWidth: innerW >= 800 ? '65%' : '100%',
+        } as any}>
+          <View style={{
+            flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start',
+            backgroundColor: 'rgba(255,255,255,0.16)', paddingHorizontal: 12, paddingVertical: 5,
+            borderRadius: 999, marginBottom: 14,
+          }}>
+            <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#4CAF50' }} />
+            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }}>
+              {(active.type || 'HOTEL').toUpperCase()}
+            </Text>
+          </View>
+          <Text style={{ color: '#fff', fontSize: innerW >= 800 ? 40 : 26, fontWeight: '900', lineHeight: innerW >= 800 ? 46 : 32, marginBottom: 10 }} numberOfLines={2}>
+            {active.name}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12, flexWrap: 'wrap' }}>
+            {active.min_price ? (
+              <Text style={{ color: '#FFD27A', fontSize: 15, fontWeight: '800' }}>₹{parseFloat(active.min_price).toFixed(0)}/night</Text>
+            ) : null}
+            {(active.city || active.address) ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Ionicons name="location" size={14} color="rgba(255,255,255,0.75)" />
+                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }} numberOfLines={1}>{active.city || active.address}</Text>
+              </View>
+            ) : null}
+          </View>
+          {active.description ? (
+            <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 21, marginBottom: 20 }} numberOfLines={2}>
+              {active.description}
+            </Text>
+          ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              onPress={open}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 8,
+                backgroundColor: '#fff', paddingHorizontal: 26, paddingVertical: 13, borderRadius: 999,
+                ...(Platform.OS === 'web' ? { boxShadow: '0 4px 18px rgba(0,0,0,0.28)', cursor: 'pointer' } as any : {}),
+              } as any}
+            >
+              <Ionicons name="bed" size={18} color="#B0300F" />
+              <Text style={{ color: '#B0300F', fontWeight: '900', fontSize: 15 }}>View Rooms</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/accommodation' as any)}
+              style={{
+                width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
+                ...(Platform.OS === 'web' ? { cursor: 'pointer' } as any : {}),
+              } as any}
+            >
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* Arrows */}
+        {properties.length > 1 && (
+          <>
+            <TouchableOpacity
+              onPress={() => goTo(idx - 1)}
+              style={{ position: 'absolute', left: 14, top: '50%', marginTop: -22, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', ...(Platform.OS === 'web' ? { cursor: 'pointer' } as any : {}) } as any}
+            >
+              <Ionicons name="chevron-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => goTo(idx + 1)}
+              style={{ position: 'absolute', right: 14, top: '50%', marginTop: -22, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', ...(Platform.OS === 'web' ? { cursor: 'pointer' } as any : {}) } as any}
+            >
+              <Ionicons name="chevron-forward" size={24} color="#fff" />
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      {/* Poster strip */}
+      {properties.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 16 }} contentContainerStyle={{ gap: 12, paddingVertical: 4 }}>
+          {properties.map((p: any, i: number) => {
+            const thumb = parseImages(p.images)[0] || null;
+            const activeThumb = i === idx;
+            return (
+              <TouchableOpacity
+                key={p.id}
+                activeOpacity={0.85}
+                onPress={() => goTo(i)}
+                style={{
+                  width: 148, height: 92, borderRadius: 12, overflow: 'hidden', position: 'relative',
+                  borderWidth: 2, borderColor: activeThumb ? '#B0300F' : 'transparent',
+                  backgroundColor: '#2A1208',
+                  ...(Platform.OS === 'web' ? { cursor: 'pointer' } as any : {}),
+                } as any}
+              >
+                {thumb ? (
+                  <Image source={{ uri: thumb }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                ) : (
+                  <LinearGradient colors={['#3D1408', '#7A3020']} style={StyleSheet.absoluteFill} />
+                )}
+                {!activeThumb && <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,4,2,0.45)' } as any} />}
+                <LinearGradient colors={['transparent', 'rgba(10,4,2,0.9)']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 44, justifyContent: 'flex-end', padding: 8 }}>
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }} numberOfLines={1}>{p.name}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
