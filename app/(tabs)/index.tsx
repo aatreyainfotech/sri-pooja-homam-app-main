@@ -29,6 +29,22 @@ function parseImages(s: string | null | undefined): string[] {
   return s.split(',').map(v => v.trim()).filter(Boolean);
 }
 
+// Image that gracefully falls back if the URL is missing or fails to load.
+function SmartImage({
+  uri, style, resizeMode = 'cover', fallback,
+}: { uri?: string | null; style?: any; resizeMode?: any; fallback?: React.ReactNode }) {
+  const [failed, setFailed] = useState(false);
+  if (!uri || failed) {
+    if (fallback !== undefined) return <>{fallback}</>;
+    return (
+      <View style={[style, { backgroundColor: '#EFE3D0', alignItems: 'center', justifyContent: 'center' }]}>
+        <Ionicons name="image-outline" size={26} color={GOLD} />
+      </View>
+    );
+  }
+  return <Image source={{ uri }} style={style} resizeMode={resizeMode} onError={() => setFailed(true)} />;
+}
+
 const DESTINATIONS = [
   { name: 'Tirupati', state: 'Andhra Pradesh', color: '#7A3020', route: '/destinations?state=andhra-pradesh' },
   { name: 'Varanasi', state: 'Uttar Pradesh', color: '#C9922A', route: '/destinations?state=uttar-pradesh' },
@@ -105,7 +121,21 @@ function DestinationsCarousel({ items, innerW }: { items: any[]; innerW: number 
             >
               {d.photo ? (
                 <View style={{ height: cardH }}>
-                  <Image source={{ uri: d.photo }} style={{ width: '100%', height: cardH }} resizeMode="cover" />
+                  <SmartImage
+                    uri={d.photo}
+                    style={{ width: '100%', height: cardH }}
+                    fallback={
+                      <LinearGradient
+                        colors={[d.color + '28', d.color + '0A']}
+                        style={{ height: cardH, alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: d.color + '20',
+                          borderWidth: 2, borderColor: d.color + '50', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="location" size={22} color={d.color} />
+                        </View>
+                      </LinearGradient>
+                    }
+                  />
                   <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.78)']}
                     style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 14, paddingVertical: 12 }}
@@ -504,6 +534,7 @@ function WebHome() {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [destinations, setDestinations] = useState<any[]>(DESTINATIONS);
+  const [settings, setSettings] = useState<any>({});
   const today = new Date().toISOString().split('T')[0];
 
   const guestSummary = `${rooms} Room${rooms > 1 ? 's' : ''}, ${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`;
@@ -525,29 +556,49 @@ function WebHome() {
     });
   }, []);
 
-  // Load platform destinations from cache → then from backend
+  // Load platform settings (CMS) from cache → then from backend
   useEffect(() => {
     (async () => {
       try {
         const cached = await AsyncStorage.getItem('sph_platform_settings');
         if (cached) {
           const parsed = JSON.parse(cached);
+          setSettings(parsed || {});
           if (Array.isArray(parsed.destinations) && parsed.destinations.length > 0)
             setDestinations(parsed.destinations);
         }
       } catch {}
       try {
         const { data } = await api.get('/platform-settings');
-        if (Array.isArray(data?.destinations) && data.destinations.length > 0) {
-          setDestinations(data.destinations);
-          // update cache
-          const cached = await AsyncStorage.getItem('sph_platform_settings').catch(() => null);
-          const prev = cached ? JSON.parse(cached) : {};
-          await AsyncStorage.setItem('sph_platform_settings', JSON.stringify({ ...prev, destinations: data.destinations }));
+        if (data && typeof data === 'object') {
+          setSettings(data);
+          if (Array.isArray(data.destinations) && data.destinations.length > 0)
+            setDestinations(data.destinations);
+          await AsyncStorage.setItem('sph_platform_settings', JSON.stringify(data));
         }
       } catch {}
     })();
   }, []);
+
+  // ── CMS-driven content with safe fallbacks ──────────────────────────────
+  const heroTitle = settings.heroTitle || 'Sri Pooja Homam';
+  const heroTelugu = settings.heroTelugu || 'శ్రీ పూజా హోమం';
+  const heroSub = settings.heroSubtitle || settings.heroDesc
+    ? `${settings.heroSubtitle || 'Book sacred poojas and homams with verified pujaris.'}\n${settings.heroDesc || 'Experience the grace of ancient Vedic rituals from your home.'}`
+    : 'Book sacred poojas and homams with verified pujaris.\nExperience the grace of ancient Vedic rituals from your home.';
+  const cta1Text = settings.cta1Text || 'Book a Pooja Now';
+  const cta2Text = settings.cta2Text || 'Watch Live Darshan';
+  const services = Array.isArray(settings.services) && settings.services.length > 0
+    ? settings.services.map((s: any) => ({ ...s, route: s.route || '/(tabs)/temples' }))
+    : SERVICES;
+  const stats = Array.isArray(settings.stats) && settings.stats.length === 4
+    ? settings.stats
+    : [
+        { v: '500+', l: 'Temples' },
+        { v: '1000+', l: 'Poojas & Homams' },
+        { v: '24/7', l: 'Live Darshan' },
+        { v: '10,000+', l: 'Devotees Served' },
+      ];
 
   return (
     <View style={[
@@ -617,18 +668,15 @@ function WebHome() {
                 <View style={wh.heroBadgeDot} />
                 <Text style={wh.heroBadgeText}>DIVINE DEVOTION AT YOUR FINGERTIPS</Text>
               </View>
-              <Text style={wh.heroTitle}>Sri Pooja Homam</Text>
-              <Text style={wh.heroTelugu}>శ్రీ పూజా హోమం</Text>
-              <Text style={wh.heroSub}>
-                Book sacred poojas and homams with verified pujaris.{'\n'}
-                Experience the grace of ancient Vedic rituals from your home.
-              </Text>
+              <Text style={wh.heroTitle}>{heroTitle}</Text>
+              <Text style={wh.heroTelugu}>{heroTelugu}</Text>
+              <Text style={wh.heroSub}>{heroSub}</Text>
               <View style={wh.heroBtns}>
                 <TouchableOpacity
                   onPress={() => user ? router.push('/(tabs)/temples' as any) : router.push('/(auth)/login' as any)}
                   style={wh.heroBtn1}
                 >
-                  <Text style={wh.heroBtn1Text}>Book a Pooja Now</Text>
+                  <Text style={wh.heroBtn1Text}>{cta1Text}</Text>
                   <Ionicons name="arrow-forward" size={16} color="#2D0B00" />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -636,17 +684,12 @@ function WebHome() {
                   style={wh.heroBtn2}
                 >
                   <View style={wh.liveDotRed} />
-                  <Text style={wh.heroBtn2Text}>Watch Live Darshan</Text>
+                  <Text style={wh.heroBtn2Text}>{cta2Text}</Text>
                 </TouchableOpacity>
               </View>
               {/* Stats */}
               <View style={[wh.statsBar, { marginTop: 36 }]}>
-                {[
-                  { v: '500+',   l: 'Temples' },
-                  { v: '1000+',  l: 'Poojas & Homams' },
-                  { v: '24/7',   l: 'Live Darshan' },
-                  { v: '10,000+', l: 'Devotees Served' },
-                ].map((s, i) => (
+                {stats.map((s: any, i: number) => (
                   <View key={i} style={wh.statItem}>
                     <Text style={wh.statValue}>{s.v}</Text>
                     <Text style={wh.statLabel}>{s.l}</Text>
@@ -682,18 +725,15 @@ function WebHome() {
               <View style={wh.heroBadgeDot} />
               <Text style={wh.heroBadgeText}>DIVINE DEVOTION AT YOUR FINGERTIPS</Text>
             </View>
-            <Text style={wh.heroTitle}>Sri Pooja Homam</Text>
-            <Text style={wh.heroTelugu}>శ్రీ పూజా హోమం</Text>
-            <Text style={wh.heroSub}>
-              Book sacred poojas and homams with verified pujaris.{'\n'}
-              Experience the grace of ancient Vedic rituals from your home.
-            </Text>
+            <Text style={wh.heroTitle}>{heroTitle}</Text>
+            <Text style={wh.heroTelugu}>{heroTelugu}</Text>
+            <Text style={wh.heroSub}>{heroSub}</Text>
             <View style={wh.heroBtns}>
               <TouchableOpacity
                 onPress={() => user ? router.push('/(tabs)/temples' as any) : router.push('/(auth)/login' as any)}
                 style={wh.heroBtn1}
               >
-                <Text style={wh.heroBtn1Text}>Book a Pooja Now</Text>
+                <Text style={wh.heroBtn1Text}>{cta1Text}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#2D0B00" />
               </TouchableOpacity>
               <TouchableOpacity
@@ -701,16 +741,11 @@ function WebHome() {
                 style={wh.heroBtn2}
               >
                 <View style={wh.liveDotRed} />
-                <Text style={wh.heroBtn2Text}>Watch Live Darshan</Text>
+                <Text style={wh.heroBtn2Text}>{cta2Text}</Text>
               </TouchableOpacity>
             </View>
             <View style={wh.statsBar}>
-              {[
-                { v: '500+',   l: 'Temples' },
-                { v: '1000+',  l: 'Poojas & Homams' },
-                { v: '24/7',   l: 'Live Darshan' },
-                { v: '10,000+', l: 'Devotees Served' },
-              ].map((s, i) => (
+              {stats.map((s: any, i: number) => (
                 <View key={i} style={wh.statItem}>
                   <Text style={wh.statValue}>{s.v}</Text>
                   <Text style={wh.statLabel}>{s.l}</Text>
@@ -898,7 +933,7 @@ function WebHome() {
       {/* ── LIVE DARSHAN ─────────────────────────────────────────────────── */}
       <View style={[wh.sectionBg, { backgroundColor: '#2A1208' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
-          <SecHead title="Live Darshan" sub="Sacred rituals streaming now" onAll={() => router.push('/(tabs)/live' as any)} dark />
+          <SecHead title={settings.secLiveTitle || "Live Darshan"} sub={settings.secLiveSub || "Sacred rituals streaming now"} onAll={() => router.push('/(tabs)/live' as any)} dark />
           {live.length > 0 ? (
             <LiveGrid items={live} innerW={Math.min(W, 1280) - 96} />
           ) : (
@@ -931,7 +966,7 @@ function WebHome() {
       {/* ── POPULAR DESTINATIONS ─────────────────────────────────────────── */}
       <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
-          <SecHead title="Popular Destinations" sub="Sacred pilgrimage cities across India" onAll={() => router.push('/destinations' as any)} />
+          <SecHead title={settings.secDestTitle || "Popular Destinations"} sub={settings.secDestSub || "Sacred pilgrimage cities across India"} onAll={() => router.push('/destinations' as any)} />
           <DestinationsCarousel items={destinations} innerW={innerW} />
         </View>
       </View>
@@ -941,14 +976,14 @@ function WebHome() {
         <View style={[wh.section, { maxWidth: innerW }]}>
           {/* Centered header with gold overline — aatreyanews.in style */}
           <View style={{ alignItems: 'center', marginBottom: 40 }}>
-            <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 3, marginBottom: 10 }}>PLATFORM FEATURES</Text>
-            <Text style={{ color: '#0D1220', fontSize: 32, fontWeight: '900', textAlign: 'center' }}>Everything for Your Spiritual Journey</Text>
+            <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 3, marginBottom: 10 }}>{settings.secPlatTitle || 'PLATFORM FEATURES'}</Text>
+            <Text style={{ color: '#0D1220', fontSize: 32, fontWeight: '900', textAlign: 'center' }}>{settings.secPlatSub || 'Everything for Your Spiritual Journey'}</Text>
             <Text style={{ color: '#6B7280', fontSize: 15, textAlign: 'center', marginTop: 8, maxWidth: 500 }}>
-              One platform. Every sacred service your devotion needs.
+              {settings.secPlatDesc || 'One platform. Every sacred service your devotion needs.'}
             </Text>
           </View>
           <View style={wh.servGrid}>
-            {SERVICES.map((s) => (
+            {services.map((s: any) => (
               <TouchableOpacity key={s.title} onPress={() => router.push(s.route as any)} style={wh.servCard}>
                 {/* Dark square icon box — aatreyanews.in style */}
                 <View style={wh.servIcon}>
@@ -967,7 +1002,7 @@ function WebHome() {
       {temples.length > 0 && (
         <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#3D1A0A' }}>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
-            <SecHead title="Featured Temples" sub="Sacred shrines across India" onAll={() => router.push('/(tabs)/temples' as any)} dark />
+            <SecHead title={settings.secTemplesTitle || "Featured Temples"} sub={settings.secTemplesSub || "Sacred shrines across India"} onAll={() => router.push('/(tabs)/temples' as any)} dark />
           </View>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%' }}>
             <TempleMultiCarousel temples={temples} innerW={Math.min(W, 1280) - 96} />
@@ -979,7 +1014,7 @@ function WebHome() {
       {properties.length > 0 && (
         <View style={[wh.sectionBg, { backgroundColor: '#FFFFFF' }]}>
           <View style={[wh.section, { maxWidth: innerW }]}>
-            <SecHead title="Featured Accommodations" sub="Hotels & dharamshalas near sacred temples" onAll={() => router.push('/accommodation' as any)} />
+            <SecHead title={settings.secAccTitle || "Featured Accommodations"} sub={settings.secAccSub || "Hotels & dharamshalas near sacred temples"} onAll={() => router.push('/accommodation' as any)} />
             <View style={{ flexDirection: 'row', gap: 18, flexWrap: 'wrap' }}>
               {properties.slice(0, 3).map((p: any) => {
                 const img = parseImages(p.images)[0] || null;
@@ -1001,7 +1036,7 @@ function WebHome() {
       {poojas.length > 0 && (
         <View style={{ paddingTop: 56, paddingBottom: 56, backgroundColor: '#2A1208' }}>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%', marginBottom: 28 }}>
-            <SecHead title="Book a Pooja or Homam" sub="Performed by verified Vedic pujaris" onAll={() => router.push('/(tabs)/temples' as any)} dark />
+            <SecHead title={settings.secPoojasTitle || "Book a Pooja or Homam"} sub={settings.secPoojasSub || "Performed by verified Vedic pujaris"} onAll={() => router.push('/(tabs)/temples' as any)} dark />
           </View>
           <View style={{ paddingHorizontal: 48, maxWidth: innerW, alignSelf: 'center', width: '100%' }}>
             <PoojaCarousel poojas={poojas} innerW={Math.min(W, 1280) - 96} />
@@ -1012,7 +1047,7 @@ function WebHome() {
       {/* ── FESTIVAL HIGHLIGHTS ──────────────────────────────────────────── */}
       <View style={[wh.sectionBg, { backgroundColor: '#F7F4F1' }]}>
         <View style={[wh.section, { maxWidth: innerW }]}>
-          <SecHead title="Festival Highlights" sub="Upcoming sacred festivals & celebrations" onAll={() => router.push('/(tabs)/calendar' as any)} />
+          <SecHead title={settings.secFestTitle || "Festival Highlights"} sub={settings.secFestSub || "Upcoming sacred festivals & celebrations"} onAll={() => router.push('/(tabs)/calendar' as any)} />
           <View style={{ flexDirection: 'row', gap: 14, flexWrap: 'wrap' }}>
             {FESTIVALS.map((f) => (
               <View

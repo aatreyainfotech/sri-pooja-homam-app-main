@@ -24,23 +24,13 @@ export default function WelcomePopup() {
 
   useEffect(() => {
     const show = () => setVisible(true);
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const shown = sessionStorage.getItem('sph_popup_v1');
-      if (!shown) {
-        const t = setTimeout(show, 1800);
-        return () => clearTimeout(t);
-      }
-    } else {
-      const t = setTimeout(show, 1800);
-      return () => clearTimeout(t);
-    }
+    // Show the welcome popup on every visit (no session/once gate).
+    const t = setTimeout(show, 1800);
+    return () => clearTimeout(t);
   }, []);
 
   const close = () => {
     setVisible(false);
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      sessionStorage.setItem('sph_popup_v1', '1');
-    }
   };
 
   if (!visible) return null;
