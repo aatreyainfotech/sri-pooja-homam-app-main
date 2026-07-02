@@ -221,7 +221,7 @@ export default function AccommodationBrowse() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterRow}
-        style={{ backgroundColor: '#FDF6EE', borderBottomWidth: 1, borderBottomColor: 'rgba(201,146,42,0.2)', height: 54 }}
+        style={{ backgroundColor: '#FDF6EE', borderBottomWidth: 1, borderBottomColor: 'rgba(201,146,42,0.2)', height: 54, flexGrow: 0, flexShrink: 0, flexBasis: 'auto' } as any}
       >
         {[
           { label: 'All', value: '', icon: 'apps-outline' },
