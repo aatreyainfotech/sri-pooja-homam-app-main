@@ -14,8 +14,8 @@ import { theme } from '../../src/constants/theme';
 import WebFooter from '../../src/components/WebFooter';
 
 const IS_WEB = Platform.OS === 'web';
-const BLUE = '#0288D1';
-const DARK_BLUE = '#01579B';
+const BLUE = '#C9922A';
+const DARK_BLUE = '#7A3020';
 
 function parseImages(s: string | null | undefined): string[] {
   if (!s) return [];
@@ -62,7 +62,7 @@ const di = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
   label: { fontSize: 10, fontWeight: '800', color: BLUE, textTransform: 'uppercase', letterSpacing: 1 },
   input: { fontSize: 16, fontWeight: '700', color: '#1A1A1A', padding: 0 },
-  sub: { fontSize: 11, color: '#90A4AE', marginTop: 2 },
+  sub: { fontSize: 11, color: '#8A6A52', marginTop: 2 },
 });
 
 // ── Counter stepper ────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ function Counter({ value, min = 1, max = 20, onChange, label, icon }: {
   return (
     <View style={cs.wrap}>
       <View style={cs.header}>
-        <Ionicons name={(icon || 'person-outline') as any} size={13} color="#546E7A" />
+        <Ionicons name={(icon || 'person-outline') as any} size={13} color="#8A6A52" />
         <Text style={cs.label}>{label}</Text>
       </View>
       <View style={cs.row}>
@@ -98,9 +98,9 @@ function Counter({ value, min = 1, max = 20, onChange, label, icon }: {
 const cs = StyleSheet.create({
   wrap: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
-  label: { fontSize: 10, fontWeight: '800', color: '#546E7A', textTransform: 'uppercase', letterSpacing: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F0F7FF', borderRadius: 12, overflow: 'hidden' },
-  btn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E3F2FD' },
+  label: { fontSize: 10, fontWeight: '800', color: '#8A6A52', textTransform: 'uppercase', letterSpacing: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FBF3E6', borderRadius: 12, overflow: 'hidden' },
+  btn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7EAD3' },
   btnOff: { backgroundColor: '#F5F5F5' },
   val: { fontSize: 18, fontWeight: '900', color: '#1A1A1A', flex: 1, textAlign: 'center' },
 });
@@ -135,8 +135,8 @@ function GuestField({ label, icon, ...props }: TextInputProps & { label: string;
 const gf = StyleSheet.create({
   wrap: { marginBottom: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: '#ECEFF1', paddingVertical: 14 },
-  iconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 10, fontWeight: '800', color: '#90A4AE', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 },
+  iconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F7EAD3', alignItems: 'center', justifyContent: 'center' },
+  label: { fontSize: 10, fontWeight: '800', color: '#8A6A52', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 },
   input: { fontSize: 15, color: '#1A1A1A', fontWeight: '500', padding: 0 },
 });
 
@@ -145,7 +145,7 @@ function CatPhoto({ uri }: { uri: string | null }) {
   const s = { width: 88, height: 88, borderRadius: 12 } as const;
   if (!uri || failed) {
     return (
-      <LinearGradient colors={['#E3F2FD', '#B3E5FC']} style={[s, { alignItems: 'center', justifyContent: 'center' } as any]}>
+      <LinearGradient colors={['#F7EAD3', '#EAD9B8']} style={[s, { alignItems: 'center', justifyContent: 'center' } as any]}>
         <Ionicons name="bed-outline" size={28} color={BLUE} />
       </LinearGradient>
     );
@@ -315,7 +315,7 @@ export default function PropertyDetailPage() {
               <LinearGradient colors={['rgba(0,0,0,0.5)', 'transparent', 'transparent', 'rgba(0,0,0,0.7)']} locations={[0, 0.25, 0.65, 1]} style={styles.heroOverlay} />
             </View>
           ) : (
-            <LinearGradient colors={['#1A237E', '#0277BD', '#0288D1']} style={styles.heroGradient}>
+            <LinearGradient colors={['#1A0C07', '#3D1408', '#7A3020']} style={styles.heroGradient}>
               <Ionicons name="bed" size={60} color="rgba(255,255,255,0.15)" />
             </LinearGradient>
           )}
@@ -604,7 +604,7 @@ export default function PropertyDetailPage() {
                         <Text style={[styles.payTabText, payMethod === 'razorpay' && styles.payTabTextActive]}>Card / Net Banking</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={[styles.payTab, payMethod === 'upi' && styles.payTabActive]} onPress={() => setPayMethod('upi')}>
-                        <Ionicons name="phone-portrait-outline" size={18} color={payMethod === 'upi' ? '#fff' : '#5C6BC0'} />
+                        <Ionicons name="phone-portrait-outline" size={18} color={payMethod === 'upi' ? '#fff' : '#C9922A'} />
                         <Text style={[styles.payTabText, payMethod === 'upi' && styles.payTabTextActive]}>UPI Transfer</Text>
                       </TouchableOpacity>
                     </View>
@@ -620,7 +620,7 @@ export default function PropertyDetailPage() {
                       <View>
                         {prop?.upi_id ? (
                           <View style={styles.upiCard}>
-                            <LinearGradient colors={['#4527A0', '#5C6BC0']} style={styles.upiCardGrad}>
+                            <LinearGradient colors={['#5A1A0E', '#7A3020']} style={styles.upiCardGrad}>
                               <Ionicons name="phone-portrait-outline" size={24} color="rgba(255,255,255,0.7)" />
                               <View style={{ flex: 1 }}>
                                 <Text style={styles.upiCardLabel}>Pay to UPI ID</Text>
@@ -647,7 +647,7 @@ export default function PropertyDetailPage() {
                           <Text style={styles.utrHint}>12-digit UTR from your UPI payment confirmation</Text>
                         </View>
                         <TouchableOpacity style={styles.bookCta} onPress={handleUpiPayment} activeOpacity={0.88}>
-                          <LinearGradient colors={['#4527A0', '#5C6BC0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
+                          <LinearGradient colors={['#5A1A0E', '#7A3020']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
                             <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
                             <Text style={styles.bookCtaText}>Submit UPI Payment</Text>
                           </LinearGradient>
@@ -669,7 +669,7 @@ export default function PropertyDetailPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: '#FBF7F1' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: theme.colors.textMuted, fontSize: 15 },
 
@@ -699,34 +699,34 @@ const styles = StyleSheet.create({
   body: { padding: IS_WEB ? 28 : 14 },
 
   // Quick strip
-  quickStrip: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#E8EEF4' },
+  quickStrip: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#EDE4D6' },
   quickItem: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  quickLabel: { fontSize: 10, fontWeight: '700', color: '#90A4AE', textTransform: 'uppercase', letterSpacing: 0.8 },
+  quickLabel: { fontSize: 10, fontWeight: '700', color: '#A08A72', textTransform: 'uppercase', letterSpacing: 0.8 },
   quickVal: { fontSize: 15, fontWeight: '800', color: '#1A1A1A', marginTop: 2 },
   quickDivider: { width: 1, backgroundColor: '#ECEFF1', marginHorizontal: 12 },
 
-  section: { backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#E8EEF4' },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#546E7A', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
-  desc: { fontSize: 14, color: '#546E7A', lineHeight: 22, marginBottom: 12 },
+  section: { backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#EDE4D6' },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#7A5C48', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  desc: { fontSize: 14, color: '#7A5C48', lineHeight: 22, marginBottom: 12 },
   noCats: { color: theme.colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 20 },
   amenitiesChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   amenityChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   amenityText: { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
 
   // Room cards
-  catCard: { backgroundColor: '#F8FBFF', borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1.5, borderColor: '#E3EFF8' },
-  catCardSelected: { borderColor: BLUE, backgroundColor: '#EBF5FF' },
+  catCard: { backgroundColor: '#FDF9F2', borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1.5, borderColor: '#EFE6D6' },
+  catCardSelected: { borderColor: BLUE, backgroundColor: '#FBF3E4' },
   catTop: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   catPhoto: { width: 88, height: 88, borderRadius: 12 },
   catName: { fontSize: 15, fontWeight: '800', color: '#1A1A1A', marginBottom: 5 },
   catMetaRow: { flexDirection: 'row', gap: 6, marginBottom: 5 },
-  catMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EEF2F5', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
-  catMetaText: { fontSize: 11, color: '#607D8B' },
-  catDesc: { fontSize: 12, color: '#78909C', lineHeight: 17 },
+  catMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1EBE0', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
+  catMetaText: { fontSize: 11, color: '#8A6A52' },
+  catDesc: { fontSize: 12, color: '#8A6A52', lineHeight: 17 },
   catAmenities: { fontSize: 11, color: '#2E7D32', marginTop: 4 },
   catPriceCol: { alignItems: 'flex-end', justifyContent: 'flex-start', minWidth: 70 },
   catPrice: { fontSize: 22, fontWeight: '900', color: BLUE },
-  catPerNight: { fontSize: 11, color: '#90A4AE' },
+  catPerNight: { fontSize: 11, color: '#A08A72' },
   selectBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: BLUE, borderRadius: 12, paddingVertical: 11 },
   selectBtnActive: { backgroundColor: BLUE, borderColor: BLUE },
   selectBtnText: { fontSize: 14, fontWeight: '700', color: BLUE },
@@ -765,23 +765,23 @@ const styles = StyleSheet.create({
   inlineWarnText: { color: '#E65100', fontSize: 13, flex: 1 },
 
   // Date card
-  dateCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#F0F7FF', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#BBDEFB' },
+  dateCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#FBF3E6', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#EAD9B8' },
   dateDivider: { alignItems: 'center', justifyContent: 'center', paddingTop: 18, paddingHorizontal: 8 },
   nightsBadge: { backgroundColor: BLUE, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center' },
   nightsNum: { color: '#fff', fontSize: 16, fontWeight: '900', lineHeight: 18 },
   nightsLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
-  dateSep: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' },
+  dateSep: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F7EAD3', alignItems: 'center', justifyContent: 'center' },
 
   counterRow: { flexDirection: 'row', marginBottom: 16 },
 
-  guestSection: { backgroundColor: '#F8FBFF', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#E3EFF8' },
-  sectionHead: { fontSize: 11, fontWeight: '800', color: '#78909C', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 },
+  guestSection: { backgroundColor: '#FDF9F2', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#EFE6D6' },
+  sectionHead: { fontSize: 11, fontWeight: '800', color: '#8A6A52', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 },
 
-  priceSummary: { backgroundColor: '#E3F2FD', borderRadius: 14, padding: 14, marginBottom: 16 },
+  priceSummary: { backgroundColor: '#F7EAD3', borderRadius: 14, padding: 14, marginBottom: 16 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  priceLabel: { fontSize: 13, color: '#546E7A', flex: 1 },
+  priceLabel: { fontSize: 13, color: '#7A5C48', flex: 1 },
   priceVal: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
-  priceTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#90CAF9', paddingTop: 10 },
+  priceTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#E0C68F', paddingTop: 10 },
   priceTotalLabel: { fontSize: 14, fontWeight: '800', color: '#1A1A1A' },
   priceTotalVal: { fontSize: 22, fontWeight: '900', color: BLUE },
 
@@ -794,12 +794,12 @@ const styles = StyleSheet.create({
   payCheckIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#2E7D32', alignItems: 'center', justifyContent: 'center' },
   payHeaderTitle: { color: '#fff', fontSize: 17, fontWeight: '900' },
   payHeaderSub: { color: 'rgba(255,255,255,0.65)', fontSize: 12, marginTop: 2 },
-  payBookingSummary: { backgroundColor: '#F0F7FF', borderRadius: 16, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: '#BBDEFB' },
+  payBookingSummary: { backgroundColor: '#FBF3E6', borderRadius: 16, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: '#EAD9B8' },
 
   payTabs: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  payTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: '#CFD8DC', borderRadius: 14, paddingVertical: 13, backgroundColor: '#F5F7FA' },
+  payTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: '#E0D5C4', borderRadius: 14, paddingVertical: 13, backgroundColor: '#FBF7F1' },
   payTabActive: { backgroundColor: BLUE, borderColor: BLUE },
-  payTabText: { fontSize: 13, fontWeight: '700', color: '#607D8B' },
+  payTabText: { fontSize: 13, fontWeight: '700', color: '#8A6A52' },
   payTabTextActive: { color: '#fff' },
 
   upiCard: { borderRadius: 14, overflow: 'hidden', marginBottom: 16 },
@@ -807,20 +807,20 @@ const styles = StyleSheet.create({
   upiCardLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
   upiCardId: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
   utrSection: { marginBottom: 16 },
-  utrInput: { borderWidth: 1.5, borderColor: '#CFD8DC', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, fontWeight: '700', color: '#1A1A1A', backgroundColor: '#F8FBFF', marginBottom: 6 },
-  utrHint: { fontSize: 11, color: '#90A4AE' },
+  utrInput: { borderWidth: 1.5, borderColor: '#E0D5C4', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, fontWeight: '700', color: '#1A1A1A', backgroundColor: '#FDF9F2', marginBottom: 6 },
+  utrHint: { fontSize: 11, color: '#A08A72' },
 
   laterBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: 8 },
-  laterBtnText: { fontSize: 13, color: '#90A4AE', fontWeight: '500' },
+  laterBtnText: { fontSize: 13, color: '#A08A72', fontWeight: '500' },
 
   // Success
   successBox: { padding: 28, alignItems: 'center' },
   successIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#2E7D32', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   successTitle: { fontSize: 24, fontWeight: '900', color: '#1A1A1A', marginBottom: 6 },
-  successSub: { fontSize: 14, color: '#78909C', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
-  successCard: { width: '100%', backgroundColor: '#F0F7FF', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#BBDEFB' },
+  successSub: { fontSize: 14, color: '#8A6A52', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
+  successCard: { width: '100%', backgroundColor: '#FBF3E6', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#EAD9B8' },
   successRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 7 },
-  successKey: { fontSize: 13, color: '#78909C', fontWeight: '500' },
+  successKey: { fontSize: 13, color: '#8A6A52', fontWeight: '500' },
   successVal: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
 
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 10, width: '45%' },
