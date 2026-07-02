@@ -13,7 +13,7 @@ import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 
-const BLUE = '#0288D1';
+const BLUE = '#7A3020';   // brand maroon accent (was blue #0288D1)
 const IS_WEB = Platform.OS === 'web';
 
 function parseImages(s: string | null | undefined): string[] {
@@ -368,7 +368,7 @@ export default function AdminProperties() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#4A2C2A', '#0277BD', BLUE]} style={styles.header}>
+      <LinearGradient colors={['#3D1408', '#7A3020', '#9A4130']} style={styles.header}>
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   dropdownList: {
     borderWidth: 1.5, borderColor: BLUE + '40', borderRadius: 12,
     backgroundColor: '#fff', marginBottom: 14, overflow: 'hidden', maxHeight: 220,
-    ...(IS_WEB ? { boxShadow: '0 4px 20px rgba(2,136,209,0.15)' } as any : { shadowColor: BLUE, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 }),
+    ...(IS_WEB ? { boxShadow: '0 4px 20px rgba(122,48,32,0.15)' } as any : { shadowColor: BLUE, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 }),
   },
   dropdownItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   dropdownItemActive: { backgroundColor: BLUE },
@@ -710,8 +710,8 @@ const styles = StyleSheet.create({
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, marginTop: 8, marginBottom: 20 },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 
-  managerInfoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#E3F2FD', borderRadius: 12, padding: 14, marginBottom: 16 },
-  managerInfoText: { flex: 1, fontSize: 13, color: '#0277BD', lineHeight: 20 },
+  managerInfoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#FBF3E6', borderRadius: 12, padding: 14, marginBottom: 16 },
+  managerInfoText: { flex: 1, fontSize: 13, color: '#7A3020', lineHeight: 20 },
 
   confirmOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   confirmCard: { backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', maxWidth: 360, width: '100%' },
