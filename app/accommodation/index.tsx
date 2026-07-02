@@ -30,8 +30,8 @@ const TYPE_ICONS: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, [string, string]> = {
   hotel: ['#3D1408', '#7A3020'],
-  dharamshala: ['#4A148C', '#7B1FA2'],
-  guesthouse: ['#1B5E20', '#2E7D32'],
+  dharamshala: ['#7A3020', '#9A4130'],
+  guesthouse: ['#A67A1E', '#C9922A'],
   lodge: ['#7A3020', '#C9922A'],
 };
 
@@ -48,7 +48,7 @@ function StarRating({ rating }: { rating: number }) {
           color="#FFC107"
         />
       ))}
-      <Text style={{ fontSize: 11, color: '#78909C', marginLeft: 4, fontWeight: '600' }}>{rating.toFixed(1)}</Text>
+      <Text style={{ fontSize: 11, color: '#8A6A52', marginLeft: 4, fontWeight: '600' }}>{rating.toFixed(1)}</Text>
     </View>
   );
 }
@@ -152,13 +152,13 @@ export default function AccommodationBrowse() {
             ) : null}
             {item.check_out_time ? (
               <View style={styles.infoChip}>
-                <Ionicons name="log-out-outline" size={11} color="#607D8B" />
+                <Ionicons name="log-out-outline" size={11} color={MAROON} />
                 <Text style={styles.infoChipText}>Out {item.check_out_time}</Text>
               </View>
             ) : null}
             {item.total_rooms ? (
               <View style={styles.infoChip}>
-                <Ionicons name="bed-outline" size={11} color="#607D8B" />
+                <Ionicons name="bed-outline" size={11} color={MAROON} />
                 <Text style={styles.infoChipText}>{item.total_rooms} rooms</Text>
               </View>
             ) : null}
@@ -235,7 +235,7 @@ export default function AccommodationBrowse() {
             style={[styles.filterChip, filterType === f.value && styles.filterChipActive]}
             onPress={() => setFilterType(f.value)}
           >
-            <Ionicons name={f.icon as any} size={13} color={filterType === f.value ? '#fff' : '#78909C'} />
+            <Ionicons name={f.icon as any} size={13} color={filterType === f.value ? '#fff' : '#A67A1E'} />
             <Text style={[styles.filterText, filterType === f.value && styles.filterTextActive]}>{f.label}</Text>
           </TouchableOpacity>
         ))}

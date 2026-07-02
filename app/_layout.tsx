@@ -367,6 +367,13 @@ export default function RootLayout() {
     }).catch(() => {});
   }, []);
 
+  // Keep the browser tab title set — Expo Router clears document.title on web
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const TITLE = 'Sri Pooja Homam';
+    if (document.title !== TITLE) document.title = TITLE;
+  }, [pathname]);
+
   useEffect(() => {
     if (Platform.OS === 'web') return;
     respRef.current = Notifications.addNotificationResponseReceivedListener((response) => {
