@@ -23,8 +23,10 @@ function parseImages(s: string | null | undefined): string[] {
   return s.split(',').map(v => v.trim()).filter(Boolean);
 }
 
-// Resize + compress image to max 1200px at 70% JPEG quality
-function compressImage(file: File, maxPx = 1200, quality = 0.7): Promise<string> {
+// Resize + compress image to max 900px at 55% JPEG quality.
+// Kept small on purpose: images are stored inline (base64) in the DB, so large
+// payloads make the create/update request time out. Small = reliable saves.
+function compressImage(file: File, maxPx = 900, quality = 0.55): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -188,6 +190,7 @@ export default function AdminProperties() {
   const [mainMsg, setMainMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [confirmActivate, setConfirmActivate] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<any>(null);
+  const [createdProp, setCreatedProp] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [form, setForm] = useState({
     name: '', type: 'hotel', temple_id: '', address: '', city: '',
@@ -221,18 +224,26 @@ export default function AdminProperties() {
       setCreateError('Hotel name, address and description are required.');
       return;
     }
+    const imagesStr = propImages.join(',');
+    // Images are stored inline in the DB; keep the payload small so the request
+    // does not time out. ~1.5 MB of base64 is a safe ceiling.
+    if (imagesStr.length > 1_500_000) {
+      setCreateError('Photos are too large. Please add fewer photos (2–3) or paste image URLs instead.');
+      return;
+    }
     setCreateLoading(true);
     try {
       await api.post('/properties', {
         ...form,
         total_rooms: parseInt(form.total_rooms) || 0,
         temple_id: form.temple_id || null,
-        images: propImages.join(','),
+        images: imagesStr,
       });
+      const createdName = form.name.trim();
       setShowCreate(false);
       resetForm();
       await load();
-      setMainMsg({ type: 'success', text: 'Property created! Open it to add room categories, then activate it.' });
+      setCreatedProp({ name: createdName });
     } catch (e: any) {
       setCreateError(e?.response?.data?.detail || 'Failed to create property. Please try again.');
     } finally {
@@ -601,6 +612,32 @@ export default function AdminProperties() {
           </View>
         </View>
       </Modal>
+
+      {/* ── Success: Property Created ── */}
+      <Modal visible={!!createdProp} animationType="fade" transparent>
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmCard}>
+            <View style={styles.successRing}>
+              <Ionicons name="checkmark" size={40} color="#fff" />
+            </View>
+            <Text style={styles.confirmTitle}>Hotel Created!</Text>
+            <Text style={styles.confirmSub}>
+              "{createdProp?.name}" has been added. Open it to add room categories, then activate it to make it visible to guests.
+            </Text>
+            <View style={styles.confirmBtns}>
+              <TouchableOpacity style={styles.confirmCancel} onPress={() => setCreatedProp(null)}>
+                <Text style={styles.confirmCancelText}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmAction, { backgroundColor: '#7A3020' }]}
+                onPress={() => { setCreatedProp(null); setShowCreate(true); }}
+              >
+                <Text style={styles.confirmActionText}>Add Another</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -715,6 +752,7 @@ const styles = StyleSheet.create({
 
   confirmOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   confirmCard: { backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', maxWidth: 360, width: '100%' },
+  successRing: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#2E7D32', alignItems: 'center', justifyContent: 'center', marginBottom: 16, ...(IS_WEB ? { boxShadow: '0 6px 20px rgba(46,125,50,0.35)' } as any : {}) },
   confirmTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text, marginBottom: 8, textAlign: 'center' },
   confirmSub: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
   confirmBtns: { flexDirection: 'row', gap: 12, width: '100%' },
