@@ -428,7 +428,7 @@ export default function AdminProperties() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Property</Text>
+              <Text style={styles.modalTitle}>Add Hotel</Text>
               <TouchableOpacity onPress={() => { setShowCreate(false); resetForm(); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
@@ -500,7 +500,7 @@ export default function AdminProperties() {
 
               <TouchableOpacity style={[styles.submitBtn, createLoading && { opacity: 0.6 }]} onPress={handleCreate} disabled={createLoading}>
                 <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                <Text style={styles.submitText}>{createLoading ? 'Creating...' : 'Create Property'}</Text>
+                <Text style={styles.submitText}>{createLoading ? 'Creating...' : 'Create Hotel'}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
