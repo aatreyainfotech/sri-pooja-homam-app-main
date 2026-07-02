@@ -271,7 +271,11 @@ export default function AccommodationBrowse() {
               </View>
             )
           }
-          ListFooterComponent={IS_WEB ? <WebFooter /> : null}
+          ListFooterComponent={IS_WEB ? (
+            <View style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)' } as any}>
+              <WebFooter />
+            </View>
+          ) : null}
         />
       </View>
     </SafeAreaView>
@@ -279,7 +283,7 @@ export default function AccommodationBrowse() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FDF6EE' },
+  container: { flex: 1, backgroundColor: '#FDF6EE', ...(IS_WEB ? { overflowX: 'hidden' } as any : {}) },
 
   header: { paddingBottom: IS_WEB ? 32 : 20 },
   headerInner: { paddingHorizontal: IS_WEB ? 48 : 16, paddingTop: IS_WEB ? 36 : 8 },
