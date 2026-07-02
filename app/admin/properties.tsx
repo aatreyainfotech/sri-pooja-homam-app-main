@@ -65,7 +65,7 @@ function TempleDropdown({ temples, value, onChange }: { temples: any[]; value: s
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={theme.colors.textMuted} />
       </TouchableOpacity>
       {open && (
-        <View style={styles.dropdownList}>
+        <ScrollView style={styles.dropdownList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
           <TouchableOpacity
             style={[styles.dropdownItem, !value && styles.dropdownItemActive]}
             onPress={() => { onChange(''); setOpen(false); }}
@@ -92,7 +92,7 @@ function TempleDropdown({ temples, value, onChange }: { temples: any[]; value: s
               </View>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   dropdownBtnText: { fontSize: 14, flex: 1 },
   dropdownList: {
     borderWidth: 1.5, borderColor: BLUE + '40', borderRadius: 12,
-    backgroundColor: '#fff', marginBottom: 14, overflow: 'hidden', maxHeight: 220,
+    backgroundColor: '#fff', marginBottom: 14, overflow: 'hidden', maxHeight: 320,
     ...(IS_WEB ? { boxShadow: '0 4px 20px rgba(122,48,32,0.15)' } as any : { shadowColor: BLUE, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 }),
   },
   dropdownItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
