@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, color: '#fff', fontSize: 14, ...(IS_WEB ? { outline: 'none' } as any : {}) } as any,
 
   filterRow: {
-    flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 12, gap: 8,
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, gap: 8,
   },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
