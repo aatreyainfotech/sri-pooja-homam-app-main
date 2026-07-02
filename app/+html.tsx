@@ -18,6 +18,7 @@ export default function Root({ children }: PropsWithChildren) {
           content="Sri Pooja Homam — India's trusted platform to book sacred poojas, homams, live temple darshan and temple accommodation with verified pujaris."
         />
         <ScrollViewStyleReset />
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
         <style
           dangerouslySetInnerHTML={{
             __html: `

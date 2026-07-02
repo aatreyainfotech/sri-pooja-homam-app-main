@@ -350,6 +350,31 @@ export default function PropertyDetail() {
     setShowDeleteCat(cat);
   };
 
+  // Room Categories management is restricted to super admins only.
+  if (user && user.role !== 'super_admin') {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <LinearGradient colors={['#3D1408', '#7A3020', '#9A4130']} style={styles.header}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>Room Categories</Text>
+            <View style={{ width: 40 }} />
+          </View>
+        </LinearGradient>
+        <View style={[styles.loading, { paddingHorizontal: 32 }]}>
+          <Ionicons name="lock-closed" size={54} color="#9A4130" style={{ marginBottom: 16 }} />
+          <Text style={[styles.loadingText, { fontWeight: '800', fontSize: 18, marginBottom: 8, textAlign: 'center' }]}>Super Admin Only</Text>
+          <Text style={[styles.loadingText, { textAlign: 'center', opacity: 0.7 }]}>Room Categories can only be managed by a super admin. Please contact your administrator.</Text>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 22, backgroundColor: '#7A3020', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
+            <Text style={{ color: '#fff', fontWeight: '700' }}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!prop) return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.loading}><Text style={styles.loadingText}>Loading…</Text></View>

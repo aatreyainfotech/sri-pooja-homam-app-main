@@ -119,7 +119,6 @@ export default function HotelManagerDashboard() {
             <Text style={styles.actionsTitle}>Quick Actions</Text>
             <View style={styles.actionsGrid}>
               <ActionTile icon="calendar-outline" label="Manage Bookings" color="#E67E22" onPress={() => router.push('/hotel-manager/bookings' as any)} />
-              <ActionTile icon="albums-outline" label="Room Categories" color={BLUE} onPress={() => router.push(`/admin/property-detail?id=${prop.id}` as any)} />
             </View>
           </>
         )}

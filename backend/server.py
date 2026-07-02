@@ -2336,6 +2336,14 @@ async def create_accommodation_booking(data: AccommodationBookingIn, user: dict 
         cur += _td(days=1)
 
     amount = float(cat["price_per_night"]) * nights * data.rooms
+    # GST on hotel accommodation is based on the declared room tariff per night:
+    #   tariff <= 7500  -> 5%  (without Input Tax Credit)
+    #   tariff >  7500  -> 18% (with Input Tax Credit)
+    tariff = float(cat["price_per_night"])
+    gst_rate = 0.05 if tariff <= 7500 else 0.18
+    gst_amount = round(amount * gst_rate, 2)
+    base_amount = round(amount, 2)
+    amount = round(base_amount + gst_amount, 2)
     bid = str(uuid.uuid4())
     rzp_order_id = None
     if RAZORPAY_ENABLED:
@@ -2360,6 +2368,8 @@ async def create_accommodation_booking(data: AccommodationBookingIn, user: dict 
     )
     return {
         "id": bid, "amount": amount, "nights": nights,
+        "base_amount": base_amount, "gst_amount": gst_amount,
+        "gst_rate": int(gst_rate * 100),
         "razorpay_order_id": rzp_order_id,
         "razorpay_key_id": os.getenv("RAZORPAY_KEY_ID") if RAZORPAY_ENABLED else None,
     }

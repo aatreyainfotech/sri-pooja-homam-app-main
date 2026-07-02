@@ -24,6 +24,34 @@ function parseImages(s: string | null | undefined): string[] {
   return s.split(',').map(v => v.trim()).filter(Boolean);
 }
 
+// Lazily load Razorpay's checkout.js on web so window.Razorpay is available.
+// Resolves true once the script is ready, false if it fails to load.
+function ensureRazorpay(): Promise<boolean> {
+  if (!IS_WEB || typeof window === 'undefined' || typeof document === 'undefined') return Promise.resolve(false);
+  // @ts-ignore
+  if (window.Razorpay) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const SRC = 'https://checkout.razorpay.com/v1/checkout.js';
+    let s = document.querySelector(`script[src="${SRC}"]`) as HTMLScriptElement | null;
+    if (s && (s as any)._loaded) { resolve(true); return; }
+    if (!s) {
+      s = document.createElement('script');
+      s.src = SRC;
+      s.async = true;
+      document.body.appendChild(s);
+    }
+    const done = (ok: boolean) => {
+      // @ts-ignore
+      (s as any)._loaded = ok && !!window.Razorpay;
+      resolve(ok && typeof (window as any).Razorpay !== 'undefined');
+    };
+    s.addEventListener('load', () => done(true), { once: true });
+    s.addEventListener('error', () => done(false), { once: true });
+    // Safety timeout
+    setTimeout(() => done(typeof (window as any).Razorpay !== 'undefined'), 8000);
+  });
+}
+
 // ── Date input ─────────────────────────────────────────────────────────────────
 function DateInput({ label, value, onChange, placeholder, icon }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; icon?: string;
@@ -193,12 +221,19 @@ export default function PropertyDetailPage() {
     } catch { return 0; }
   };
   const calcAmount = () => (selectedCat ? parseFloat(selectedCat.price_per_night) * calcNights() * rooms : 0);
+  // GST on room tariff per night: <= ₹7,500 → 5%, > ₹7,500 → 18%
+  const gstRate = () => (selectedCat && parseFloat(selectedCat.price_per_night) > 7500 ? 0.18 : 0.05);
+  const calcGst = () => Math.round(calcAmount() * gstRate());
+  const calcTotal = () => calcAmount() + calcGst();
 
   const handleBook = async () => {
     setBookError('');
     if (!user) { setBookError('Please log in to book accommodation.'); return; }
     if (!bookForm.check_in || !bookForm.check_out || !bookForm.guest_name || !bookForm.guest_mobile) {
       setBookError('Fill in all required fields: dates, name, and mobile.'); return;
+    }
+    if (!/^[6-9]\d{9}$/.test(bookForm.guest_mobile.trim())) {
+      setBookError('Enter a valid 10-digit mobile number.'); return;
     }
     if (calcNights() <= 0) { setBookError('Check-out must be after check-in.'); return; }
     try {
@@ -243,13 +278,15 @@ export default function PropertyDetailPage() {
         prefill: { name: bookForm.guest_name, contact: bookForm.guest_mobile },
         theme: { color: BLUE },
       };
-      // @ts-ignore
-      if (typeof window !== 'undefined' && window.Razorpay) {
+      ensureRazorpay().then((ready) => {
         // @ts-ignore
-        new window.Razorpay(options).open();
-      } else {
-        setPayError('Razorpay not loaded. Use UPI or contact via WhatsApp.');
-      }
+        if (ready && typeof window !== 'undefined' && window.Razorpay) {
+          // @ts-ignore
+          new window.Razorpay(options).open();
+        } else {
+          setPayError('Could not load the card payment window. Please use UPI Transfer below, or contact us on WhatsApp.');
+        }
+      });
     } else {
       const msg = encodeURIComponent(
         `Hi, I want to pay ₹${booking.amount} for booking at ${prop?.name}.\nBooking ID: ${booking.id}\nDates: ${bookForm.check_in} to ${bookForm.check_out}`
@@ -499,7 +536,7 @@ export default function PropertyDetailPage() {
                 <View style={styles.guestSection}>
                   <Text style={styles.sectionHead}>Guest Details</Text>
                   <GuestField label="Full Name *" value={bookForm.guest_name} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_name: v })} placeholder="Rama Rao" icon="person-outline" />
-                  <GuestField label="Mobile Number *" value={bookForm.guest_mobile} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_mobile: v })} placeholder="+91 98765 43210" keyboardType="phone-pad" icon="call-outline" />
+                  <GuestField label="Mobile Number *" value={bookForm.guest_mobile} onChangeText={(v: string) => setBookForm({ ...bookForm, guest_mobile: v.replace(/\D/g, '').slice(0, 10) })} placeholder="10-digit mobile number" keyboardType="phone-pad" icon="call-outline" maxLength={10} />
                   <GuestField label="Special Requests" value={bookForm.special_requests} onChangeText={(v: string) => setBookForm({ ...bookForm, special_requests: v })} placeholder="Vegetarian meals, early check-in…" icon="chatbubble-ellipses-outline" multiline />
                 </View>
 
@@ -510,9 +547,13 @@ export default function PropertyDetailPage() {
                       <Text style={styles.priceLabel}>₹{parseFloat(selectedCat?.price_per_night || 0).toFixed(0)} × {nights} nights × {rooms} room(s)</Text>
                       <Text style={styles.priceVal}>₹{amount.toFixed(0)}</Text>
                     </View>
+                    <View style={styles.priceRow}>
+                      <Text style={styles.priceLabel}>GST ({(gstRate() * 100).toFixed(0)}%)</Text>
+                      <Text style={styles.priceVal}>₹{calcGst().toFixed(0)}</Text>
+                    </View>
                     <View style={styles.priceTotal}>
                       <Text style={styles.priceTotalLabel}>Total Amount</Text>
-                      <Text style={styles.priceTotalVal}>₹{amount.toFixed(0)}</Text>
+                      <Text style={styles.priceTotalVal}>₹{calcTotal().toFixed(0)}</Text>
                     </View>
                   </View>
                 )}
