@@ -26,23 +26,38 @@ function parseImages(s: string | null | undefined): string[] {
 // Resize + compress image to max 900px at 55% JPEG quality.
 // Kept small on purpose: images are stored inline (base64) in the DB, so large
 // payloads make the create/update request time out. Small = reliable saves.
+// IMPORTANT: every path must settle (resolve/reject). A missing onerror handler
+// on an undecodable file (e.g. iPhone HEIC or a corrupt image) would otherwise
+// leave the promise pending forever and freeze the "Creating..." button.
 function compressImage(file: File, maxPx = 900, quality = 0.55): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const fail = () => reject(new Error(`Couldn't process "${file.name || 'this image'}". Please use a JPG or PNG photo.`));
+    // Hard safety timeout so a stuck decode can never hang the UI.
+    const timer = setTimeout(fail, 20000);
+    const done = (v: string) => { clearTimeout(timer); resolve(v); };
     const reader = new FileReader();
+    reader.onerror = () => { clearTimeout(timer); fail(); };
     reader.onload = (ev) => {
       const img = new (window as any).Image();
+      img.onerror = () => { clearTimeout(timer); fail(); };
       img.onload = () => {
-        let { width, height } = img;
-        if (width > maxPx || height > maxPx) {
-          const ratio = Math.min(maxPx / width, maxPx / height);
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
+        try {
+          let { width, height } = img;
+          if (!width || !height) { clearTimeout(timer); return fail(); }
+          if (width > maxPx || height > maxPx) {
+            const ratio = Math.min(maxPx / width, maxPx / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+          done(canvas.toDataURL('image/jpeg', quality));
+        } catch {
+          clearTimeout(timer);
+          fail();
         }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.src = ev.target?.result as string;
     };
@@ -111,17 +126,28 @@ function ImagePickerSection({
   onUrlAdd: (url: string) => void;
 }) {
   const [urlInput, setUrlInput] = useState('');
+  const [imgError, setImgError] = useState('');
+  const [imgBusy, setImgBusy] = useState(false);
 
   const handleFileChange = async (e: any) => {
     const files: File[] = Array.from(e.target?.files || []);
     if (!files.length) return;
+    const input = e.target;
+    setImgError('');
+    setImgBusy(true);
     const results: string[] = [];
-    for (const file of files) {
-      const compressed = await compressImage(file);
-      results.push(compressed);
+    try {
+      for (const file of files) {
+        results.push(await compressImage(file));
+      }
+      onAdd(results);
+    } catch (err: any) {
+      setImgError(err?.message || 'Could not process that photo. Please try a JPG or PNG.');
+      if (results.length) onAdd(results); // keep the ones that did work
+    } finally {
+      setImgBusy(false);
+      if (input) input.value = '';
     }
-    onAdd(results);
-    e.target.value = '';
   };
 
   return (
@@ -143,13 +169,14 @@ function ImagePickerSection({
               <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '100%', height: '100%', gap: 6 }}>
                 {/* @ts-ignore */}
                 <input type="file" accept="image/*" multiple onChange={handleFileChange} style={{ display: 'none' }} />
-                <Ionicons name="camera-outline" size={24} color={BLUE} />
-                <Text style={styles.imgAddText}>Upload</Text>
+                <Ionicons name={imgBusy ? 'hourglass-outline' : 'camera-outline'} size={24} color={BLUE} />
+                <Text style={styles.imgAddText}>{imgBusy ? 'Processing…' : 'Upload'}</Text>
               </label>
             </View>
           ) : null}
         </View>
       </ScrollView>
+      {imgError ? <Text style={styles.imgError}>{imgError}</Text> : null}
       <View style={styles.urlRow}>
         <TextInput
           style={[styles.input, { flex: 1, marginBottom: 0 }]}
@@ -740,6 +767,7 @@ const styles = StyleSheet.create({
   imgRemoveBtn: { position: 'absolute', top: 4, right: 4, backgroundColor: '#fff', borderRadius: 10 },
   imgAddBtn: { width: 90, height: 90, borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: BLUE + '60', alignItems: 'center', justifyContent: 'center', backgroundColor: BLUE + '08' },
   imgAddText: { color: BLUE, fontSize: 11, fontWeight: '700' },
+  imgError: { color: '#C62828', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   urlRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   urlAddBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' },
   imgCount: { fontSize: 11, color: theme.colors.textMuted, marginTop: 5 },
