@@ -181,7 +181,7 @@ const s = StyleSheet.create({
     flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 14, borderRadius: 14,
     ...(IS_WEB ? {
-      background: 'linear-gradient(135deg, #C9922A 0%, #7A3020 100%)',
+      backgroundImage: 'linear-gradient(135deg, #C9922A 0%, #7A3020 100%)',
       boxShadow: '0 4px 16px rgba(122,48,32,0.4)',
     } as any : { backgroundColor: '#7A3020' }),
   },

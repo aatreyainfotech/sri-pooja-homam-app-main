@@ -636,7 +636,7 @@ const w = StyleSheet.create({
   navGoldLine: {
     height: 2,
     ...(Platform.OS === 'web' ? {
-      background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.55) 25%, rgba(212,175,55,0.55) 75%, transparent 100%)',
+      backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.55) 25%, rgba(212,175,55,0.55) 75%, transparent 100%)',
     } as any : { backgroundColor: 'rgba(212,175,55,0.35)' }),
   },
 

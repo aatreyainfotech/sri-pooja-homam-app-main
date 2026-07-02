@@ -30,23 +30,23 @@ function parseImages(s: string | null | undefined): string[] {
 }
 
 const DESTINATIONS = [
-  { name: 'Tirupati', state: 'Andhra Pradesh', color: '#FF5722', route: '/destinations?state=andhra-pradesh' },
-  { name: 'Varanasi', state: 'Uttar Pradesh', color: '#9C27B0', route: '/destinations?state=uttar-pradesh' },
-  { name: 'Rishikesh', state: 'Uttarakhand', color: '#00BCD4', route: '/destinations?state=uttarakhand' },
-  { name: 'Shirdi', state: 'Maharashtra', color: '#FF9800', route: '/destinations?state=maharashtra' },
-  { name: 'Madurai', state: 'Tamil Nadu', color: '#E91E63', route: '/destinations?state=tamil-nadu' },
-  { name: 'Udupi', state: 'Karnataka', color: '#4CAF50', route: '/destinations?state=karnataka' },
-  { name: 'Dwarka', state: 'Gujarat', color: '#2196F3', route: '/destinations?state=gujarat' },
-  { name: 'Guruvayur', state: 'Kerala', color: '#8BC34A', route: '/destinations?state=kerala' },
+  { name: 'Tirupati', state: 'Andhra Pradesh', color: '#7A3020', route: '/destinations?state=andhra-pradesh' },
+  { name: 'Varanasi', state: 'Uttar Pradesh', color: '#C9922A', route: '/destinations?state=uttar-pradesh' },
+  { name: 'Rishikesh', state: 'Uttarakhand', color: '#A67A1E', route: '/destinations?state=uttarakhand' },
+  { name: 'Shirdi', state: 'Maharashtra', color: '#9A4130', route: '/destinations?state=maharashtra' },
+  { name: 'Madurai', state: 'Tamil Nadu', color: '#8B3520', route: '/destinations?state=tamil-nadu' },
+  { name: 'Udupi', state: 'Karnataka', color: '#7A3020', route: '/destinations?state=karnataka' },
+  { name: 'Dwarka', state: 'Gujarat', color: '#C9922A', route: '/destinations?state=gujarat' },
+  { name: 'Guruvayur', state: 'Kerala', color: '#A67A1E', route: '/destinations?state=kerala' },
 ];
 
 const FESTIVALS = [
-  { name: 'Guru Purnima', date: 'Jul 21, 2025', desc: 'Day of spiritual teachers', color: '#9C27B0' },
-  { name: 'Varalakshmi Vratham', date: 'Aug 8, 2025', desc: 'Goddess Lakshmi festival', color: '#E91E63' },
-  { name: 'Ganesh Chaturthi', date: 'Aug 27, 2025', desc: "Lord Ganesha's birthday", color: '#FF5722' },
-  { name: 'Navratri Begins', date: 'Oct 2, 2025', desc: 'Nine nights of goddess worship', color: '#F44336' },
-  { name: 'Diwali', date: 'Oct 20, 2025', desc: 'Festival of lights', color: '#FFC107' },
-  { name: 'Karthika Masam', date: 'Nov 1, 2025', desc: 'Holy month of Lord Shiva', color: '#2196F3' },
+  { name: 'Guru Purnima', date: 'Jul 21, 2025', desc: 'Day of spiritual teachers', color: '#7A3020' },
+  { name: 'Varalakshmi Vratham', date: 'Aug 8, 2025', desc: 'Goddess Lakshmi festival', color: '#9A4130' },
+  { name: 'Ganesh Chaturthi', date: 'Aug 27, 2025', desc: "Lord Ganesha's birthday", color: '#C9922A' },
+  { name: 'Navratri Begins', date: 'Oct 2, 2025', desc: 'Nine nights of goddess worship', color: '#8B3520' },
+  { name: 'Diwali', date: 'Oct 20, 2025', desc: 'Festival of lights', color: '#C9922A' },
+  { name: 'Karthika Masam', date: 'Nov 1, 2025', desc: 'Holy month of Lord Shiva', color: '#A67A1E' },
 ];
 
 const SERVICES = [
@@ -320,10 +320,10 @@ function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
                   onPress={() => router.push(`/book-pooja/${p.id}` as any)}
                   style={{
                     borderRadius: 12, paddingVertical: 11, alignItems: 'center',
+                    backgroundColor: '#8B3520',
                     ...(Platform.OS === 'web' ? {
-                      background: 'linear-gradient(135deg, #8B3520 0%, #5A2010 100%)',
                       boxShadow: '0 4px 16px rgba(139,53,32,0.4)',
-                    } : { backgroundColor: '#8B3520' }),
+                    } : {}),
                   } as any}
                 >
                   <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 }}>Book Now →</Text>
@@ -1366,10 +1366,10 @@ const wh: any = {
   bookBtn: {
     marginTop: 14,
     paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+    backgroundColor: '#8B3520',
     ...(Platform.OS === 'web' ? {
-      background: 'linear-gradient(135deg, #A01818 0%, #7B1010 100%)',
       boxShadow: '0 4px 16px rgba(139,21,21,0.45)',
-    } as any : { backgroundColor: '#C62828' }),
+    } as any : {}),
   },
   bookBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 },
 

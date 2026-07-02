@@ -17,47 +17,47 @@ const IS_WEB = Platform.OS === 'web';
 
 const STATES = [
   {
-    id: 'andhra-pradesh', name: 'Andhra Pradesh', color: '#FF5722',
+    id: 'andhra-pradesh', name: 'Andhra Pradesh', color: '#7A3020',
     temples: ['Tirupati Balaji', 'Srisailam Mallikarjuna', 'Kanaka Durga – Vijayawada', 'Simhachalam Temple', 'Annavaram Satyanarayana'],
     highlights: 'Home to the richest temple in the world – Tirumala Tirupati Devasthanams.',
   },
   {
-    id: 'telangana', name: 'Telangana', color: '#9C27B0',
+    id: 'telangana', name: 'Telangana', color: '#C9922A',
     temples: ['Yadagirigutta Narasimha', 'Bhadrachalam Sita Ramachandra', 'Dharmapuri Narasimha', 'Keesaragutta Ramalingeswara', 'Vemulawada Rajarajeshwara'],
     highlights: 'Rich in Shaivite and Vaishnavite traditions with ancient rock-cut temples.',
   },
   {
-    id: 'tamil-nadu', name: 'Tamil Nadu', color: '#E91E63',
+    id: 'tamil-nadu', name: 'Tamil Nadu', color: '#A67A1E',
     temples: ['Meenakshi Amman – Madurai', 'Ramanathaswamy – Rameswaram', 'Brihadeeswarar – Thanjavur', 'Nataraja – Chidambaram', 'Murugan – Palani'],
     highlights: 'Land of Dravidian architecture with towering gopurams and ancient Divya Desams.',
   },
   {
-    id: 'karnataka', name: 'Karnataka', color: '#4CAF50',
+    id: 'karnataka', name: 'Karnataka', color: '#8B3520',
     temples: ['Udupi Sri Krishna', 'Kukke Subramanya', 'Chamundeshwari – Mysore', 'Murdeshwar Shiva', 'Dharmasthala Manjunatha'],
     highlights: 'Karnataka blends coastal temples with Deccan plateau shrines.',
   },
   {
-    id: 'kerala', name: 'Kerala', color: '#8BC34A',
+    id: 'kerala', name: 'Kerala', color: '#9A4130',
     temples: ['Guruvayur Krishna', 'Sabarimala Ayyappa', 'Padmanabhaswamy – Thiruvananthapuram', 'Ettumanoor Mahadeva', 'Kodungallur Bhagavathy'],
     highlights: 'God\'s Own Country — serene temples set amid lush green backwaters.',
   },
   {
-    id: 'maharashtra', name: 'Maharashtra', color: '#FF9800',
+    id: 'maharashtra', name: 'Maharashtra', color: '#C9922A',
     temples: ['Shirdi Sai Baba', 'Trimbakeshwar Jyotirlinga', 'Pandharpur Vitthal', 'Kolhapur Mahalaxmi', 'Ashtavinayak Circuit'],
     highlights: 'Maharashtra holds 3 of the 12 Jyotirlingas and the beloved Shirdi Sai Baba.',
   },
   {
-    id: 'gujarat', name: 'Gujarat', color: '#2196F3',
+    id: 'gujarat', name: 'Gujarat', color: '#7A3020',
     temples: ['Somnath Jyotirlinga', 'Dwarkadhish – Dwarka', 'Ambaji Devi', 'Akshardham – Gandhinagar', 'Bahucharaji Mata'],
     highlights: 'Gujarat has 2 of the 12 Jyotirlingas and the sacred Char Dham city of Dwarka.',
   },
   {
-    id: 'uttarakhand', name: 'Uttarakhand', color: '#00BCD4',
+    id: 'uttarakhand', name: 'Uttarakhand', color: '#A67A1E',
     temples: ['Badrinath', 'Kedarnath', 'Gangotri', 'Yamunotri', 'Haridwar & Rishikesh'],
     highlights: 'Dev Bhoomi — the sacred land of gods, home to Char Dham yatra.',
   },
   {
-    id: 'uttar-pradesh', name: 'Uttar Pradesh', color: '#FF7043',
+    id: 'uttar-pradesh', name: 'Uttar Pradesh', color: '#8B3520',
     temples: ['Kashi Vishwanath – Varanasi', 'Krishna Janmabhoomi – Mathura', 'Ram Janmabhoomi – Ayodhya', 'Vindhyavasini Devi', 'Chitrakoot Dham'],
     highlights: 'UP is the spiritual heartland — Varanasi, Mathura, Ayodhya: all are here.',
   },
