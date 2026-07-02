@@ -85,11 +85,11 @@ export default function WebFooter() {
           <View style={{ marginTop: 14 }}>
             <Text style={s.colHead}>Download App</Text>
             <TouchableOpacity style={[s.storeBtn, { marginTop: 6 }]} onPress={() => Linking.openURL('https://play.google.com/store/search?q=sri+pooja+homam')}>
-              <Ionicons name="logo-android" size={14} color="#A5D6A7" />
+              <Ionicons name="logo-android" size={14} color="#E3B85C" />
               <Text style={s.storeTxt}>Google Play</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[s.storeBtn, { marginTop: 6 }]} onPress={() => Linking.openURL('https://apps.apple.com/search?term=sri+pooja+homam')}>
-              <Ionicons name="logo-apple" size={14} color="#90CAF9" />
+              <Ionicons name="logo-apple" size={14} color="#E3B85C" />
               <Text style={s.storeTxt}>App Store</Text>
             </TouchableOpacity>
           </View>
@@ -102,12 +102,12 @@ export default function WebFooter() {
           <Text style={s.trustHeading}>Trusted & Secure Platform</Text>
           <View style={s.trustBadges}>
             {[
-              { icon: 'shield-checkmark', color: '#4CAF50', title: '256-bit SSL',    sub: 'Encrypted' },
+              { icon: 'shield-checkmark', color: '#E3B85C', title: '256-bit SSL',    sub: 'Encrypted' },
               { icon: 'ribbon',           color: '#C9922A', title: 'ISO 27001',       sub: 'Certified Security' },
-              { icon: 'card',             color: '#528FF0', title: 'Razorpay',        sub: 'Secure Payments' },
-              { icon: 'globe',            color: '#FF6B00', title: 'Digital India',   sub: 'Compliant' },
-              { icon: 'phone-portrait',   color: '#2E3A8A', title: 'UPI / IMPS',      sub: 'Payments Accepted' },
-              { icon: 'people',           color: '#8B3520', title: '10,000+ Devotees', sub: 'Served' },
+              { icon: 'card',             color: '#E3B85C', title: 'Razorpay',        sub: 'Secure Payments' },
+              { icon: 'globe',            color: '#C9922A', title: 'Digital India',   sub: 'Compliant' },
+              { icon: 'phone-portrait',   color: '#E3B85C', title: 'UPI / IMPS',      sub: 'Payments Accepted' },
+              { icon: 'people',           color: '#C9922A', title: '10,000+ Devotees', sub: 'Served' },
             ].map((b) => (
               <View key={b.title} style={s.trustBadge}>
                 <Ionicons name={b.icon as any} size={22} color={b.color} />
