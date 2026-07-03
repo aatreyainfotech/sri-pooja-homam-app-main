@@ -1576,6 +1576,8 @@ function MobileHome() {
               snapToInterval={SCREEN_W - 40}
               decelerationRate="fast"
               keyExtractor={(i) => i.id}
+              getItemLayout={(_, index) => ({ length: SCREEN_W - 40, offset: (SCREEN_W - 40) * index, index })}
+              onScrollToIndexFailed={() => {}}
               contentContainerStyle={{ paddingHorizontal: 20 }}
               ItemSeparatorComponent={() => <View style={{ width: 0 }} />}
               renderItem={({ item }) => (
