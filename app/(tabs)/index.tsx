@@ -1686,6 +1686,7 @@ function MobileHome() {
         </View>
 
         <View style={{ height: 20 }} />
+        {IS_WEB && <WebFooter />}
       </ScrollView>
     </SafeAreaView>
   );

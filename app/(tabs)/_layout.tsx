@@ -1,7 +1,7 @@
 import { Tabs, Slot } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
-import { View, Text, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 
 const BRAND = '#8B1515';
 const GOLD = '#C9922A';
@@ -36,13 +36,13 @@ function TabIcon({ iconFocused, iconBlur, label, focused, badge }: TabIconProps)
 
 export default function TabsLayout() {
   const { user, loading } = useAuth();
-  const { width } = useWindowDimensions();
-  const isWebDesktop = Platform.OS === 'web' && width >= 768;
+  const isWeb = Platform.OS === 'web';
 
   if (loading) return null;
 
-  // Desktop web: no auth gate, no tab bar — website navbar handles navigation
-  if (isWebDesktop) return <Slot />;
+  // Any web (desktop or mobile browser): no bottom tab bar — the website
+  // navbar / hamburger menu handles navigation on all screen sizes.
+  if (isWeb) return <Slot />;
 
   // Mobile app / mobile web: guests can browse the home page and public tabs.
   // Protected tabs (Bookings, Profile) show their own sign-in prompt.

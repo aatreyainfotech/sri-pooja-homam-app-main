@@ -94,9 +94,107 @@ function WebNavbar() {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const isHotelMgr = user?.role === 'hotel_manager';
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
-  const go = (route: string) => { setActiveMenu(null); router.push(route as any); };
+  const go = (route: string) => { setActiveMenu(null); setMobileOpen(false); router.push(route as any); };
   const activeItem = MEGA_NAV.find(n => n.label === activeMenu);
+
+  // ── Mobile navbar: brand + hamburger + slide-down menu ──────────────────
+  if (isMobile) {
+    return (
+      <View style={[w.navbar, { zIndex: 50 } as any]}>
+        <View style={[w.navInner, { paddingHorizontal: 16 }]}>
+          <TouchableOpacity onPress={() => go('/(tabs)')} style={[w.brandRow, { flex: 1, marginRight: 0 }]}>
+            <Image source={require('../assets/images/icon.png')} style={w.navLogo} />
+            <View>
+              <Text style={w.navTelugu}>శ్రీ పూజా హోమం</Text>
+              <Text style={w.navLatin}>SRI POOJA HOMAM</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setMobileOpen(o => !o)} style={mNav.burger}>
+            <Ionicons name={mobileOpen ? 'close' : 'menu'} size={26} color={GOLD} />
+          </TouchableOpacity>
+        </View>
+
+        {mobileOpen && (
+          <View style={mNav.sheet}>
+            <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
+              <TouchableOpacity onPress={() => go('/(tabs)')} style={mNav.row}>
+                <Ionicons name="home-outline" size={17} color={GOLD} />
+                <Text style={mNav.rowText}>Home</Text>
+              </TouchableOpacity>
+
+              {MEGA_NAV.map((item) => (
+                <View key={item.label}>
+                  {item.children ? (
+                    <>
+                      <View style={mNav.sectionHead}>
+                        {item.live && <View style={w.liveDotNav} />}
+                        <Text style={mNav.sectionHeadText}>{item.label}</Text>
+                      </View>
+                      {item.children.map((child) => (
+                        <TouchableOpacity key={child.label} onPress={() => go(child.route)} style={[mNav.row, { paddingLeft: 20 }]}>
+                          <Ionicons name="chevron-forward" size={14} color="rgba(212,175,55,0.5)" />
+                          <View style={{ flex: 1 }}>
+                            <Text style={mNav.rowText}>{child.label}</Text>
+                            <Text style={mNav.rowSub}>{child.sub}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </>
+                  ) : (
+                    <TouchableOpacity onPress={() => go(item.route!)} style={mNav.row}>
+                      {item.live && <View style={w.liveDotNav} />}
+                      <Text style={[mNav.rowText, item.live && { color: '#EF9A9A' }]}>{item.label}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+
+              {user && (
+                <TouchableOpacity onPress={() => go('/(tabs)/bookings')} style={mNav.row}>
+                  <Ionicons name="receipt-outline" size={17} color={GOLD} />
+                  <Text style={mNav.rowText}>My Bookings</Text>
+                </TouchableOpacity>
+              )}
+              {isAdmin && (
+                <TouchableOpacity onPress={() => go('/admin')} style={mNav.row}>
+                  <Ionicons name="shield-checkmark" size={17} color={GOLD} />
+                  <Text style={mNav.rowText}>Admin CMS</Text>
+                </TouchableOpacity>
+              )}
+              {isHotelMgr && (
+                <TouchableOpacity onPress={() => go('/hotel-manager')} style={mNav.row}>
+                  <Ionicons name="business-outline" size={17} color={GOLD} />
+                  <Text style={mNav.rowText}>My Hotel</Text>
+                </TouchableOpacity>
+              )}
+
+              <View style={mNav.divider} />
+              {user ? (
+                <TouchableOpacity
+                  onPress={async () => { setMobileOpen(false); await logout(); router.replace('/(auth)/login' as any); }}
+                  style={[mNav.row]}
+                >
+                  <Ionicons name="log-out-outline" size={17} color="#EF9A9A" />
+                  <Text style={[mNav.rowText, { color: '#EF9A9A' }]}>Sign Out ({user.full_name})</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={() => go('/(auth)/login')} style={mNav.signInBtn}>
+                  <Ionicons name="person-circle-outline" size={18} color={MAROON} />
+                  <Text style={mNav.signInText}>Sign In</Text>
+                </TouchableOpacity>
+              )}
+            </ScrollView>
+          </View>
+        )}
+
+        <View style={w.navGoldLine} />
+      </View>
+    );
+  }
 
   return (
     <>
@@ -354,8 +452,7 @@ export default function RootLayout() {
   const respRef = useRef<any>(null);
   const { width: screenWidth } = useWindowDimensions();
 
-  // Mobile = native app OR browser on small screen (phone/tablet < 768px)
-  const isMobileWeb  = Platform.OS === 'web' && screenWidth < 768;
+  // Mobile web = browser on a small screen (phone/tablet < 768px)
   const isAdminWeb   = Platform.OS === 'web' && screenWidth >= 768 && (pathname?.startsWith('/admin') ?? false);
   const AUTH_PATHS   = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password-otp'];
   const isAuthRoute  = Platform.OS === 'web' && AUTH_PATHS.some(p => pathname === p);
@@ -385,8 +482,10 @@ export default function RootLayout() {
     return () => { try { respRef.current?.remove?.(); } catch {} };
   }, [router]);
 
-  // ── 1. Native mobile OR mobile web browser ─────────────────────────────
-  if (Platform.OS !== 'web' || isMobileWeb) {
+  // ── 1. Native mobile app only (bottom tab bar) ─────────────────────────
+  // Mobile web browsers now get the public website layout (below) instead of
+  // the app tab bar, so every visitor sees the same responsive website.
+  if (Platform.OS !== 'web') {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
@@ -670,4 +769,35 @@ const w = StyleSheet.create({
       : { position: 'absolute' }) as any,
   } as any,
   waFloatText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+});
+
+// ── Mobile web navbar (hamburger menu) styles ──────────────────────────────
+const mNav = StyleSheet.create({
+  burger: {
+    width: 42, height: 42, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(212,175,55,0.12)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.35)',
+  },
+  sheet: {
+    backgroundColor: '#1C0D07',
+    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.18)',
+    paddingVertical: 8, paddingHorizontal: 12,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 16px 40px rgba(0,0,0,0.6)' } as any : {}),
+  } as any,
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 12, paddingHorizontal: 12, borderRadius: 10,
+  },
+  rowText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  rowSub: { color: 'rgba(255,255,255,0.4)', fontSize: 11.5, marginTop: 1 },
+  sectionHead: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    paddingTop: 12, paddingBottom: 4, paddingHorizontal: 12,
+  },
+  sectionHeadText: { color: GOLD, fontSize: 12, fontWeight: '800', letterSpacing: 1 },
+  divider: { height: 1, backgroundColor: 'rgba(212,175,55,0.15)', marginVertical: 8 },
+  signInBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: GOLD, paddingVertical: 13, borderRadius: 12, marginTop: 4, marginBottom: 6,
+  },
+  signInText: { color: MAROON, fontSize: 15, fontWeight: '800' },
 });
