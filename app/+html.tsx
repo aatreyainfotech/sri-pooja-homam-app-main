@@ -12,11 +12,35 @@ export default function Root({ children }: PropsWithChildren) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
-        <title>Sri Pooja Homam</title>
+        <title>Sri Pooja Homam - Book Poojas, Homams & Live Darshan</title>
         <meta
           name="description"
-          content="Sri Pooja Homam — India's trusted platform to book sacred poojas, homams, live temple darshan and temple accommodation with verified pujaris."
+          content="Sri Pooja Homam - India's trusted platform to book sacred poojas, homams, live temple darshan and temple accommodation with verified pujaris."
         />
+        <meta name="theme-color" content="#7A3020" />
+        <link rel="icon" href="/img/icon.png" />
+        <link rel="apple-touch-icon" href="/img/icon.png" />
+
+        {/* Open Graph — link previews (WhatsApp / Facebook / LinkedIn) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Sri Pooja Homam" />
+        <meta property="og:title" content="Sri Pooja Homam - Book Poojas, Homams & Live Darshan" />
+        <meta
+          property="og:description"
+          content="India's trusted platform to book sacred poojas, homams, live temple darshan and temple accommodation with verified pujaris."
+        />
+        <meta property="og:url" content="https://sri.aatreya.org/" />
+        <meta property="og:image" content="https://sri.aatreya.org/img/og.png" />
+
+        {/* Twitter card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Sri Pooja Homam - Book Poojas, Homams & Live Darshan" />
+        <meta
+          name="twitter:description"
+          content="India's trusted platform to book sacred poojas, homams, live temple darshan and temple accommodation with verified pujaris."
+        />
+        <meta name="twitter:image" content="https://sri.aatreya.org/img/og.png" />
+
         <ScrollViewStyleReset />
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
         <style
