@@ -690,7 +690,7 @@ function WebHome() {
               {/* Stats */}
               <View style={[wh.statsBar, { marginTop: 36 }]}>
                 {stats.map((s: any, i: number) => (
-                  <View key={i} style={wh.statItem}>
+                  <View key={i} style={[wh.statItem, i === stats.length - 1 && wh.statItemLast]}>
                     <Text style={wh.statValue}>{s.v}</Text>
                     <Text style={wh.statLabel}>{s.l}</Text>
                   </View>
@@ -746,7 +746,7 @@ function WebHome() {
             </View>
             <View style={wh.statsBar}>
               {stats.map((s: any, i: number) => (
-                <View key={i} style={wh.statItem}>
+                <View key={i} style={[wh.statItem, i === stats.length - 1 && wh.statItemLast]}>
                   <Text style={wh.statValue}>{s.v}</Text>
                   <Text style={wh.statLabel}>{s.l}</Text>
                 </View>
@@ -1281,10 +1281,11 @@ const wh: any = {
     borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.2)', paddingTop: 28,
   },
   statItem: {
-    paddingRight: 40, paddingBottom: 16,
+    flexGrow: 1, flexBasis: 120, minWidth: 120,
+    paddingRight: 24, paddingBottom: 16,
     borderRightWidth: 1, borderRightColor: 'rgba(212,175,55,0.15)',
-    marginRight: 40,
   },
+  statItemLast: { borderRightWidth: 0 },
   statValue: { color: GOLD, fontSize: 36, fontWeight: '900' },
   statLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 13, marginTop: 3, letterSpacing: 0.5 },
 
