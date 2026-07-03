@@ -1,4 +1,4 @@
-import { Tabs, Redirect, Slot } from 'expo-router';
+import { Tabs, Slot } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { View, Text, StyleSheet, Platform, useWindowDimensions } from 'react-native';
@@ -44,9 +44,8 @@ export default function TabsLayout() {
   // Desktop web: no auth gate, no tab bar — website navbar handles navigation
   if (isWebDesktop) return <Slot />;
 
-  // Mobile app / mobile web: require login
-  if (!user) return <Redirect href="/(auth)/login" />;
-
+  // Mobile app / mobile web: guests can browse the home page and public tabs.
+  // Protected tabs (Bookings, Profile) show their own sign-in prompt.
   const isPujari = user?.role === 'poojari';
 
   return (

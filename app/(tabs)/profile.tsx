@@ -143,6 +143,35 @@ export default function Profile() {
 
   const isAdmin = user?.role === 'super_admin' || user?.role === 'admin';
 
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <LinearGradient colors={['#8B1515', '#630B0B']} style={[styles.header, { paddingBottom: 30 }]}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={34} color="#fff" />
+          </View>
+          <Text style={styles.name}>Welcome</Text>
+          <Text style={styles.mobile}>Sign in to access your account</Text>
+        </LinearGradient>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+          <Ionicons name="lock-closed-outline" size={44} color={theme.colors.primary} style={{ marginBottom: 16 }} />
+          <Text style={{ fontSize: 18, fontWeight: '800', color: theme.colors.text, textAlign: 'center' }}>Sign in to your account</Text>
+          <Text style={{ fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 21 }}>
+            Log in to book poojas, view bookings and manage your profile.
+          </Text>
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.colors.primary, paddingHorizontal: 30, paddingVertical: 13, borderRadius: 999, marginTop: 24 }}
+            onPress={() => router.push('/(auth)/login')}
+            activeOpacity={0.9}
+          >
+            <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>Sign In</Text>
+            <Ionicons name="arrow-forward" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>

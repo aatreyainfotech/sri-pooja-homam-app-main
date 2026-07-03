@@ -8,10 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
+import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 
 export default function Bookings() {
   const router = useRouter();
+  const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,7 @@ export default function Bookings() {
   const [receipt, setReceipt] = useState<any | null>(null);
 
   const load = useCallback(async () => {
+    if (!user) { setItems([]); return; }
     setError('');
     setLoading(true);
     try {
@@ -29,7 +32,7 @@ export default function Bookings() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -45,6 +48,28 @@ export default function Bookings() {
       Alert.alert('Payment failed', apiError(e));
     }
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
+          <Text style={styles.title}>My Bookings</Text>
+          <Text style={styles.sub}>Your sacred pooja & homam reservations</Text>
+        </LinearGradient>
+        <View style={styles.guestWrap}>
+          <View style={styles.guestIcon}>
+            <Ionicons name="receipt-outline" size={40} color={theme.colors.primary} />
+          </View>
+          <Text style={styles.guestTitle}>Sign in to view your bookings</Text>
+          <Text style={styles.guestSub}>Log in to see your pooja & homam reservations and receipts.</Text>
+          <TouchableOpacity style={styles.guestBtn} onPress={() => router.push('/(auth)/login')} activeOpacity={0.9}>
+            <Text style={styles.guestBtnText}>Sign In</Text>
+            <Ionicons name="arrow-forward" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -198,6 +223,13 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 18, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   title: { color: '#fff', fontSize: 26, fontWeight: '700' },
   sub: { color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
+
+  guestWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  guestIcon: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#FFEBEE', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  guestTitle: { fontSize: 19, fontWeight: '800', color: theme.colors.text, textAlign: 'center' },
+  guestSub: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 21 },
+  guestBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.colors.primary, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 999, marginTop: 24 },
+  guestBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   card: {
     backgroundColor: '#fff', borderRadius: 20, padding: 16,
