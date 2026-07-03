@@ -133,6 +133,14 @@ function UtilityBar() {
 }
 
 function WebNavbar() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const isHotelMgr = user?.role === 'hotel_manager';
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
   const go = (route: string) => { setActiveMenu(null); setMobileOpen(false); router.push(route as any); };
   const activeItem = MEGA_NAV.find(n => n.label === activeMenu);
