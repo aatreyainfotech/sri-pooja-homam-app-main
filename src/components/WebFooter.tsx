@@ -123,11 +123,25 @@ export default function WebFooter() {
 
       <View style={s.bottom}>
         <Text style={s.copyright}>© 2026 Aatreya Infotech Systems LLP • All rights reserved</Text>
-        <TouchableOpacity onPress={() => Linking.openURL('https://aatreya.org')}>
-          <Text style={s.devTxt}>
-            Powered by <Text style={s.devName}>Aatreya Infotech Systems LLP</Text>
-          </Text>
-        </TouchableOpacity>
+        <View style={s.bottomLinks}>
+          <TouchableOpacity onPress={() => router.push('/legal/privacy-policy' as any)}>
+            <Text style={s.bottomLink}>Privacy</Text>
+          </TouchableOpacity>
+          <Text style={s.bottomDot}>•</Text>
+          <TouchableOpacity onPress={() => router.push('/legal/terms' as any)}>
+            <Text style={s.bottomLink}>Terms</Text>
+          </TouchableOpacity>
+          <Text style={s.bottomDot}>•</Text>
+          <TouchableOpacity onPress={() => router.push('/legal/refund' as any)}>
+            <Text style={s.bottomLink}>Refund</Text>
+          </TouchableOpacity>
+          <Text style={s.bottomDot}>•</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://aatreya.org')}>
+            <Text style={s.devTxt}>
+              Powered by <Text style={s.devName}>Aatreya Infotech</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </LinearGradient>
   );
@@ -170,6 +184,9 @@ const s = StyleSheet.create({
     ...(Platform.OS === 'web' ? { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any : {}),
   },
   copyright: { color: 'rgba(227,184,92,0.6)', fontSize: 11 },
+  bottomLinks: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  bottomLink: { color: 'rgba(253,251,247,0.6)', fontSize: 11, fontWeight: '600' } as any,
+  bottomDot: { color: 'rgba(201,146,42,0.4)', fontSize: 11 },
   devTxt: { color: 'rgba(253,251,247,0.5)', fontSize: 11 } as any,
   devName: { color: GOLD_LIGHT, fontWeight: '700' },
 

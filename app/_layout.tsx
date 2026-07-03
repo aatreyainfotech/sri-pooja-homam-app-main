@@ -88,15 +88,51 @@ const MEGA_NAV: Array<{
 ];
 
 // ── Auth-aware Web Navbar (must be inside AuthProvider) ────────────────────
-function WebNavbar() {
-  const router = useRouter();
-  const { user, logout } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const isHotelMgr = user?.role === 'hotel_manager';
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
+// ── Government / tourism-portal style utility bar (above the navbar) ────────
+function UtilityBar() {
   const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const compact = width < 768;
+  const SOCIALS: Array<{ icon: string; color: string; url: string }> = [
+    { icon: 'logo-whatsapp',  color: '#25D366', url: 'https://wa.me/918309067121' },
+    { icon: 'logo-facebook',  color: '#4C8BF5', url: 'https://facebook.com/sripoojahomam' },
+    { icon: 'logo-instagram', color: '#F06292', url: 'https://instagram.com/sripoojahomam' },
+    { icon: 'logo-youtube',   color: '#FF5252', url: 'https://youtube.com/@sripoojahomam' },
+  ];
+  return (
+    <View style={w.utilBar}>
+      <View style={w.utilInner}>
+        <View style={w.utilLeft}>
+          <TouchableOpacity style={w.utilItem} onPress={() => Linking.openURL('tel:+918644297366')}>
+            <Ionicons name="call-outline" size={12} color={GOLD} />
+            <Text style={w.utilText}>+91 86442 97366</Text>
+          </TouchableOpacity>
+          {!compact && (
+            <TouchableOpacity style={w.utilItem} onPress={() => Linking.openURL('mailto:support@aatreya.org')}>
+              <Ionicons name="mail-outline" size={12} color={GOLD} />
+              <Text style={w.utilText}>support@aatreya.org</Text>
+            </TouchableOpacity>
+          )}
+          {!compact && (
+            <View style={w.utilItem}>
+              <Ionicons name="time-outline" size={12} color={GOLD} />
+              <Text style={w.utilText}>Open 24 / 7</Text>
+            </View>
+          )}
+        </View>
+        <View style={w.utilRight}>
+          {!compact && <Text style={w.utilTagline}>Book Sacred Poojas & Homams Online</Text>}
+          {SOCIALS.map((sm) => (
+            <TouchableOpacity key={sm.icon} style={w.utilSocial} onPress={() => Linking.openURL(sm.url)}>
+              <Ionicons name={sm.icon as any} size={14} color={sm.color} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function WebNavbar() {
 
   const go = (route: string) => { setActiveMenu(null); setMobileOpen(false); router.push(route as any); };
   const activeItem = MEGA_NAV.find(n => n.label === activeMenu);
@@ -531,11 +567,7 @@ export default function RootLayout() {
         {/* Announcement strip + Navbar — hidden on auth pages */}
         {!isAuthRoute && (
           <>
-            <View style={w.topStrip}>
-              <Text style={w.topStripText}>
-                ✦  Book Sacred Poojas & Homams Online  •  Sri Pooja Homam  ✦
-              </Text>
-            </View>
+            <UtilityBar />
             <WebNavbar />
           </>
         )}
@@ -646,6 +678,27 @@ const w = StyleSheet.create({
   // Announcement strip
   topStrip: { backgroundColor: '#3D1A0A', paddingVertical: 7, alignItems: 'center' },
   topStripText: { color: GOLD, fontSize: 11, letterSpacing: 1.8, fontWeight: '600' } as any,
+
+  // Government / tourism-portal style utility bar
+  utilBar: {
+    backgroundColor: '#2A0F06',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(201,146,42,0.18)',
+  },
+  utilInner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    flexWrap: 'wrap', rowGap: 4,
+    paddingHorizontal: 16, paddingVertical: 6,
+    ...(Platform.OS === 'web' ? { maxWidth: 1280, alignSelf: 'center', width: '100%' } as any : {}),
+  },
+  utilLeft: { flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap' },
+  utilRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  utilItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  utilText: { color: 'rgba(253,251,247,0.72)', fontSize: 11.5, fontWeight: '500' } as any,
+  utilTagline: { color: GOLD, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginRight: 6 } as any,
+  utilSocial: {
+    width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(201,146,42,0.22)',
+  },
 
   // Navbar
   navbar: {
