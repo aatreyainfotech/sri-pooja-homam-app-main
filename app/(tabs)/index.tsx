@@ -1278,16 +1278,22 @@ const wh: any = {
 
   statsBar: {
     flexDirection: 'row', gap: 0, marginTop: 48, flexWrap: 'wrap',
-    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.2)', paddingTop: 28,
+    borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.2)', paddingTop: 32,
   },
   statItem: {
     flexGrow: 1, flexBasis: 120, minWidth: 120,
-    paddingRight: 24, paddingBottom: 16,
+    paddingHorizontal: 24, paddingBottom: 16,
     borderRightWidth: 1, borderRightColor: 'rgba(212,175,55,0.15)',
   },
   statItemLast: { borderRightWidth: 0 },
-  statValue: { color: GOLD, fontSize: 36, fontWeight: '900' },
-  statLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 13, marginTop: 3, letterSpacing: 0.5 },
+  statValue: {
+    color: GOLD, fontSize: 40, fontWeight: '900', letterSpacing: -0.5,
+    ...(Platform.OS === 'web' ? { textShadow: '0 2px 24px rgba(201,146,42,0.45)' } as any : {}),
+  },
+  statLabel: {
+    color: 'rgba(255,255,255,0.72)', fontSize: 12, marginTop: 7,
+    letterSpacing: 1.4, textTransform: 'uppercase', fontWeight: '600',
+  },
 
   // Section helpers
   sectionBg: { paddingVertical: 56, paddingHorizontal: 24 },
