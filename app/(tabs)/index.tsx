@@ -691,8 +691,8 @@ function WebHome() {
               <View style={[wh.statsBar, { marginTop: 36 }]}>
                 {stats.map((s: any, i: number) => (
                   <View key={i} style={[wh.statItem, i === stats.length - 1 && wh.statItemLast]}>
-                    <Text style={wh.statValue}>{s.v}</Text>
-                    <Text style={wh.statLabel}>{s.l}</Text>
+                    <Text style={wh.statValue} numberOfLines={1}>{s.v}</Text>
+                    <Text style={wh.statLabel} numberOfLines={1}>{s.l}</Text>
                   </View>
                 ))}
               </View>
@@ -747,8 +747,8 @@ function WebHome() {
             <View style={wh.statsBar}>
               {stats.map((s: any, i: number) => (
                 <View key={i} style={[wh.statItem, i === stats.length - 1 && wh.statItemLast]}>
-                  <Text style={wh.statValue}>{s.v}</Text>
-                  <Text style={wh.statLabel}>{s.l}</Text>
+                  <Text style={wh.statValue} numberOfLines={1}>{s.v}</Text>
+                  <Text style={wh.statLabel} numberOfLines={1}>{s.l}</Text>
                 </View>
               ))}
             </View>
@@ -1281,14 +1281,14 @@ const wh: any = {
     borderTopWidth: 1, borderTopColor: 'rgba(212,175,55,0.2)', paddingTop: 32,
   },
   statItem: {
-    flexGrow: 1, flexBasis: 120, minWidth: 120,
+    flexGrow: 1, flexBasis: 150, minWidth: 150,
     paddingHorizontal: 24, paddingBottom: 16,
     borderRightWidth: 1, borderRightColor: 'rgba(212,175,55,0.15)',
   },
   statItemLast: { borderRightWidth: 0 },
   statValue: {
     color: GOLD, fontSize: 40, fontWeight: '900', letterSpacing: -0.5,
-    ...(Platform.OS === 'web' ? { textShadow: '0 2px 24px rgba(201,146,42,0.45)' } as any : {}),
+    ...(Platform.OS === 'web' ? { textShadow: '0 2px 24px rgba(201,146,42,0.45)', whiteSpace: 'nowrap' } as any : {}),
   },
   statLabel: {
     color: 'rgba(255,255,255,0.72)', fontSize: 12, marginTop: 7,
