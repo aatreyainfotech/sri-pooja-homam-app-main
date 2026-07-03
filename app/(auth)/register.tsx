@@ -134,7 +134,10 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: 24, paddingBottom: 40 },
+  scroll: {
+    padding: 24, paddingBottom: 40,
+    ...(Platform.OS === 'web' ? { maxWidth: 520, alignSelf: 'center', width: '100%' } as any : {}),
+  },
   back: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 2 },
   backText: { color: '#FDFBF7', fontSize: 15 },
   title: { fontSize: 30, fontWeight: '700', color: theme.colors.secondary, marginTop: 8 },
@@ -142,6 +145,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.bgPaper, borderRadius: 24, padding: 20,
     borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 20px 60px rgba(0,0,0,0.35)' } as any : {}),
   },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
