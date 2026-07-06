@@ -159,28 +159,27 @@ export default function LiveStream() {
             <Text style={styles.waitingSub}>Waiting for the pujari to start</Text>
           </View>
         )
+      ) : streamUrl && Platform.OS === 'web' ? (
+        // ── All stream types on web → iframe (WebView & expo-av don't support web) ──
+        <iframe
+          src={streamUrl}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' } as any}
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
+        />
       ) : useWebView ? (
-        // ── Webpage URL → iframe on web, WebView on native ──
-        Platform.OS === 'web' ? (
-          <iframe
-            src={streamUrl}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' } as any}
-            allow="autoplay; fullscreen; encrypted-media"
-            allowFullScreen
-          />
-        ) : (
-          <WebView
-            source={{ uri: streamUrl }}
-            style={StyleSheet.absoluteFill}
-            allowsInlineMediaPlayback
-            mediaPlaybackRequiresUserAction={false}
-            javaScriptEnabled
-            domStorageEnabled
-            onError={() => setVideoError('Could not load the stream page.')}
-          />
-        )
+        // ── Native: webpage URL → WebView ──
+        <WebView
+          source={{ uri: streamUrl }}
+          style={StyleSheet.absoluteFill}
+          allowsInlineMediaPlayback
+          mediaPlaybackRequiresUserAction={false}
+          javaScriptEnabled
+          domStorageEnabled
+          onError={() => setVideoError('Could not load the stream page.')}
+        />
       ) : streamUrl ? (
-        // ── Direct video URL (.m3u8 / .mp4) → expo-av ──
+        // ── Native: direct video URL (.m3u8 / .mp4) → expo-av ──
         <Video
           source={{ uri: streamUrl }}
           style={styles.video}
