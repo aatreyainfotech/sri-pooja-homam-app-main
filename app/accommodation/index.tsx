@@ -283,7 +283,7 @@ export default function AccommodationBrowse() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FDF6EE', ...(IS_WEB ? { overflowX: 'hidden' } as any : {}) },
+  container: { flex: 1, flexDirection: 'column', backgroundColor: '#FDF6EE', ...(IS_WEB ? { overflowX: 'hidden' } as any : {}) },
 
   header: { paddingBottom: IS_WEB ? 32 : 20 },
   headerInner: { paddingHorizontal: IS_WEB ? 48 : 16, paddingTop: IS_WEB ? 36 : 8 },

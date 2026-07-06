@@ -160,16 +160,25 @@ export default function LiveStream() {
           </View>
         )
       ) : useWebView ? (
-        // ── Webpage URL (e.g. sai.org.in, temple website embeds) → WebView ──
-        <WebView
-          source={{ uri: streamUrl }}
-          style={StyleSheet.absoluteFill}
-          allowsInlineMediaPlayback
-          mediaPlaybackRequiresUserAction={false}
-          javaScriptEnabled
-          domStorageEnabled
-          onError={() => setVideoError('Could not load the stream page.')}
-        />
+        // ── Webpage URL → iframe on web, WebView on native ──
+        Platform.OS === 'web' ? (
+          <iframe
+            src={streamUrl}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' } as any}
+            allow="autoplay; fullscreen; encrypted-media"
+            allowFullScreen
+          />
+        ) : (
+          <WebView
+            source={{ uri: streamUrl }}
+            style={StyleSheet.absoluteFill}
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled
+            domStorageEnabled
+            onError={() => setVideoError('Could not load the stream page.')}
+          />
+        )
       ) : streamUrl ? (
         // ── Direct video URL (.m3u8 / .mp4) → expo-av ──
         <Video
