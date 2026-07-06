@@ -18,6 +18,7 @@ export default function Register() {
     full_name: '', mobile: '', email: '', address: '', city: '', pincode: '', password: '',
   });
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -82,23 +83,35 @@ export default function Register() {
             <Text style={styles.subtitle}>Join Sri Pooja Homam family</Text>
 
             <View style={styles.card}>
-              {fields.map((f) => (
-                <View key={f.key} style={styles.inputWrap}>
-                  <Ionicons name={f.icon} size={20} color={theme.colors.primary} />
-                  <TextInput
-                    testID={`register-${f.key}-input`}
-                    value={form[f.key]}
-                    onChangeText={(v) => set(f.key, v)}
-                    placeholder={f.label}
-                    placeholderTextColor={theme.colors.textMuted}
-                    keyboardType={f.keyboardType ?? 'default'}
-                    secureTextEntry={!!f.secure}
-                    autoCapitalize={f.key === 'email' ? 'none' : 'sentences'}
-                    maxLength={f.maxLen}
-                    style={styles.input}
-                  />
-                </View>
-              ))}
+              {fields.map((f) => {
+                const focused = focusedField === f.key;
+                return (
+                  <View
+                    key={f.key}
+                    style={[styles.inputWrap, focused && styles.inputWrapFocused]}
+                  >
+                    <Ionicons
+                      name={f.icon}
+                      size={18}
+                      color={focused ? '#C9922A' : '#9CA3AF'}
+                    />
+                    <TextInput
+                      testID={`register-${f.key}-input`}
+                      value={form[f.key]}
+                      onChangeText={(v) => set(f.key, v)}
+                      placeholder={f.label}
+                      placeholderTextColor={theme.colors.textMuted}
+                      keyboardType={f.keyboardType ?? 'default'}
+                      secureTextEntry={!!f.secure}
+                      autoCapitalize={f.key === 'email' ? 'none' : 'sentences'}
+                      maxLength={f.maxLen}
+                      style={styles.input}
+                      onFocus={() => setFocusedField(f.key)}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                  </View>
+                );
+              })}
 
               <TouchableOpacity testID="register-submit-btn" style={styles.btnPrimary} onPress={onSubmit} disabled={loading}>
                 {loading ? <ActivityIndicator color="#fff" /> : (
@@ -148,12 +161,22 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { boxShadow: '0 20px 60px rgba(0,0,0,0.35)' } as any : {}),
   },
   inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderColor: theme.colors.border,
-    borderRadius: 14, paddingHorizontal: 14,
-    marginBottom: 12, backgroundColor: '#fff',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 1.5, borderColor: '#E5E1D8',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 2,
+    marginBottom: 14, backgroundColor: '#FBFAF7',
+    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s' } as any : {}),
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: theme.colors.text },
+  inputWrapFocused: {
+    borderColor: '#C9922A',
+    backgroundColor: '#FFFFFF',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(201,146,42,0.12)' } as any : {}),
+  },
+  input: {
+    flex: 1, paddingVertical: 13, fontSize: 15,
+    color: '#111827',
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
+  },
   btnPrimary: {
     backgroundColor: theme.colors.primary, borderRadius: 999, paddingVertical: 15,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
