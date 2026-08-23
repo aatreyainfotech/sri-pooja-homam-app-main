@@ -12,6 +12,7 @@ import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { AppAlertHost } from '../src/components/AppAlert';
+import AppLockGate from '../src/components/AppLockGate';
 
 // ── Shared screen stack ────────────────────────────────────────────────────
 function AppStack() {
@@ -535,7 +536,9 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <AuthProvider>
             <StatusBar style="light" />
-            <AppStack />
+            <AppLockGate>
+              <AppStack />
+            </AppLockGate>
             <AppAlertHost />
           </AuthProvider>
         </SafeAreaProvider>

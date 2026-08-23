@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator,
-  Modal, Pressable, Platform, TextInput,
+  Modal, Pressable, Platform, TextInput, Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,12 +12,16 @@ import { useAuth } from '../../src/context/AuthContext';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
 import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as biometrics from '../../src/services/biometrics';
+import * as secureCredentials from '../../src/services/secureCredentials';
+import { useScreenCaptureProtection, useScreenshotWarning } from '../../src/hooks/useScreenCaptureProtection';
 
 const IS_WEB = Platform.OS === 'web';
 
 export default function Profile() {
   const router = useRouter();
-  const { user, logout, setUser } = useAuth();
+  const { user, logout, setUser, biometricEnabled, setBiometricEnabled } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -25,8 +29,51 @@ export default function Profile() {
   const [upiEdit, setUpiEdit] = useState('');
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [savingUpi, setSavingUpi] = useState(false);
+  const [biometricLabel, setBiometricLabel] = useState('Biometric Login');
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [togglingBiometric, setTogglingBiometric] = useState(false);
 
   const isPujari = user?.role === 'poojari';
+
+  useScreenCaptureProtection();
+  useScreenshotWarning("Screenshots of your profile details aren't recommended.");
+
+  useEffect(() => {
+    if (IS_WEB) return;
+    biometrics.checkAvailability().then((a) => setBiometricAvailable(a.available));
+    biometrics.getBiometricLabel().then(setBiometricLabel);
+  }, []);
+
+  const onToggleBiometric = async (next: boolean) => {
+    if (togglingBiometric) return;
+    if (next && !biometricAvailable) {
+      Alert.alert(
+        'Not Available',
+        `${biometricLabel} isn't set up on this device. Enroll it in your device settings first.`
+      );
+      return;
+    }
+    setTogglingBiometric(true);
+    try {
+      if (next) {
+        const ok = await biometrics.authenticate(`Confirm ${biometricLabel} to enable it for sign-in`);
+        if (!ok) return;
+        const token = await AsyncStorage.getItem('auth_token');
+        if (!token || !user) {
+          Alert.alert('Error', 'Could not read your current session. Try signing in again.');
+          return;
+        }
+        await secureCredentials.saveCredentials(token, user as any);
+        await setBiometricEnabled(true);
+      } else {
+        await setBiometricEnabled(false);
+      }
+    } catch (e) {
+      Alert.alert('Error', apiError(e));
+    } finally {
+      setTogglingBiometric(false);
+    }
+  };
 
   const loadUpi = async () => {
     if (!isPujari) return;
@@ -272,6 +319,35 @@ export default function Profile() {
               <Ionicons name="pencil-outline" size={18} color={theme.colors.textMuted} />
             </TouchableOpacity>
             <Text style={styles.upiHint}>Admin will send your earnings to this ID after pooja completion</Text>
+          </View>
+        )}
+
+        {!IS_WEB && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Security</Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="finger-print-outline" size={20} color={theme.colors.primary} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.infoLabel}>{biometricLabel} Sign-In</Text>
+                <Text style={styles.upiHint}>
+                  {biometricAvailable
+                    ? 'Unlock and sign in faster, and re-lock the app when backgrounded.'
+                    : `${biometricLabel} isn't enrolled on this device.`}
+                </Text>
+              </View>
+              {togglingBiometric ? (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              ) : (
+                <Switch
+                  testID="profile-biometric-switch"
+                  value={biometricEnabled}
+                  onValueChange={onToggleBiometric}
+                  disabled={!biometricAvailable && !biometricEnabled}
+                  trackColor={{ false: '#D1D5DB', true: theme.colors.secondary }}
+                  thumbColor="#fff"
+                />
+              )}
+            </View>
           </View>
         )}
 

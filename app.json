@@ -55,7 +55,14 @@
           "color": "#D4AF37",
           "defaultChannel": "default"
         }
-      ]
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Sri Pooja Homam to use Face ID to sign you in securely."
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

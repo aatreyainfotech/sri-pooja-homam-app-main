@@ -13,12 +13,16 @@ import { useResponsive } from '../../src/hooks/useResponsive';
 import ScreenHeader from '../../src/components/ui/ScreenHeader';
 import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
 import Surface from '../../src/components/ui/Surface';
+import { useScreenCaptureProtection, useScreenshotWarning } from '../../src/hooks/useScreenCaptureProtection';
 
 export default function Bookings() {
   const router = useRouter();
   const { user } = useAuth();
   const { isDesktop } = useResponsive();
   const numColumns = isDesktop ? 2 : 1;
+
+  useScreenCaptureProtection();
+  useScreenshotWarning("Screenshots of payment receipts aren't recommended.");
   const [items, setItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);

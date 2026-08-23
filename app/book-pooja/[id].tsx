@@ -15,6 +15,7 @@ import ScreenHeader from '../../src/components/ui/ScreenHeader';
 import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
 import Surface from '../../src/components/ui/Surface';
 import Button from '../../src/components/ui/Button';
+import { useScreenCaptureProtection, useScreenshotWarning } from '../../src/hooks/useScreenCaptureProtection';
 
 export default function BookPooja() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +24,9 @@ export default function BookPooja() {
   const { user } = useAuth();
   const [pooja, setPooja] = useState<any>(null);
   const [step, setStep] = useState<'details' | 'payment' | 'success'>('details');
+
+  useScreenCaptureProtection(step === 'payment' || step === 'success');
+  useScreenshotWarning("Screenshots of payment details aren't recommended.");
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [showRazorpay, setShowRazorpay] = useState(false);

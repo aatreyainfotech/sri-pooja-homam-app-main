@@ -12,12 +12,14 @@ import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 import Input from '../../src/components/ui/Input';
 import Button from '../../src/components/ui/Button';
+import * as biometrics from '../../src/services/biometrics';
+import * as secureCredentials from '../../src/services/secureCredentials';
 
 const GOLD = '#C9922A';
 
 export default function Login() {
   const router = useRouter();
-  const { setSession } = useAuth();
+  const { setSession, biometricEnabled } = useAuth();
   const { width: W } = useWindowDimensions();
   const isMobileLayout = W < 768;            // < 768px → show compact mobile card
   const [mobile, setMobile] = useState('');
@@ -25,10 +27,43 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [retryIn, setRetryIn] = useState(0);
+  const [showBiometricBtn, setShowBiometricBtn] = useState(false);
+  const [biometricLabel, setBiometricLabel] = useState('Biometric Login');
+  const [bioLoading, setBioLoading] = useState(false);
   const retryTimer = useRef<any>(null);
   const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => () => { if (retryTimer.current) clearInterval(retryTimer.current); }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' || !biometricEnabled) { setShowBiometricBtn(false); return; }
+    (async () => {
+      const [{ available }, label, creds] = await Promise.all([
+        biometrics.checkAvailability(),
+        biometrics.getBiometricLabel(),
+        secureCredentials.getCredentials(),
+      ]);
+      setBiometricLabel(label);
+      setShowBiometricBtn(available && !!creds);
+    })();
+  }, [biometricEnabled]);
+
+  const onBiometricLogin = async () => {
+    setBioLoading(true);
+    try {
+      const ok = await biometrics.authenticate(`Sign in with ${biometricLabel}`);
+      if (!ok) return;
+      const creds = await secureCredentials.getCredentials();
+      if (!creds) {
+        setLoginError('Biometric session expired. Please sign in with your password.');
+        return;
+      }
+      await setSession(creds.token, creds.user as any);
+      router.replace('/(tabs)');
+    } finally {
+      setBioLoading(false);
+    }
+  };
 
   const startRetryCountdown = (cb: () => void) => {
     setRetryIn(30);
@@ -322,6 +357,20 @@ export default function Login() {
                 onPress={onLogin}
                 style={{ marginTop: theme.spacing.xs }}
               />
+
+              {showBiometricBtn && (
+                <Button
+                  testID="login-biometric-btn"
+                  title={`Sign in with ${biometricLabel}`}
+                  icon="finger-print-outline"
+                  variant="outline"
+                  size="lg"
+                  fullWidth
+                  loading={bioLoading}
+                  onPress={onBiometricLogin}
+                  style={{ marginTop: theme.spacing.sm }}
+                />
+              )}
 
               <TouchableOpacity testID="login-forgot-link" style={m.forgotBtn} onPress={() => router.push('/(auth)/forgot-password' as any)}>
                 <Text style={m.forgotText}>Forgot Password?</Text>

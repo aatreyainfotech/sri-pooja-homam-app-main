@@ -7,6 +7,7 @@ import {
   savePushTokenOnBackend,
   removePushTokenFromBackend,
 } from '../services/notifications';
+import * as secureCredentials from '../services/secureCredentials';
 
 export type User = {
   id: string;
@@ -34,6 +35,8 @@ type AuthCtx = {
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   setUser: (u: User) => void;
+  biometricEnabled: boolean;
+  setBiometricEnabled: (enabled: boolean) => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx>({} as any);
@@ -41,7 +44,21 @@ const Ctx = createContext<AuthCtx>({} as any);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const pushTokenRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    secureCredentials.getBiometricEnabled().then(setBiometricEnabledState);
+  }, []);
+
+  const setBiometricEnabled = async (enabled: boolean) => {
+    await secureCredentials.setBiometricEnabledFlag(enabled);
+    setBiometricEnabledState(enabled);
+    if (!enabled) {
+      await secureCredentials.clearCredentials();
+    }
+  };
 
   const registerPushForUser = async () => {
     try {
@@ -81,6 +98,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
     // Register push token right after login
     registerPushForUser();
+    // Re-mirror into the biometric credential cache so a normal password
+    // login keeps Face ID/fingerprint login working without re-toggling it.
+    if (Platform.OS !== 'web' && (await secureCredentials.getBiometricEnabled())) {
+      secureCredentials.saveCredentials(token, u).catch(() => {});
+    }
   };
 
   const logout = async () => {
@@ -91,10 +113,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     await AsyncStorage.removeItem('auth_token');
     setUser(null);
+    // Clear the cached biometric credential (but keep the user's preference
+    // flag, so biometric login re-arms automatically on their next sign-in).
+    if (Platform.OS !== 'web') {
+      secureCredentials.clearCredentials().catch(() => {});
+    }
   };
 
   return (
-    <Ctx.Provider value={{ user, loading, setSession, logout, refresh: loadMe, setUser }}>
+    <Ctx.Provider value={{ user, loading, setSession, logout, refresh: loadMe, setUser, biometricEnabled, setBiometricEnabled }}>
       {children}
     </Ctx.Provider>
   );
