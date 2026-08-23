@@ -7,10 +7,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
+import Input from '../../src/components/ui/Input';
+import Chip from '../../src/components/ui/Chip';
+import Badge from '../../src/components/ui/Badge';
 
 const EMPTY = { temple_id: '', name: '', type: 'pooja', description: '', price: '', duration: '', image: '', sched_date: '', sched_time: '' };
 
@@ -102,39 +107,39 @@ export default function ManagePoojas() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top']}>
-      <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
-        <TouchableOpacity testID="pmg-back" onPress={() => safeBack('/admin')} style={styles.back}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Poojas & Homams</Text>
-        <TouchableOpacity testID="pmg-new-btn" onPress={openNew} style={styles.back}>
-          <Ionicons name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-      </LinearGradient>
+      <ScreenHeader
+        title="Poojas & Homams"
+        onBack={() => safeBack('/admin')}
+        rightAction={
+          <TouchableOpacity testID="pmg-new-btn" onPress={openNew} hitSlop={10}>
+            <Ionicons name="add-circle" size={28} color="#fff" />
+          </TouchableOpacity>
+        }
+      />
 
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}
-        contentContainerStyle={{ padding: 16, gap: 10 }}
+        contentContainerStyle={{ padding: theme.spacing.md, gap: theme.spacing.sm + 2, alignItems: 'center' }}
         renderItem={({ item }) => (
-          <View testID={`pmg-item-${item.id}`} style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.img} />
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <View style={styles.typeChip}>
-                <Text style={styles.typeChipText}>{item.type.toUpperCase()}</Text>
+          <ResponsiveContainer maxWidth={900}>
+            <Surface testID={`pmg-item-${item.id}`} elevation="sm" padding="sm" radius="lg" style={styles.card}>
+              <Image source={{ uri: item.image }} style={styles.img} />
+              <View style={{ flex: 1, marginLeft: theme.spacing.sm + 4 }}>
+                <Badge label={item.type.toUpperCase()} status="neutral" size="sm" />
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.sub}>{templeName(item.temple_id)} • ₹{item.price}</Text>
+                <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
+                  <TouchableOpacity testID={`pmg-edit-${item.id}`} onPress={() => openEdit(item)} style={styles.actEdit}>
+                    <Ionicons name="pencil" size={14} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity testID={`pmg-del-${item.id}`} onPress={() => remove(item)} style={[styles.actEdit, { backgroundColor: theme.statusColors.danger.bg }]}>
+                    <Ionicons name="trash" size={14} color={theme.colors.danger} />
+                  </TouchableOpacity>
+                </View>
               </View>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.sub}>{templeName(item.temple_id)} • ₹{item.price}</Text>
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity testID={`pmg-edit-${item.id}`} onPress={() => openEdit(item)} style={styles.actEdit}>
-                  <Ionicons name="pencil" size={14} color={theme.colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity testID={`pmg-del-${item.id}`} onPress={() => remove(item)} style={styles.actEdit}>
-                  <Ionicons name="trash" size={14} color={theme.colors.danger} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+            </Surface>
+          </ResponsiveContainer>
         )}
       />
 
@@ -146,53 +151,33 @@ export default function ManagePoojas() {
               <Text style={styles.mtitle}>{editing ? 'Edit Pooja' : 'New Pooja/Homam'}</Text>
               <TouchableOpacity testID="pmg-save-btn" onPress={save} style={styles.mcloseBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><Text style={styles.msave}>Save</Text></TouchableOpacity>
             </View>
-            <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+            <ScrollView contentContainerStyle={{ padding: theme.spacing.lg }}>
               <Text style={styles.flabel}>Temple</Text>
               <View style={styles.chipRow}>
                 {temples.map((t) => (
-                  <TouchableOpacity key={t.id} onPress={() => setForm({ ...form, temple_id: t.id })} style={[styles.chip, form.temple_id === t.id && styles.chipActive]}>
-                    <Text style={[styles.chipText, form.temple_id === t.id && styles.chipTextActive]}>{t.name}</Text>
-                  </TouchableOpacity>
+                  <Chip key={t.id} label={t.name} selected={form.temple_id === t.id} onPress={() => setForm({ ...form, temple_id: t.id })} />
                 ))}
               </View>
 
               <Text style={styles.flabel}>Type</Text>
               <View style={styles.chipRow}>
                 {['pooja', 'homam'].map((t) => (
-                  <TouchableOpacity key={t} onPress={() => setForm({ ...form, type: t })} style={[styles.chip, form.type === t && styles.chipActive]}>
-                    <Text style={[styles.chipText, form.type === t && styles.chipTextActive]}>{t.toUpperCase()}</Text>
-                  </TouchableOpacity>
+                  <Chip key={t} label={t.toUpperCase()} selected={form.type === t} onPress={() => setForm({ ...form, type: t })} />
                 ))}
               </View>
 
-              <Field testID="pmg-name-input" label="Name" value={form.name} onChangeText={(v: string) => setForm({ ...form, name: v })} />
-              <Field testID="pmg-desc-input" label="Description" value={form.description} onChangeText={(v: string) => setForm({ ...form, description: v })} multiline />
-              <Field testID="pmg-price-input" label="Price (₹)" value={form.price} onChangeText={(v: string) => setForm({ ...form, price: v })} keyboardType="decimal-pad" />
-              <Field testID="pmg-duration-input" label="Duration" value={form.duration} onChangeText={(v: string) => setForm({ ...form, duration: v })} />
+              <Input testID="pmg-name-input" label="Name" value={form.name} onChangeText={(v: string) => setForm({ ...form, name: v })} />
+              <Input testID="pmg-desc-input" label="Description" value={form.description} onChangeText={(v: string) => setForm({ ...form, description: v })} multiline />
+              <Input testID="pmg-price-input" label="Price (₹)" value={form.price} onChangeText={(v: string) => setForm({ ...form, price: v })} keyboardType="decimal-pad" />
+              <Input testID="pmg-duration-input" label="Duration" value={form.duration} onChangeText={(v: string) => setForm({ ...form, duration: v })} />
               <ImagePickerField testID="pmg-image-input" label="Pooja Image" value={form.image} onChangeValue={(v: string) => setForm({ ...form, image: v })} />
-              <Field testID="pmg-sched-date-input" label="Pooja Date (YYYY-MM-DD)" value={form.sched_date || ''} onChangeText={(v: string) => setForm({ ...form, sched_date: v })} />
-              <Field testID="pmg-sched-time-input" label="Pooja Time (HH:MM, 24h)" value={form.sched_time || ''} onChangeText={(v: string) => setForm({ ...form, sched_time: v })} />
+              <Input testID="pmg-sched-date-input" label="Pooja Date (YYYY-MM-DD)" value={form.sched_date || ''} onChangeText={(v: string) => setForm({ ...form, sched_date: v })} />
+              <Input testID="pmg-sched-time-input" label="Pooja Time (HH:MM, 24h)" value={form.sched_time || ''} onChangeText={(v: string) => setForm({ ...form, sched_time: v })} />
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
-  );
-}
-
-function Field({ label, value, onChangeText, multiline, keyboardType, testID }: any) {
-  return (
-    <View>
-      <Text style={styles.flabel}>{label}</Text>
-      <TextInput
-        testID={testID}
-        value={value}
-        onChangeText={onChangeText}
-        multiline={multiline}
-        keyboardType={keyboardType}
-        style={[styles.finput, multiline && { minHeight: 70, textAlignVertical: 'top' }]}
-      />
-    </View>
   );
 }
 
@@ -222,7 +207,7 @@ function ImagePickerField({ label, value, onChangeValue, testID }: any) {
   };
 
   return (
-    <View>
+    <View style={{ marginBottom: theme.spacing.md }}>
       <Text style={styles.flabel}>{label}</Text>
       <View style={styles.imgRow}>
         <TextInput
@@ -249,30 +234,21 @@ function ImagePickerField({ label, value, onChangeValue, testID }: any) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
-  back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  card: { flexDirection: 'row', backgroundColor: '#fff', padding: 10, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.border },
-  img: { width: 80, height: 80, borderRadius: 10 },
-  typeChip: { alignSelf: 'flex-start', backgroundColor: '#FFEBEE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  typeChipText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: theme.colors.primary },
+  card: { flexDirection: 'row' },
+  img: { width: 80, height: 80, borderRadius: theme.radius.sm + 4 },
   name: { fontSize: 15, fontWeight: '700', color: theme.colors.text, marginTop: 2 },
   sub: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
-  actEdit: { backgroundColor: '#FFEBEE', padding: 8, borderRadius: 8 },
+  actEdit: { backgroundColor: theme.statusColors.neutral.bg, padding: 8, borderRadius: theme.radius.sm + 2 },
 
-  mhead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  mhead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: theme.spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   mcloseBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   mtitle: { fontSize: 17, fontWeight: '700', color: theme.colors.text },
   msave: { color: theme.colors.primary, fontWeight: '700', fontSize: 15 },
   flabel: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  finput: { backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border, borderRadius: 12, padding: 12, fontSize: 14, color: theme.colors.text },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
-  chipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  chipText: { fontSize: 12, fontWeight: '600', color: theme.colors.text },
-  chipTextActive: { color: '#fff' },
-  imgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  pickBtn: { backgroundColor: theme.colors.primary, padding: 13, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  clearBtn: { backgroundColor: '#FFEBEE', padding: 13, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  preview: { width: '100%', height: 160, borderRadius: 12, marginTop: 10 },
+  finput: { backgroundColor: theme.colors.white, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, padding: theme.spacing.sm + 4, fontSize: 14, color: theme.colors.text },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginBottom: theme.spacing.md },
+  imgRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  pickBtn: { backgroundColor: theme.colors.primary, padding: 13, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center' },
+  clearBtn: { backgroundColor: theme.statusColors.danger.bg, padding: 13, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center' },
+  preview: { width: '100%', height: 160, borderRadius: theme.radius.md, marginTop: theme.spacing.sm + 2 },
 });

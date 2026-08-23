@@ -3,19 +3,25 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
   Modal, Alert, ScrollView, KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
+import { useResponsive } from '../../src/hooks/useResponsive';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
+import Input from '../../src/components/ui/Input';
+import Chip from '../../src/components/ui/Chip';
 
 const EMPTY = { temple_id: null, title: '', caption: '', video_url: '', thumbnail: '' };
 
 export default function ManageVideos() {
-  const router = useRouter();
   const safeBack = useSafeBack();
+  const { isDesktop } = useResponsive();
+  const numColumns = isDesktop ? 3 : 2;
   const [items, setItems] = useState<any[]>([]);
   const [temples, setTemples] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
@@ -68,39 +74,42 @@ export default function ManageVideos() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top']}>
-      <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
-        <TouchableOpacity testID="vmg-back" onPress={() => safeBack('/admin')} style={styles.back}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Manage Videos</Text>
-        <TouchableOpacity testID="vmg-new-btn" onPress={openNew} style={styles.back}>
-          <Ionicons name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-      </LinearGradient>
-
-      <FlatList
-        data={items}
-        keyExtractor={(i) => i.id}
-        numColumns={2}
-        contentContainerStyle={{ padding: 12, gap: 12 }}
-        columnWrapperStyle={{ gap: 12 }}
-        renderItem={({ item }) => (
-          <View testID={`vmg-item-${item.id}`} style={styles.card}>
-            <Image source={{ uri: item.thumbnail }} style={styles.thumb} />
-            <View style={styles.playBadge}>
-              <Ionicons name="play" size={14} color="#fff" />
-            </View>
-            <View style={{ padding: 10 }}>
-              <Text style={styles.name} numberOfLines={1}>{item.title}</Text>
-              <Text style={styles.cap} numberOfLines={2}>{item.caption}</Text>
-              <TouchableOpacity testID={`vmg-del-${item.id}`} onPress={() => remove(item)} style={styles.delBtn}>
-                <Ionicons name="trash" size={14} color={theme.colors.danger} />
-                <Text style={styles.delText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+      <ScreenHeader
+        title="Manage Videos"
+        onBack={() => safeBack('/admin')}
+        rightAction={
+          <TouchableOpacity testID="vmg-new-btn" onPress={openNew} hitSlop={10}>
+            <Ionicons name="add-circle" size={28} color="#fff" />
+          </TouchableOpacity>
+        }
       />
+
+      <ResponsiveContainer maxWidth={1100} style={{ flex: 1, alignSelf: 'center' }}>
+        <FlatList
+          key={numColumns}
+          data={items}
+          keyExtractor={(i) => i.id}
+          numColumns={numColumns}
+          contentContainerStyle={{ padding: theme.spacing.sm + 4, gap: theme.spacing.sm + 4 }}
+          columnWrapperStyle={{ gap: theme.spacing.sm + 4 }}
+          renderItem={({ item }) => (
+            <Surface testID={`vmg-item-${item.id}`} elevation="sm" padding="xs" radius="lg" style={styles.card}>
+              <Image source={{ uri: item.thumbnail }} style={styles.thumb} />
+              <View style={styles.playBadge}>
+                <Ionicons name="play" size={14} color="#fff" />
+              </View>
+              <View style={{ padding: theme.spacing.sm + 2 }}>
+                <Text style={styles.name} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.cap} numberOfLines={2}>{item.caption}</Text>
+                <TouchableOpacity testID={`vmg-del-${item.id}`} onPress={() => remove(item)} style={styles.delBtn}>
+                  <Ionicons name="trash" size={14} color={theme.colors.danger} />
+                  <Text style={styles.delText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            </Surface>
+          )}
+        />
+      </ResponsiveContainer>
 
       <Modal visible={modal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModal(false)}>
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
@@ -110,30 +119,19 @@ export default function ManageVideos() {
               <Text style={styles.mtitle}>Upload Video</Text>
               <TouchableOpacity testID="vmg-save-btn" onPress={save} style={styles.mcloseBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><Text style={styles.msave}>Publish</Text></TouchableOpacity>
             </View>
-            <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+            <ScrollView contentContainerStyle={{ padding: theme.spacing.lg }}>
               <Text style={styles.flabel}>Temple (optional)</Text>
               <View style={styles.chipRow}>
-                <TouchableOpacity onPress={() => setForm({ ...form, temple_id: null })} style={[styles.chip, !form.temple_id && styles.chipActive]}>
-                  <Text style={[styles.chipText, !form.temple_id && styles.chipTextActive]}>General</Text>
-                </TouchableOpacity>
+                <Chip label="General" selected={!form.temple_id} onPress={() => setForm({ ...form, temple_id: null })} />
                 {temples.map((t) => (
-                  <TouchableOpacity key={t.id} onPress={() => setForm({ ...form, temple_id: t.id })} style={[styles.chip, form.temple_id === t.id && styles.chipActive]}>
-                    <Text style={[styles.chipText, form.temple_id === t.id && styles.chipTextActive]}>{t.name}</Text>
-                  </TouchableOpacity>
+                  <Chip key={t.id} label={t.name} selected={form.temple_id === t.id} onPress={() => setForm({ ...form, temple_id: t.id })} />
                 ))}
               </View>
 
-              <Text style={styles.flabel}>Title</Text>
-              <TextInput testID="vmg-title-input" value={form.title} onChangeText={(v) => setForm({ ...form, title: v })} style={styles.finput} />
-
-              <Text style={styles.flabel}>Caption</Text>
-              <TextInput testID="vmg-caption-input" value={form.caption} onChangeText={(v) => setForm({ ...form, caption: v })} multiline style={[styles.finput, { minHeight: 70, textAlignVertical: 'top' }]} />
-
-              <Text style={styles.flabel}>Video URL</Text>
-              <TextInput testID="vmg-video-input" value={form.video_url} onChangeText={(v) => setForm({ ...form, video_url: v })} style={styles.finput} autoCapitalize="none" />
-
-              <Text style={styles.flabel}>Thumbnail URL</Text>
-              <TextInput testID="vmg-thumb-input" value={form.thumbnail} onChangeText={(v) => setForm({ ...form, thumbnail: v })} style={styles.finput} autoCapitalize="none" />
+              <Input testID="vmg-title-input" label="Title" value={form.title} onChangeText={(v) => setForm({ ...form, title: v })} />
+              <Input testID="vmg-caption-input" label="Caption" value={form.caption} onChangeText={(v) => setForm({ ...form, caption: v })} multiline />
+              <Input testID="vmg-video-input" label="Video URL" value={form.video_url} onChangeText={(v) => setForm({ ...form, video_url: v })} autoCapitalize="none" />
+              <Input testID="vmg-thumb-input" label="Thumbnail URL" value={form.thumbnail} onChangeText={(v) => setForm({ ...form, thumbnail: v })} autoCapitalize="none" />
 
               {form.thumbnail ? <Image source={{ uri: form.thumbnail }} style={styles.preview} /> : null}
             </ScrollView>
@@ -145,27 +143,19 @@ export default function ManageVideos() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
-  back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  card: { flex: 1, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: theme.colors.border, overflow: 'hidden' },
+  card: { flex: 1, overflow: 'hidden' },
   thumb: { width: '100%', aspectRatio: 16 / 11 },
-  playBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(139,21,21,0.85)', borderRadius: 999, padding: 6 },
+  playBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(122,48,32,0.85)', borderRadius: theme.radius.full, padding: 6 },
   name: { fontSize: 13, fontWeight: '700', color: theme.colors.text },
   cap: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2, minHeight: 28 },
-  delBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 6, backgroundColor: '#FFEBEE', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  delBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 6, backgroundColor: theme.statusColors.danger.bg, paddingHorizontal: 8, paddingVertical: 4, borderRadius: theme.radius.sm },
   delText: { fontSize: 11, color: theme.colors.danger, fontWeight: '600' },
 
-  mhead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  mhead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: theme.spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   mcloseBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   mtitle: { fontSize: 17, fontWeight: '700', color: theme.colors.text },
   msave: { color: theme.colors.primary, fontWeight: '700', fontSize: 15 },
   flabel: { fontSize: 11, fontWeight: '800', color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  finput: { backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border, borderRadius: 12, padding: 12, fontSize: 14, color: theme.colors.text },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
-  chipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  chipText: { fontSize: 12, fontWeight: '600', color: theme.colors.text },
-  chipTextActive: { color: '#fff' },
-  preview: { width: '100%', height: 180, borderRadius: 12 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginBottom: theme.spacing.md },
+  preview: { width: '100%', height: 180, borderRadius: theme.radius.md },
 });
