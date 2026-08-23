@@ -10,9 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import Input from '../../src/components/ui/Input';
+import Button from '../../src/components/ui/Button';
 
-const GOLD   = '#C9922A';
-const MAROON = '#7A3020';
+const GOLD = '#C9922A';
 
 export default function Login() {
   const router = useRouter();
@@ -21,13 +22,11 @@ export default function Login() {
   const isMobileLayout = W < 768;            // < 768px → show compact mobile card
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [focused, setFocused] = useState('');
   const [loginError, setLoginError] = useState('');
   const [retryIn, setRetryIn] = useState(0);
   const retryTimer = useRef<any>(null);
-  const passwordRef = useRef<any>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => () => { if (retryTimer.current) clearInterval(retryTimer.current); }, []);
 
@@ -91,24 +90,19 @@ export default function Login() {
         </View>
       ) : null}
 
-      <Text style={w.fieldLabel}>Mobile number</Text>
-      <View style={[w.inputWrap, focused === 'mobile' && w.inputWrapFocused]}>
-        <Ionicons name="call-outline" size={18} color={focused === 'mobile' ? GOLD : '#9CA3AF'} />
-        <TextInput
-          testID="login-mobile-input"
-          value={mobile}
-          onChangeText={setMobile}
-          placeholder="Enter your mobile number"
-          placeholderTextColor="#9CA3AF"
-          keyboardType="phone-pad"
-          style={w.input}
-          maxLength={10}
-          returnKeyType="next"
-          onSubmitEditing={() => passwordRef.current?.focus()}
-          onFocus={() => setFocused('mobile')}
-          onBlur={() => setFocused('')}
-        />
-      </View>
+      <Input
+        testID="login-mobile-input"
+        label="Mobile number"
+        icon="call-outline"
+        value={mobile}
+        onChangeText={setMobile}
+        placeholder="Enter your mobile number"
+        keyboardType="phone-pad"
+        maxLength={10}
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        containerStyle={{ marginBottom: theme.spacing.sm }}
+      />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <Text style={w.fieldLabel}>Password</Text>
@@ -116,50 +110,28 @@ export default function Login() {
           <Text style={{ color: GOLD, fontSize: 13, fontWeight: '600' }}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
-      <View style={[w.inputWrap, focused === 'password' && w.inputWrapFocused, { marginTop: 0 }]}>
-        <Ionicons name="lock-closed-outline" size={18} color={focused === 'password' ? GOLD : '#9CA3AF'} />
-        <TextInput
-          testID="login-password-input"
-          ref={passwordRef}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter your password"
-          placeholderTextColor="#9CA3AF"
-          secureTextEntry={!showPw}
-          style={w.input}
-          returnKeyType="done"
-          onSubmitEditing={onLogin}
-          onFocus={() => setFocused('password')}
-          onBlur={() => setFocused('')}
-        />
-        <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-          <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9CA3AF" />
-        </TouchableOpacity>
-      </View>
+      <Input
+        testID="login-password-input"
+        ref={passwordRef}
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Enter your password"
+        icon="lock-closed-outline"
+        secureTextEntry
+        returnKeyType="done"
+        onSubmitEditing={onLogin}
+      />
 
-      <TouchableOpacity
+      <Button
         testID="login-submit-btn"
-        style={[w.btnPrimary, loading && { opacity: 0.85 }]}
+        title={loading ? (loginError === '__waking__' ? 'Connecting…' : 'Signing in…') : 'Sign In →'}
+        variant="primary"
+        size="lg"
+        fullWidth
+        loading={loading}
         onPress={onLogin}
-        disabled={loading}
-        activeOpacity={0.85}
-      >
-        <LinearGradient
-          colors={['#E3B85C', '#C9922A', '#A07520']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={w.btnPrimaryFill}
-        >
-        {loading ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <ActivityIndicator color="#1A0505" size="small" />
-            <Text style={w.btnPrimaryText}>{loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}</Text>
-          </View>
-        ) : (
-          <Text style={w.btnPrimaryText}>Sign In →</Text>
-        )}
-        </LinearGradient>
-      </TouchableOpacity>
+        style={{ marginTop: theme.spacing.sm }}
+      />
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20, gap: 4 }}>
         <Text style={{ color: '#6B7280', fontSize: 14 }}>New devotee?</Text>
@@ -319,51 +291,37 @@ export default function Login() {
                 </View>
               ) : null}
 
-              <View style={m.inputWrap}>
-                <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
-                <TextInput
-                  testID="login-mobile-input"
-                  value={mobile}
-                  onChangeText={setMobile}
-                  placeholder="Mobile number"
-                  placeholderTextColor={theme.colors.textMuted}
-                  keyboardType="phone-pad"
-                  style={m.input}
-                  maxLength={10}
-                />
-              </View>
+              <Input
+                testID="login-mobile-input"
+                icon="call-outline"
+                value={mobile}
+                onChangeText={setMobile}
+                placeholder="Mobile number"
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
 
-              <View style={m.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={20} color={theme.colors.primary} />
-                <TextInput
-                  testID="login-password-input"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Password"
-                  placeholderTextColor={theme.colors.textMuted}
-                  secureTextEntry={!showPw}
-                  style={m.input}
-                />
-                <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-                  <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={20} color={theme.colors.textMuted} />
-                </TouchableOpacity>
-              </View>
+              <Input
+                testID="login-password-input"
+                icon="lock-closed-outline"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                secureTextEntry
+              />
 
-              <TouchableOpacity testID="login-submit-btn" style={[m.btnPrimary, loading && { opacity: 0.85 }]} onPress={onLogin} disabled={loading}>
-                {loading ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <ActivityIndicator color="#fff" size="small" />
-                    <Text style={m.btnPrimaryText}>
-                      {loginError === '__waking__' ? 'Connecting…' : 'Signing in…'}
-                    </Text>
-                  </View>
-                ) : (
-                  <>
-                    <Text style={m.btnPrimaryText}>Sign In</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#fff" />
-                  </>
-                )}
-              </TouchableOpacity>
+              <Button
+                testID="login-submit-btn"
+                title={loading ? (loginError === '__waking__' ? 'Connecting…' : 'Signing in…') : 'Sign In'}
+                icon={loading ? undefined : 'arrow-forward'}
+                iconPosition="right"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                onPress={onLogin}
+                style={{ marginTop: theme.spacing.xs }}
+              />
 
               <TouchableOpacity testID="login-forgot-link" style={m.forgotBtn} onPress={() => router.push('/(auth)/forgot-password' as any)}>
                 <Text style={m.forgotText}>Forgot Password?</Text>
@@ -374,9 +332,7 @@ export default function Login() {
               </View>
 
               <Link href="/(auth)/register" asChild>
-                <TouchableOpacity testID="login-register-link" style={m.btnSecondary}>
-                  <Text style={m.btnSecondaryText}>Create Account</Text>
-                </TouchableOpacity>
+                <Button testID="login-register-link" title="Create Account" variant="outline" size="lg" fullWidth />
               </Link>
 
               <View style={m.legalRow}>
@@ -458,37 +414,6 @@ const w = StyleSheet.create({
 
   fieldLabel: { color: '#374151', fontSize: 14, fontWeight: '600', marginBottom: 8 },
 
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#FBFAF7',
-    borderWidth: 1.5, borderColor: '#E5E1D8',
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 2,
-    marginBottom: 18,
-    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s' } as any : {}),
-  },
-  inputWrapFocused: {
-    borderColor: GOLD,
-    backgroundColor: '#FFFFFF',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(201,146,42,0.12)' } as any : {}),
-  },
-  input: {
-    flex: 1, paddingVertical: 13, fontSize: 15, color: '#111827',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
-  } as any,
-
-  // Gold Sign In button (aatreyanews.in style)
-  btnPrimary: {
-    borderRadius: 12, marginTop: 8, overflow: 'hidden',
-    ...(Platform.OS === 'web' ? {
-      boxShadow: '0 8px 24px rgba(201,146,42,0.35)',
-    } as any : {}),
-  },
-  btnPrimaryFill: {
-    paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-  },
-  btnPrimaryText: { color: '#1A0505', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
-
   wakingBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12,
@@ -527,18 +452,6 @@ const m = StyleSheet.create({
   },
   cardTitle: { fontSize: 24, fontWeight: '800', color: '#0D1220' },
   cardSub: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1.5, borderColor: '#D1D5DB',
-    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 4,
-    marginBottom: 14, backgroundColor: '#fff',
-  },
-  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: '#111827' },
-  btnPrimary: {
-    backgroundColor: GOLD, borderRadius: 999, paddingVertical: 15,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
-  },
-  btnPrimaryText: { color: '#1A0505', fontSize: 16, fontWeight: '700' },
   wakingBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12,
@@ -557,10 +470,6 @@ const m = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
   divLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
   divText: { color: '#9CA3AF', fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
-  btnSecondary: {
-    borderWidth: 1.5, borderColor: 'rgba(139,21,21,0.4)', borderRadius: 999, paddingVertical: 14, alignItems: 'center',
-  },
-  btnSecondaryText: { color: MAROON, fontSize: 15, fontWeight: '600' },
   legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, flexWrap: 'wrap' },
   legalLink: { color: '#9CA3AF', fontSize: 12, fontWeight: '500' },
   legalDot: { color: '#D1D5DB', fontSize: 12 },

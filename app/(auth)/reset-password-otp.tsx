@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { api, apiError } from '../../src/services/api';
+import OtpInput from '../../src/components/ui/OtpInput';
 
 const GOLD   = '#C9922A';
 const IS_WEB = Platform.OS === 'web';
@@ -21,7 +22,6 @@ export default function ResetPasswordOtp() {
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown]   = useState(0);
   const [pwFocused, setPwFocused] = useState(false);
-  const refs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     if (otp_mock && typeof otp_mock === 'string' && otp_mock.length === 6) {
@@ -54,14 +54,6 @@ export default function ResetPasswordOtp() {
     } finally {
       setResending(false);
     }
-  };
-
-  const setDigit = (i: number, v: string) => {
-    const d = v.replace(/\D/g, '').slice(0, 1);
-    const next = [...otp];
-    next[i] = d;
-    setOtp(next);
-    if (d && i < 5) refs.current[i + 1]?.focus();
   };
 
   const reset = async () => {
@@ -117,19 +109,7 @@ export default function ResetPasswordOtp() {
           <View style={w.formCard}>
             {/* OTP boxes */}
             <Text style={w.label}>ENTER OTP</Text>
-            <View style={w.otpRow}>
-              {otp.map((d, i) => (
-                <TextInput
-                  key={i}
-                  ref={(r) => { refs.current[i] = r; }}
-                  value={d}
-                  onChangeText={(v) => setDigit(i, v)}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  style={[w.otpBox, d ? w.otpBoxFilled : null]}
-                />
-              ))}
-            </View>
+            <OtpInput value={otp} onChange={setOtp} variant="glass" testIDPrefix="reset-otp-input" />
 
             {/* New password */}
             <Text style={[w.label, { marginTop: 20 }]}>NEW PASSWORD</Text>
@@ -228,21 +208,6 @@ const w = StyleSheet.create({
   },
 
   label: { fontSize: 10, fontWeight: '800', color: 'rgba(212,175,55,0.5)', letterSpacing: 1.5, marginBottom: 10 },
-
-  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: IS_WEB ? 10 : 8 },
-  otpBox: {
-    width: IS_WEB ? 48 : 44, height: IS_WEB ? 56 : 52,
-    borderRadius: 12, borderWidth: 1.5,
-    borderColor: 'rgba(212,175,55,0.2)',
-    textAlign: 'center', fontSize: 22, fontWeight: '800',
-    color: '#FFF8F0', backgroundColor: 'rgba(255,255,255,0.04)',
-    ...(IS_WEB ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
-  } as any,
-  otpBoxFilled: {
-    borderColor: 'rgba(212,175,55,0.65)',
-    backgroundColor: 'rgba(212,175,55,0.07)',
-    ...(IS_WEB ? { boxShadow: '0 0 0 3px rgba(212,175,55,0.08)' } as any : {}),
-  },
 
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 12,

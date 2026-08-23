@@ -2,11 +2,11 @@ import { Tabs, Slot } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { theme } from '../../src/constants/theme';
 
-const BRAND = '#8B1515';
-const GOLD = '#C9922A';
+const BRAND = theme.colors.primary;
 const MUTED = '#B0B0B0';
-const PILL_BG = '#FFEBEE';
+const PILL_BG = 'rgba(122,48,32,0.08)';
 
 type TabIconProps = {
   iconFocused: string;
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     paddingBottom: 0,
     elevation: 32,
-    shadowColor: '#8B1515',
+    shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.10,
     shadowRadius: 20,

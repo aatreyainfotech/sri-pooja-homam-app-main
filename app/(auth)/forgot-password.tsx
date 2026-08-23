@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
+  View, Text, TouchableOpacity, StyleSheet,
+  Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { api, apiError } from '../../src/services/api';
+import { theme } from '../../src/constants/theme';
+import GlassCard from '../../src/components/ui/GlassCard';
+import Input from '../../src/components/ui/Input';
+import Button from '../../src/components/ui/Button';
 
-const GOLD   = '#C9922A';
 const IS_WEB = Platform.OS === 'web';
 
 export default function ForgotPassword() {
   const router = useRouter();
   const [mobile, setMobile]   = useState('');
   const [loading, setLoading] = useState(false);
-  const [focused, setFocused] = useState(false);
 
   const send = async () => {
     if (!mobile.trim() || mobile.trim().length !== 10) {
@@ -46,9 +48,7 @@ export default function ForgotPassword() {
 
   return (
     <LinearGradient
-      colors={['#C9922A', '#7A3020', '#3D1408', '#120805']}
-      locations={[0, 0.3, 0.6, 1]}
-      start={[0, 0]} end={[1, 1]}
+      colors={theme.gradients.hero}
       style={IS_WEB ? w.rootWeb : w.rootMobile}
     >
       {IS_WEB && (
@@ -68,7 +68,7 @@ export default function ForgotPassword() {
         <View style={w.center}>
           {/* Icon ring */}
           <View style={w.iconWrap}>
-            <Ionicons name="lock-open-outline" size={32} color={GOLD} />
+            <Ionicons name="lock-open-outline" size={32} color={theme.colors.secondary} />
           </View>
 
           <Text style={w.title}>Forgot Password?</Text>
@@ -76,42 +76,34 @@ export default function ForgotPassword() {
             Enter your registered mobile number.{'\n'}We'll send an OTP via WhatsApp.
           </Text>
 
-          {/* Dark form card */}
-          <View style={w.formCard}>
-            <View style={[w.inputWrap, focused && w.inputWrapFocused]}>
-              <Ionicons name="call-outline" size={19} color={focused ? GOLD : 'rgba(212,175,55,0.5)'} />
-              <TextInput
-                value={mobile}
-                onChangeText={setMobile}
-                placeholder="Mobile number"
-                placeholderTextColor="rgba(255,248,240,0.3)"
-                keyboardType="phone-pad"
-                style={w.input}
-                maxLength={10}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-              />
-            </View>
+          {/* Glass form card */}
+          <GlassCard style={w.formCard}>
+            <Input
+              icon="call-outline"
+              tone="onDark"
+              value={mobile}
+              onChangeText={setMobile}
+              placeholder="Mobile number"
+              keyboardType="phone-pad"
+              maxLength={10}
+            />
 
-            <TouchableOpacity
-              style={[w.btn, loading && { opacity: 0.7 }]}
+            <Button
+              title="Send WhatsApp OTP"
+              icon="logo-whatsapp"
+              variant="secondary"
+              size="lg"
+              fullWidth
+              loading={loading}
               onPress={send}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              {loading ? <ActivityIndicator color="#fff" /> : (
-                <>
-                  <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-                  <Text style={w.btnTxt}>Send WhatsApp OTP</Text>
-                </>
-              )}
-            </TouchableOpacity>
+              style={{ marginBottom: theme.spacing.md }}
+            />
 
             <TouchableOpacity onPress={() => router.back()} style={w.backLink}>
-              <Ionicons name="arrow-back-outline" size={14} color={GOLD} />
+              <Ionicons name="arrow-back-outline" size={14} color={theme.colors.secondary} />
               <Text style={w.backLinkTxt}>Back to Sign In</Text>
             </TouchableOpacity>
-          </View>
+          </GlassCard>
 
           <Text style={w.copy}>© 2026 Aatreya Infotech Systems LLP</Text>
         </View>
@@ -154,41 +146,10 @@ const w = StyleSheet.create({
 
   formCard: {
     width: '100%', maxWidth: IS_WEB ? 420 : undefined,
-    backgroundColor: 'rgba(20,3,3,0.7)',
-    borderWidth: 1, borderColor: 'rgba(212,175,55,0.14)',
-    borderRadius: 20, padding: 28,
-    ...(IS_WEB ? { backdropFilter: 'blur(10px)', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' } as any : {}),
   },
-
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1.5, borderColor: 'rgba(212,175,55,0.18)',
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 2, marginBottom: 16,
-    ...(IS_WEB ? { transition: 'border-color 0.2s, background 0.2s' } as any : {}),
-  },
-  inputWrapFocused: IS_WEB ? {
-    borderColor: 'rgba(212,175,55,0.7)',
-    backgroundColor: 'rgba(212,175,55,0.06)',
-    boxShadow: '0 0 0 3px rgba(212,175,55,0.08)',
-  } as any : { borderColor: GOLD },
-  input: {
-    flex: 1, paddingVertical: 14, fontSize: 15, color: '#FFF8F0',
-    ...(IS_WEB ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
-  } as any,
-
-  btn: {
-    borderRadius: 14, paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 18,
-    ...(IS_WEB ? {
-      backgroundImage: 'linear-gradient(135deg, #A01818 0%, #7B1010 100%)',
-      boxShadow: '0 6px 28px rgba(139,21,21,0.55)',
-    } as any : { backgroundColor: '#A01818' }),
-  },
-  btnTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
   backLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  backLinkTxt: { color: GOLD, fontSize: 14, fontWeight: '600' },
+  backLinkTxt: { color: theme.colors.secondary, fontSize: 14, fontWeight: '600' },
 
   copy: {
     color: 'rgba(212,175,55,0.25)', fontSize: 11,

@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import OtpInput from '../../src/components/ui/OtpInput';
 
 export default function VerifyOtp() {
   const router = useRouter();
@@ -22,7 +23,6 @@ export default function VerifyOtp() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const refs = useRef<(TextInput | null)[]>([]);
 
   // Auto-fill mocked OTP after 500ms for UX convenience
   useEffect(() => {
@@ -57,14 +57,6 @@ export default function VerifyOtp() {
     } finally {
       setResending(false);
     }
-  };
-
-  const setDigit = (i: number, v: string) => {
-    const d = v.replace(/\D/g, '').slice(0, 1);
-    const next = [...otp];
-    next[i] = d;
-    setOtp(next);
-    if (d && i < 5) refs.current[i + 1]?.focus();
   };
 
   const verify = async () => {
@@ -111,23 +103,7 @@ export default function VerifyOtp() {
             </View>
           )}
 
-          <View style={styles.otpRow}>
-            {otp.map((d, i) => (
-              <TextInput
-                key={i}
-                testID={`otp-input-${i}`}
-                ref={(r) => { refs.current[i] = r; }}
-                value={d}
-                onChangeText={(v) => setDigit(i, v)}
-                onKeyPress={({ nativeEvent }) => {
-                  if (nativeEvent.key === 'Backspace' && !d && i > 0) refs.current[i - 1]?.focus();
-                }}
-                keyboardType="number-pad"
-                maxLength={1}
-                style={styles.otpBox}
-              />
-            ))}
-          </View>
+          <OtpInput value={otp} onChange={setOtp} variant="glass" testIDPrefix="otp-input" />
 
           <TouchableOpacity testID="otp-verify-btn" style={styles.btnPrimary} onPress={verify} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : (
@@ -174,12 +150,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 30, fontWeight: '700', color: theme.colors.secondary, textAlign: 'center' },
   subtitle: { fontSize: 14, color: 'rgba(253,251,247,0.8)', textAlign: 'center', marginTop: 8, marginBottom: 30, lineHeight: 22 },
-  otpRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginBottom: 24 },
-  otpBox: {
-    flex: 1, height: 60, borderWidth: 2, borderColor: theme.colors.secondary,
-    borderRadius: 12, backgroundColor: '#fff', textAlign: 'center',
-    fontSize: 24, fontWeight: '700', color: theme.colors.primary,
-  },
   btnPrimary: {
     backgroundColor: theme.colors.secondary, borderRadius: 999, paddingVertical: 15,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

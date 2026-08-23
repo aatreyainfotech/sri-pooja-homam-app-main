@@ -6,12 +6,15 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
 import RazorpayCheckout from '../../src/components/RazorpayCheckout';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
+import Button from '../../src/components/ui/Button';
 
 export default function BookPooja() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -131,18 +134,14 @@ export default function BookPooja() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
-        <TouchableOpacity testID="book-back-btn" onPress={() => safeBack('/(tabs)')} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="close" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {step === 'details' ? 'Book Pooja' : step === 'payment' ? 'Payment' : 'Confirmed'}
-        </Text>
-        <View style={{ width: 40 }} />
-      </LinearGradient>
+      <ScreenHeader
+        title={step === 'details' ? 'Book Pooja' : step === 'payment' ? 'Payment' : 'Confirmed'}
+        onBack={() => safeBack('/(tabs)')}
+      />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, alignItems: 'center' }} keyboardShouldPersistTaps="handled">
+        <ResponsiveContainer maxWidth={640}>
           {/* Pooja summary card */}
           <View style={styles.summaryCard}>
             <Image source={{ uri: pooja.image }} style={styles.summaryImg} />
@@ -156,116 +155,122 @@ export default function BookPooja() {
 
           {step === 'details' && (
             <>
-              <Text style={styles.formTitle}>Schedule Pooja</Text>
-              <Text style={styles.formSub}>Choose the date and time for your pooja</Text>
+              <Surface elevation="sm" padding="md" radius="lg" style={{ marginBottom: theme.spacing.lg }}>
+                <Text style={styles.formTitle}>Schedule Pooja</Text>
+                <Text style={styles.formSub}>Choose the date and time for your pooja</Text>
 
-              {/* Date picker */}
-              <Text style={styles.fieldLabel}>Select Date *</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ marginBottom: 18 }}
-                contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
-              >
-                {dateOptions.map((item, i) => {
-                  const isSel = selectedDate?.toDateString() === item.toDateString();
-                  const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
-                  const date = item.getDate();
-                  const month = item.toLocaleDateString('en-IN', { month: 'short' });
-                  return (
-                    <TouchableOpacity
-                      key={i}
-                      onPress={() => setSelectedDate(item)}
-                      style={[styles.dateChip, isSel && styles.dateChipSel]}
-                    >
-                      <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
-                      <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
-                      <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+                {/* Date picker */}
+                <Text style={styles.fieldLabel}>Select Date *</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginBottom: 18 }}
+                  contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
+                >
+                  {dateOptions.map((item, i) => {
+                    const isSel = selectedDate?.toDateString() === item.toDateString();
+                    const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
+                    const date = item.getDate();
+                    const month = item.toLocaleDateString('en-IN', { month: 'short' });
+                    return (
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => setSelectedDate(item)}
+                        style={[styles.dateChip, isSel && styles.dateChipSel]}
+                      >
+                        <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
+                        <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
+                        <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
 
-              {/* Time slot picker */}
-              <Text style={styles.fieldLabel}>Select Time *</Text>
-              <View style={styles.timeGrid}>
-                {timeSlots.map((slot) => {
-                  const isSel = selectedTime === slot;
-                  return (
-                    <TouchableOpacity
-                      key={slot}
-                      onPress={() => setSelectedTime(slot)}
-                      style={[styles.timeChip, isSel && styles.timeChipSel]}
-                    >
-                      <Text style={[styles.timeChipText, isSel && styles.timeChipTextSel]}>{slot}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                {/* Time slot picker */}
+                <Text style={styles.fieldLabel}>Select Time *</Text>
+                <View style={styles.timeGrid}>
+                  {timeSlots.map((slot) => {
+                    const isSel = selectedTime === slot;
+                    return (
+                      <Button
+                        key={slot}
+                        title={slot}
+                        variant={isSel ? 'secondary' : 'outline'}
+                        onPress={() => setSelectedTime(slot)}
+                        style={styles.timeChip}
+                      />
+                    );
+                  })}
+                </View>
+              </Surface>
 
-              <View style={styles.divider} />
-              <Text style={styles.formTitle}>Devotee Details</Text>
-              <Text style={styles.formSub}>Name, Gotra & Nakshatra will be chanted during the ritual</Text>
+              <Surface elevation="sm" padding="md" radius="lg" style={{ marginBottom: theme.spacing.lg }}>
+                <Text style={styles.formTitle}>Devotee Details</Text>
+                <Text style={styles.formSub}>Name, Gotra & Nakshatra will be chanted during the ritual</Text>
 
-              <Field label="Devotee Name *" icon="person-outline">
-                <TextInput
-                  testID="book-devotee-input"
-                  value={form.devotee_name}
-                  onChangeText={(v) => set('devotee_name', v)}
-                  placeholder="Full name as per records"
-                  placeholderTextColor={theme.colors.textMuted}
-                  style={styles.input}
-                />
-              </Field>
+                <Field label="Devotee Name *" icon="person-outline">
+                  <TextInput
+                    testID="book-devotee-input"
+                    value={form.devotee_name}
+                    onChangeText={(v) => set('devotee_name', v)}
+                    placeholder="Full name as per records"
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={styles.input}
+                  />
+                </Field>
 
-              <Field label="Gotra" icon="book-outline">
-                <TextInput
-                  testID="book-gotra-input"
-                  value={form.gotra}
-                  onChangeText={(v) => set('gotra', v)}
-                  placeholder="e.g. Kashyapa"
-                  placeholderTextColor={theme.colors.textMuted}
-                  style={styles.input}
-                />
-              </Field>
+                <Field label="Gotra" icon="book-outline">
+                  <TextInput
+                    testID="book-gotra-input"
+                    value={form.gotra}
+                    onChangeText={(v) => set('gotra', v)}
+                    placeholder="e.g. Kashyapa"
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={styles.input}
+                  />
+                </Field>
 
-              <Field label="Nakshatra" icon="star-outline">
-                <TextInput
-                  testID="book-nakshatra-input"
-                  value={form.nakshatra}
-                  onChangeText={(v) => set('nakshatra', v)}
-                  placeholder="e.g. Rohini"
-                  placeholderTextColor={theme.colors.textMuted}
-                  style={styles.input}
-                />
-              </Field>
+                <Field label="Nakshatra" icon="star-outline">
+                  <TextInput
+                    testID="book-nakshatra-input"
+                    value={form.nakshatra}
+                    onChangeText={(v) => set('nakshatra', v)}
+                    placeholder="e.g. Rohini"
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={styles.input}
+                  />
+                </Field>
 
-              <Field label="Special Requests (optional)" icon="chatbubble-outline">
-                <TextInput
-                  testID="book-notes-input"
-                  value={form.notes}
-                  onChangeText={(v) => set('notes', v)}
-                  placeholder="Any special request for priest..."
-                  placeholderTextColor={theme.colors.textMuted}
-                  multiline
-                  style={[styles.input, { minHeight: 70, textAlignVertical: 'top' }]}
-                />
-              </Field>
+                <Field label="Special Requests (optional)" icon="chatbubble-outline">
+                  <TextInput
+                    testID="book-notes-input"
+                    value={form.notes}
+                    onChangeText={(v) => set('notes', v)}
+                    placeholder="Any special request for priest..."
+                    placeholderTextColor={theme.colors.textMuted}
+                    multiline
+                    style={[styles.input, { minHeight: 70, textAlignVertical: 'top' }]}
+                  />
+                </Field>
+              </Surface>
 
-              <TouchableOpacity testID="book-proceed-btn" style={styles.btnPrimary} onPress={createBooking} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : (
-                  <>
-                    <Text style={styles.btnPrimaryText}>Proceed to Payment</Text>
-                    <Ionicons name="arrow-forward" size={18} color="#fff" />
-                  </>
-                )}
-              </TouchableOpacity>
+              <Button
+                testID="book-proceed-btn"
+                title="Proceed to Payment"
+                icon="arrow-forward"
+                iconPosition="right"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                onPress={createBooking}
+              />
             </>
           )}
 
           {step === 'payment' && booking && (
             <>
-              <View style={styles.payCard}>
+              <Surface elevation="sm" padding="lg" radius="lg" style={{ alignItems: 'center' }}>
                 <Ionicons name="card" size={40} color={theme.colors.primary} />
                 <Text style={styles.payTitle}>Razorpay Secure Payment</Text>
                 <Text style={styles.paySub}>Order: {booking.razorpay_order_id}</Text>
@@ -286,16 +291,19 @@ export default function BookPooja() {
                 </View>
 
                 <Text style={styles.secureNote}>🔒 Secured by Razorpay — UPI, Cards, Net Banking, Wallets</Text>
-              </View>
+              </Surface>
 
-              <TouchableOpacity testID="book-pay-btn" style={styles.btnPrimary} onPress={payNow} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : (
-                  <>
-                    <Ionicons name="lock-closed" size={16} color="#fff" />
-                    <Text style={styles.btnPrimaryText}>Pay ₹{booking.amount.toFixed(0)} Securely</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              <Button
+                testID="book-pay-btn"
+                title={`Pay ₹${booking.amount.toFixed(0)} Securely`}
+                icon="lock-closed"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                onPress={payNow}
+                style={{ marginTop: theme.spacing.md }}
+              />
 
               <RazorpayCheckout
                 visible={showRazorpay}
@@ -346,11 +354,17 @@ export default function BookPooja() {
                 <Text style={styles.unlockText}>Live streaming unlocked for this temple</Text>
               </View>
 
-              <TouchableOpacity testID="book-done-btn" style={styles.btnPrimary} onPress={() => router.replace('/(tabs)/bookings')}>
-                <Text style={styles.btnPrimaryText}>View My Bookings</Text>
-              </TouchableOpacity>
+              <Button
+                testID="book-done-btn"
+                title="View My Bookings"
+                variant="primary"
+                size="lg"
+                fullWidth
+                onPress={() => router.replace('/(tabs)/bookings')}
+              />
             </View>
           )}
+        </ResponsiveContainer>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -381,12 +395,6 @@ function ReceiptRow({ label, value }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 12, paddingVertical: 12,
-  },
-  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
 
   summaryCard: {
     flexDirection: 'row', backgroundColor: '#fff', padding: 12, borderRadius: 18,
@@ -410,16 +418,6 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, paddingVertical: 12, fontSize: 15, color: theme.colors.text },
 
-  btnPrimary: {
-    backgroundColor: theme.colors.primary, borderRadius: 999, paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 12,
-  },
-  btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-
-  payCard: {
-    backgroundColor: '#fff', padding: 20, borderRadius: 18,
-    borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center',
-  },
   payTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text, marginTop: 10 },
   paySub: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   payBreakdown: { width: '100%', marginTop: 20 },
@@ -451,8 +449,6 @@ const styles = StyleSheet.create({
   },
   unlockText: { color: theme.colors.secondaryDark, fontSize: 13, fontWeight: '600' },
 
-  divider: { height: 1, backgroundColor: theme.colors.border, marginVertical: 20 },
-
   dateChip: {
     alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 14, borderWidth: 1.5, borderColor: theme.colors.border,
@@ -464,13 +460,9 @@ const styles = StyleSheet.create({
   dateChipMonth: { fontSize: 10, fontWeight: '600', color: theme.colors.textMuted },
   dateChipTextSel: { color: '#fff' },
 
-  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
+  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
   timeChip: {
-    paddingHorizontal: 14, paddingVertical: 9,
-    borderRadius: 20, borderWidth: 1.5, borderColor: theme.colors.border,
-    backgroundColor: '#fff',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
   },
-  timeChipSel: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  timeChipText: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
-  timeChipTextSel: { color: '#fff' },
 });

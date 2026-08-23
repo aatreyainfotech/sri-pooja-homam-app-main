@@ -8,7 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
-import { theme } from '../../src/constants/theme';
+import { theme, palette } from '../../src/constants/theme';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
 
 export default function TempleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -64,7 +65,7 @@ export default function TempleDetail() {
           </View>
         </View>
 
-        <View style={styles.content}>
+        <ResponsiveContainer maxWidth={900} style={styles.content}>
           <View style={styles.deityCard}>
             <Text style={styles.deityLabel}>PRESIDING DEITY</Text>
             <Text style={styles.deity}>🕉 {temple.deity}</Text>
@@ -118,7 +119,7 @@ export default function TempleDetail() {
               </View>
             </TouchableOpacity>
           ))}
-        </View>
+        </ResponsiveContainer>
       </ScrollView>
     </View>
   );
@@ -126,60 +127,60 @@ export default function TempleDetail() {
 
 const styles: any = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  bannerWrap: { height: 320, position: 'relative', backgroundColor: '#3D1515' },
-  bannerSafe: { position: 'absolute', top: 0, left: 0, right: 0, padding: 12 },
+  bannerWrap: { height: 320, position: 'relative', backgroundColor: theme.colors.primaryDark },
+  bannerSafe: { position: 'absolute', top: 0, left: 0, right: 0, padding: theme.spacing.sm + 4 },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 40, height: 40, borderRadius: theme.radius.lg,
     backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center',
   },
-  bannerContent: { position: 'absolute', bottom: 20, left: 20, right: 20 },
+  bannerContent: { position: 'absolute', bottom: theme.spacing.lg, left: theme.spacing.lg, right: theme.spacing.lg },
   logoWrap: {
     width: 60, height: 60, borderRadius: 30,
     borderWidth: 3, borderColor: theme.colors.secondary,
     backgroundColor: theme.colors.secondary, overflow: 'hidden',
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm + 2,
   },
-  templeName: { color: '#fff', fontSize: 28, fontWeight: '800' },
+  templeName: { ...theme.typography.h1, fontSize: 28, color: '#fff' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   loc: { color: theme.colors.secondary, fontSize: 13, fontWeight: '600' },
 
-  content: { padding: 20 },
+  content: { padding: theme.spacing.lg },
   deityCard: {
-    backgroundColor: 'rgba(212,175,55,0.12)', padding: 14, borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(212,175,55,0.35)', marginBottom: 20,
+    backgroundColor: 'rgba(212,175,55,0.12)', padding: theme.spacing.md, borderRadius: theme.radius.md,
+    borderWidth: 1, borderColor: 'rgba(212,175,55,0.35)', marginBottom: theme.spacing.lg,
   },
   deityLabel: { fontSize: 10, fontWeight: '800', color: theme.colors.secondaryDark, letterSpacing: 1.5 },
   deity: { fontSize: 18, fontWeight: '700', color: theme.colors.primary, marginTop: 4 },
 
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text, marginTop: 8, marginBottom: 8 },
-  desc: { color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, marginBottom: 14 },
+  sectionTitle: { ...theme.typography.h3, color: theme.colors.text, marginTop: theme.spacing.sm, marginBottom: theme.spacing.sm },
+  desc: { ...theme.typography.body, color: theme.colors.textSecondary, marginBottom: theme.spacing.md },
 
-  filterRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  filter: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border },
+  filterRow: { flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md },
+  filter: { paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.sm, borderRadius: theme.radius.full, backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border },
   filterActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   filterText: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
   filterTextActive: { color: '#fff' },
 
   poojaCard: {
-    flexDirection: 'row', backgroundColor: '#fff', padding: 12, borderRadius: 18,
-    borderWidth: 1, borderColor: theme.colors.border, marginBottom: 12,
+    flexDirection: 'row', backgroundColor: '#fff', padding: theme.spacing.sm + 4, borderRadius: theme.radius.lg,
+    borderWidth: 1, borderColor: theme.colors.border, marginBottom: theme.spacing.sm + 4,
   },
-  poojaImgWrap: { width: 100, height: 130, borderRadius: 14, backgroundColor: '#F5E6D0', overflow: 'hidden' },
+  poojaImgWrap: { width: 100, height: 130, borderRadius: theme.radius.md, backgroundColor: palette.creamDeep, overflow: 'hidden' },
   typeTag: (type: string) => ({
     alignSelf: 'flex-start',
-    backgroundColor: type === 'homam' ? '#FFF3E0' : '#FFEBEE',
-    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4,
+    backgroundColor: type === 'homam' ? '#FFF3E0' : 'rgba(122,48,32,0.08)',
+    paddingHorizontal: theme.spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, marginBottom: 4,
   }),
   typeTagText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: theme.colors.primary },
   poojaName: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
   poojaDesc: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2, lineHeight: 16 },
-  poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  poojaFoot: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginTop: 4 },
   poojaPrice: { fontSize: 16, fontWeight: '800', color: theme.colors.primary },
   poojaDur: { fontSize: 11, color: theme.colors.textMuted },
   bookBtn: {
     flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: 4,
-    backgroundColor: theme.colors.primary, paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 999, marginTop: 8,
+    backgroundColor: theme.colors.primary, paddingHorizontal: theme.spacing.sm + 4, paddingVertical: theme.spacing.xs + 2,
+    borderRadius: theme.radius.full, marginTop: theme.spacing.sm,
   },
   bookBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });

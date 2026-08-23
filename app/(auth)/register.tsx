@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
+  View, Text, TouchableOpacity, StyleSheet, ScrollView,
+  KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
@@ -10,6 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
+import Input from '../../src/components/ui/Input';
+import Button from '../../src/components/ui/Button';
+import Surface from '../../src/components/ui/Surface';
 
 export default function Register() {
   const router = useRouter();
@@ -18,7 +21,6 @@ export default function Register() {
     full_name: '', mobile: '', email: '', address: '', city: '', pincode: '', password: '',
   });
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -70,7 +72,7 @@ export default function Register() {
   ];
 
   return (
-    <LinearGradient colors={['#8B1515', '#630B0B', '#2D1B19']} style={{ flex: 1 }}>
+    <LinearGradient colors={[theme.colors.primary, theme.colors.primaryDark, theme.colors.bgDark]} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -82,45 +84,34 @@ export default function Register() {
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join Sri Pooja Homam family</Text>
 
-            <View style={styles.card}>
-              {fields.map((f) => {
-                const focused = focusedField === f.key;
-                return (
-                  <View
-                    key={f.key}
-                    style={[styles.inputWrap, focused && styles.inputWrapFocused]}
-                  >
-                    <Ionicons
-                      name={f.icon}
-                      size={18}
-                      color={focused ? '#C9922A' : '#9CA3AF'}
-                    />
-                    <TextInput
-                      testID={`register-${f.key}-input`}
-                      value={form[f.key]}
-                      onChangeText={(v) => set(f.key, v)}
-                      placeholder={f.label}
-                      placeholderTextColor={theme.colors.textMuted}
-                      keyboardType={f.keyboardType ?? 'default'}
-                      secureTextEntry={!!f.secure}
-                      autoCapitalize={f.key === 'email' ? 'none' : 'sentences'}
-                      maxLength={f.maxLen}
-                      style={styles.input}
-                      onFocus={() => setFocusedField(f.key)}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
-                );
-              })}
+            <Surface elevation="lg" padding="lg" radius="xl" style={styles.card}>
+              {fields.map((f) => (
+                <Input
+                  key={f.key}
+                  testID={`register-${f.key}-input`}
+                  icon={f.icon}
+                  value={form[f.key]}
+                  onChangeText={(v) => set(f.key, v)}
+                  placeholder={f.label}
+                  keyboardType={f.keyboardType ?? 'default'}
+                  secureTextEntry={!!f.secure}
+                  autoCapitalize={f.key === 'email' ? 'none' : 'sentences'}
+                  maxLength={f.maxLen}
+                />
+              ))}
 
-              <TouchableOpacity testID="register-submit-btn" style={styles.btnPrimary} onPress={onSubmit} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : (
-                  <>
-                    <Text style={styles.btnPrimaryText}>Send WhatsApp OTP</Text>
-                    <Ionicons name="logo-whatsapp" size={20} color="#fff" />
-                  </>
-                )}
-              </TouchableOpacity>
+              <Button
+                testID="register-submit-btn"
+                title="Send WhatsApp OTP"
+                icon="logo-whatsapp"
+                iconPosition="right"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                onPress={onSubmit}
+                style={{ marginTop: theme.spacing.xs }}
+              />
 
               <Text style={styles.info}>📱 We'll send a 6-digit OTP to verify your mobile</Text>
 
@@ -138,7 +129,7 @@ export default function Register() {
                   <TouchableOpacity><Text style={styles.legalLink}>Refund Policy</Text></TouchableOpacity>
                 </Link>
               </View>
-            </View>
+            </Surface>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -153,35 +144,12 @@ const styles = StyleSheet.create({
   },
   back: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 2 },
   backText: { color: '#FDFBF7', fontSize: 15 },
-  title: { fontSize: 30, fontWeight: '700', color: theme.colors.secondary, marginTop: 8 },
+  title: { ...theme.typography.h1, color: theme.colors.secondary, marginTop: 8 },
   subtitle: { fontSize: 14, color: 'rgba(253,251,247,0.7)', marginBottom: 20 },
   card: {
-    backgroundColor: theme.colors.bgPaper, borderRadius: 24, padding: 20,
+    backgroundColor: theme.colors.bgPaper,
     borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 20px 60px rgba(0,0,0,0.35)' } as any : {}),
   },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderWidth: 1.5, borderColor: '#E5E1D8',
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 2,
-    marginBottom: 14, backgroundColor: '#FBFAF7',
-    ...(Platform.OS === 'web' ? { transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s' } as any : {}),
-  },
-  inputWrapFocused: {
-    borderColor: '#C9922A',
-    backgroundColor: '#FFFFFF',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(201,146,42,0.12)' } as any : {}),
-  },
-  input: {
-    flex: 1, paddingVertical: 13, fontSize: 15,
-    color: '#111827',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none', outlineWidth: 0 } as any : {}),
-  },
-  btnPrimary: {
-    backgroundColor: theme.colors.primary, borderRadius: 999, paddingVertical: 15,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
-  },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   info: { textAlign: 'center', color: theme.colors.textMuted, fontSize: 12, marginTop: 14 },
   legalNote: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',

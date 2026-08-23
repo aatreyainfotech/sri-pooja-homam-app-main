@@ -11,6 +11,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/context/AuthContext';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+
+const IS_WEB = Platform.OS === 'web';
 
 export default function Profile() {
   const router = useRouter();
@@ -146,7 +149,7 @@ export default function Profile() {
   if (!user) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <LinearGradient colors={['#8B1515', '#630B0B']} style={[styles.header, { paddingBottom: 30 }]}>
+        <LinearGradient colors={theme.gradients.headerPrimary} style={[styles.header, { paddingBottom: 30 }]}>
           <View style={styles.avatar}>
             <Ionicons name="person" size={34} color="#fff" />
           </View>
@@ -175,7 +178,7 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
+        <LinearGradient colors={theme.gradients.headerPrimary} style={styles.header}>
           <TouchableOpacity
             testID="profile-avatar-btn"
             activeOpacity={0.8}
@@ -196,7 +199,7 @@ export default function Profile() {
               </View>
             ) : (
               <View style={styles.editBadge}>
-                <Ionicons name="camera" size={16} color="#8B1515" />
+                <Ionicons name="camera" size={16} color={theme.colors.primary} />
               </View>
             )}
           </TouchableOpacity>
@@ -208,6 +211,7 @@ export default function Profile() {
           </View>
         </LinearGradient>
 
+        <ResponsiveContainer maxWidth={720}>
         {isAdmin && (
           <TouchableOpacity
             testID="profile-admin-btn"
@@ -294,13 +298,14 @@ export default function Profile() {
         </TouchableOpacity>
 
         <Text style={styles.footer}>🙏 Sri Pooja Homam v1.0{'\n'}Developed by Aatreya Infotech</Text>
+        </ResponsiveContainer>
       </ScrollView>
 
       {/* Photo picker bottom sheet */}
       <Modal visible={showPicker} transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowPicker(false)}>
           <Pressable style={styles.sheet} onPress={() => {}}>
-            <View style={styles.sheetHandle} />
+            {!IS_WEB && <View style={styles.sheetHandle} />}
             <Text style={styles.sheetTitle}>Profile Photo</Text>
             {Platform.OS !== 'web' && (
               <TouchableOpacity style={styles.sheetBtn} onPress={takePhoto}>
@@ -329,7 +334,7 @@ export default function Profile() {
       <Modal visible={showUpiModal} transparent animationType="slide" onRequestClose={() => setShowUpiModal(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowUpiModal(false)}>
           <Pressable style={styles.sheet} onPress={() => {}}>
-            <View style={styles.sheetHandle} />
+            {!IS_WEB && <View style={styles.sheetHandle} />}
             <Text style={styles.sheetTitle}>PhonePe / UPI ID</Text>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 16 }}>
               Enter your PhonePe mobile number or UPI ID (e.g. 9876543210@ybl)
@@ -477,9 +482,15 @@ const styles = StyleSheet.create({
 
   footer: { textAlign: 'center', marginTop: 30, color: theme.colors.textMuted, fontSize: 12, lineHeight: 20 },
 
-  // Photo picker sheet
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 20, paddingHorizontal: 16, paddingTop: 10 },
+  // Photo picker sheet — bottom sheet on native, centered dialog on web
+  backdrop: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: IS_WEB ? 'center' : 'flex-end',
+    alignItems: IS_WEB ? 'center' : undefined,
+  },
+  sheet: IS_WEB
+    ? { backgroundColor: '#fff', borderRadius: theme.radius.lg, padding: 20, width: '100%', maxWidth: 420 }
+    : { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 20, paddingHorizontal: 16, paddingTop: 10 },
   sheetHandle: { width: 40, height: 4, backgroundColor: '#ddd', alignSelf: 'center', borderRadius: 2, marginBottom: 12 },
   sheetTitle: { fontSize: 16, fontWeight: '700', color: theme.colors.text, marginBottom: 12, textAlign: 'center' },
   sheetBtn: {

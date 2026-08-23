@@ -5,15 +5,20 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import { useResponsive } from '../../src/hooks/useResponsive';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
 
 export default function Bookings() {
   const router = useRouter();
   const { user } = useAuth();
+  const { isDesktop } = useResponsive();
+  const numColumns = isDesktop ? 2 : 1;
   const [items, setItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,10 +57,7 @@ export default function Bookings() {
   if (!user) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
-          <Text style={styles.title}>My Bookings</Text>
-          <Text style={styles.sub}>Your sacred pooja & homam reservations</Text>
-        </LinearGradient>
+        <ScreenHeader title="My Bookings" subtitle="Your sacred pooja & homam reservations" />
         <View style={styles.guestWrap}>
           <View style={styles.guestIcon}>
             <Ionicons name="receipt-outline" size={40} color={theme.colors.primary} />
@@ -73,100 +75,102 @@ export default function Bookings() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
-        <Text style={styles.title}>My Bookings</Text>
-        <Text style={styles.sub}>Your sacred pooja & homam reservations</Text>
-      </LinearGradient>
+      <ScreenHeader title="My Bookings" subtitle="Your sacred pooja & homam reservations" />
 
-      <FlatList
-        data={items}
-        keyExtractor={(i) => i.id}
-        contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
-        renderItem={({ item }) => (
-          <View testID={`booking-card-${item.id}`} style={styles.card}>
-            <View style={styles.cardHead}>
-              <View style={[styles.typeBadge, { backgroundColor: item.pooja_type === 'homam' ? '#FFF3E0' : '#FFEBEE' }]}>
-                <Ionicons
-                  name={item.pooja_type === 'homam' ? 'flame' : 'flower'}
-                  size={12}
-                  color={item.pooja_type === 'homam' ? '#E65100' : '#8B1515'}
-                />
-                <Text style={styles.typeText}>{item.pooja_type.toUpperCase()}</Text>
+      <ResponsiveContainer maxWidth={900} style={{ flex: 1 }}>
+        <FlatList
+          key={numColumns}
+          data={items}
+          keyExtractor={(i) => i.id}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? { gap: 14 } : undefined}
+          contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 40 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+          renderItem={({ item }) => (
+            <Surface testID={`booking-card-${item.id}`} elevation="sm" padding="md" radius="lg" style={numColumns > 1 ? { flex: 1 } : undefined}>
+              <View style={styles.cardHead}>
+                <View style={[styles.typeBadge, { backgroundColor: item.pooja_type === 'homam' ? '#FFF3E0' : 'rgba(122,48,32,0.08)' }]}>
+                  <Ionicons
+                    name={item.pooja_type === 'homam' ? 'flame' : 'flower'}
+                    size={12}
+                    color={item.pooja_type === 'homam' ? '#E65100' : theme.colors.primary}
+                  />
+                  <Text style={styles.typeText}>{item.pooja_type.toUpperCase()}</Text>
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: item.payment_status === 'paid' ? '#E8F5E9' : '#FFF8E1' }]}>
+                  <Text style={[styles.statusText, { color: item.payment_status === 'paid' ? '#2E7D32' : '#E65100' }]}>
+                    {item.payment_status === 'paid' ? '✓ Paid' : 'Pending'}
+                  </Text>
+                </View>
               </View>
-              <View style={[styles.statusBadge, { backgroundColor: item.payment_status === 'paid' ? '#E8F5E9' : '#FFF8E1' }]}>
-                <Text style={[styles.statusText, { color: item.payment_status === 'paid' ? '#2E7D32' : '#E65100' }]}>
-                  {item.payment_status === 'paid' ? '✓ Paid' : 'Pending'}
+
+              <Text style={styles.name}>{item.pooja_name}</Text>
+              {item.temple_name ? <Text style={styles.devotee}>🛕 {item.temple_name}</Text> : null}
+              <Text style={styles.devotee}>For: {item.devotee_name}</Text>
+              {item.gotra ? <Text style={styles.meta}>Gotra: {item.gotra}</Text> : null}
+              {item.scheduled_at ? (
+                <Text style={styles.meta}>
+                  📅 {new Date(item.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </Text>
+              ) : null}
+
+              <View style={styles.foot}>
+                <Text style={styles.price}>₹{item.amount?.toFixed(0)}</Text>
+                {item.payment_status === 'paid' ? (
+                  <TouchableOpacity
+                    testID={`booking-receipt-${item.id}`}
+                    onPress={() => setReceipt(item)}
+                    style={styles.btnReceipt}
+                  >
+                    <Ionicons name="receipt-outline" size={14} color="#fff" />
+                    <Text style={styles.btnReceiptText}>Receipt</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    testID={`booking-pay-${item.id}`}
+                    onPress={() => payNow(item)}
+                    style={styles.btnPay}
+                  >
+                    <Text style={styles.btnPayText}>Pay Now</Text>
+                    <Ionicons name="arrow-forward" size={14} color="#2D1B19" />
+                  </TouchableOpacity>
+                )}
               </View>
-            </View>
-
-            <Text style={styles.name}>{item.pooja_name}</Text>
-            {item.temple_name ? <Text style={styles.devotee}>🛕 {item.temple_name}</Text> : null}
-            <Text style={styles.devotee}>For: {item.devotee_name}</Text>
-            {item.gotra ? <Text style={styles.meta}>Gotra: {item.gotra}</Text> : null}
-            {item.scheduled_at ? (
-              <Text style={styles.meta}>
-                📅 {new Date(item.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </Text>
-            ) : null}
-
-            <View style={styles.foot}>
-              <Text style={styles.price}>₹{item.amount?.toFixed(0)}</Text>
-              {item.payment_status === 'paid' ? (
-                <TouchableOpacity
-                  testID={`booking-receipt-${item.id}`}
-                  onPress={() => setReceipt(item)}
-                  style={styles.btnReceipt}
-                >
-                  <Ionicons name="receipt-outline" size={14} color="#fff" />
-                  <Text style={styles.btnReceiptText}>Receipt</Text>
+            </Surface>
+          )}
+          ListEmptyComponent={
+            loading ? (
+              <View style={styles.empty}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={styles.emptySub}>Loading your bookings…</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.empty}>
+                <Ionicons name="cloud-offline-outline" size={48} color="#E53935" />
+                <Text style={[styles.emptyTitle, { color: '#C62828' }]}>Could Not Load</Text>
+                <Text style={styles.emptySub}>{error}</Text>
+                <TouchableOpacity style={styles.browseBtn} onPress={load}>
+                  <Ionicons name="refresh" size={15} color="#fff" />
+                  <Text style={styles.browseBtnText}>Try Again</Text>
                 </TouchableOpacity>
-              ) : (
+              </View>
+            ) : (
+              <View style={styles.empty}>
+                <Ionicons name="receipt-outline" size={48} color={theme.colors.textMuted} />
+                <Text style={styles.emptyTitle}>No bookings yet</Text>
+                <Text style={styles.emptySub}>Browse temples to book your first pooja</Text>
                 <TouchableOpacity
-                  testID={`booking-pay-${item.id}`}
-                  onPress={() => payNow(item)}
-                  style={styles.btnPay}
+                  testID="bookings-browse-btn"
+                  style={styles.browseBtn}
+                  onPress={() => router.push('/(tabs)/temples')}
                 >
-                  <Text style={styles.btnPayText}>Pay Now</Text>
-                  <Ionicons name="arrow-forward" size={14} color="#2D1B19" />
+                  <Text style={styles.browseBtnText}>Browse Temples</Text>
                 </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-        ListEmptyComponent={
-          loading ? (
-            <View style={styles.empty}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.emptySub}>Loading your bookings…</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.empty}>
-              <Ionicons name="cloud-offline-outline" size={48} color="#E53935" />
-              <Text style={[styles.emptyTitle, { color: '#C62828' }]}>Could Not Load</Text>
-              <Text style={styles.emptySub}>{error}</Text>
-              <TouchableOpacity style={styles.browseBtn} onPress={load}>
-                <Ionicons name="refresh" size={15} color="#fff" />
-                <Text style={styles.browseBtnText}>Try Again</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.empty}>
-              <Ionicons name="receipt-outline" size={48} color={theme.colors.textMuted} />
-              <Text style={styles.emptyTitle}>No bookings yet</Text>
-              <Text style={styles.emptySub}>Browse temples to book your first pooja</Text>
-              <TouchableOpacity
-                testID="bookings-browse-btn"
-                style={styles.browseBtn}
-                onPress={() => router.push('/(tabs)/temples')}
-              >
-                <Text style={styles.browseBtnText}>Browse Temples</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        }
-      />
+              </View>
+            )
+          }
+        />
+      </ResponsiveContainer>
 
       <Modal visible={!!receipt} transparent animationType="fade" onRequestClose={() => setReceipt(null)}>
         <View style={styles.mBackdrop}>
@@ -188,8 +192,8 @@ export default function Bookings() {
                 </View>
               ) : null}
               {receipt?.pooja_type ? (
-                <View style={[styles.typeBadge, { alignSelf: 'flex-start', marginTop: 4, backgroundColor: receipt?.pooja_type === 'homam' ? '#FFF3E0' : '#FFEBEE' }]}>
-                  <Ionicons name={receipt?.pooja_type === 'homam' ? 'flame' : 'flower'} size={12} color={receipt?.pooja_type === 'homam' ? '#E65100' : '#8B1515'} />
+                <View style={[styles.typeBadge, { alignSelf: 'flex-start', marginTop: 4, backgroundColor: receipt?.pooja_type === 'homam' ? '#FFF3E0' : 'rgba(122,48,32,0.08)' }]}>
+                  <Ionicons name={receipt?.pooja_type === 'homam' ? 'flame' : 'flower'} size={12} color={receipt?.pooja_type === 'homam' ? '#E65100' : theme.colors.primary} />
                   <Text style={styles.typeText}>{String(receipt?.pooja_type || '').toUpperCase()}</Text>
                 </View>
               ) : null}
@@ -220,22 +224,14 @@ export default function Bookings() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 18, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-  title: { color: '#fff', fontSize: 26, fontWeight: '700' },
-  sub: { color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
 
   guestWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  guestIcon: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#FFEBEE', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  guestIcon: { width: 84, height: 84, borderRadius: 42, backgroundColor: 'rgba(122,48,32,0.08)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   guestTitle: { fontSize: 19, fontWeight: '800', color: theme.colors.text, textAlign: 'center' },
   guestSub: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 21 },
   guestBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.colors.primary, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 999, marginTop: 24 },
   guestBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
-  card: {
-    backgroundColor: '#fff', borderRadius: 20, padding: 16,
-    borderWidth: 1, borderColor: theme.colors.border,
-    shadowColor: '#8B1515', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
-  },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   typeBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   typeText: { fontSize: 10, fontWeight: '800', color: theme.colors.primary, letterSpacing: 1 },
