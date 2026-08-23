@@ -1,15 +1,18 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { theme } from '../../src/constants/theme';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
+import StatTile from '../../src/components/ui/StatTile';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -50,105 +53,78 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#4A2C2A', '#B22222', '#D35400']} style={styles.header}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity testID="admin-back-btn" onPress={() => safeBack('/(tabs)/profile')} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Admin Panel</Text>
-          <View style={{ width: 40 }} />
-        </View>
-        <Text style={styles.headerSub}>Manage your devotional platform</Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Admin Panel"
+        subtitle="Manage your devotional platform"
+        onBack={() => safeBack('/(tabs)/profile')}
+      />
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ padding: theme.spacing.lg, paddingBottom: 40, alignItems: 'center' }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       >
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <StatCard label="Revenue" value={`₹${(stats.revenue || 0).toFixed(0)}`} icon="cash" color={theme.colors.secondary} />
-          <StatCard label="Bookings" value={stats.paid_bookings || 0} icon="checkmark-circle" color="#2E7D32" />
-        </View>
-        <View style={styles.statsRow}>
-          <StatCard label="Devotees" value={stats.total_devotees || 0} icon="people" color="#1976D2" />
-          <StatCard label="Temples" value={stats.total_temples || 0} icon="business" color={theme.colors.primary} />
-        </View>
+        <ResponsiveContainer maxWidth={900}>
+          {/* Stats Row */}
+          <View style={styles.statsRow}>
+            <StatTile label="Revenue" value={`₹${(stats.revenue || 0).toFixed(0)}`} icon="cash" color={theme.colors.secondary} />
+            <StatTile label="Bookings" value={stats.paid_bookings || 0} icon="checkmark-circle" color={theme.statusColors.success.text} />
+          </View>
+          <View style={styles.statsRow}>
+            <StatTile label="Devotees" value={stats.total_devotees || 0} icon="people" color={theme.statusColors.info.text} />
+            <StatTile label="Temples" value={stats.total_temples || 0} icon="business" color={theme.colors.primary} />
+          </View>
 
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.grid}>
-          {tiles.map((t) => (
-            <TouchableOpacity
-              key={t.title}
-              testID={t.testID}
-              activeOpacity={0.85}
-              onPress={() => router.push(t.route as any)}
-              style={styles.tile}
-            >
-              <View style={[styles.tileIcon, { backgroundColor: t.color + '20' }]}>
-                {(t as any).iconLib === 'mci' ? (
-                  <MaterialCommunityIcons name={t.icon as any} size={30} color={t.color} />
-                ) : (
-                  <Ionicons name={t.icon as any} size={28} color={t.color} />
-                )}
-              </View>
-              <Text style={styles.tileTitle}>{t.title}</Text>
-              <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} style={{ position: 'absolute', top: 16, right: 14 }} />
-            </TouchableOpacity>
-          ))}
-        </View>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.grid}>
+            {tiles.map((t) => (
+              <TouchableOpacity
+                key={t.title}
+                testID={t.testID}
+                activeOpacity={0.85}
+                onPress={() => router.push(t.route as any)}
+                style={styles.tileWrap}
+              >
+                <Surface elevation="sm" padding="md" radius="lg" style={styles.tile}>
+                  <View style={[styles.tileIcon, { backgroundColor: t.color + '20' }]}>
+                    {(t as any).iconLib === 'mci' ? (
+                      <MaterialCommunityIcons name={t.icon as any} size={30} color={t.color} />
+                    ) : (
+                      <Ionicons name={t.icon as any} size={28} color={t.color} />
+                    )}
+                  </View>
+                  <Text style={styles.tileTitle}>{t.title}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} style={{ position: 'absolute', top: 16, right: 14 }} />
+                </Surface>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        {/* Live indicator */}
-        <View style={styles.liveInfo}>
-          <View style={styles.liveDot} />
-          <Text style={styles.liveInfoText}>{stats.live_count || 0} stream(s) currently live</Text>
-        </View>
+          {/* Live indicator */}
+          <View style={styles.liveInfo}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveInfoText}>{stats.live_count || 0} stream(s) currently live</Text>
+          </View>
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function StatCard({ label, value, icon, color }: any) {
-  return (
-    <View style={styles.statCard}>
-      <View style={[styles.statIcon, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={22} color={color} />
-      </View>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
-  header: { paddingTop: 8, paddingBottom: 22, paddingHorizontal: 16, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  headerSub: { color: theme.colors.secondary, fontSize: 13, textAlign: 'center', marginTop: 4 },
 
-  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  statCard: {
-    flex: 1, backgroundColor: '#fff', padding: 14, borderRadius: 16,
-    borderWidth: 1, borderColor: theme.colors.border,
-  },
-  statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  statLabel: { fontSize: 11, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
-  statValue: { fontSize: 22, fontWeight: '800', color: theme.colors.text, marginTop: 2 },
+  statsRow: { flexDirection: 'row', gap: theme.spacing.md, marginBottom: theme.spacing.md },
 
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginTop: 20, marginBottom: 10 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tile: {
-    width: '48%', minHeight: 130, backgroundColor: '#fff', padding: 16, borderRadius: 18,
-    borderWidth: 1, borderColor: theme.colors.border, justifyContent: 'space-between',
-  },
-  tileIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  tileTitle: { fontSize: 15, fontWeight: '700', color: theme.colors.text, marginTop: 10 },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm + 2 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md },
+  tileWrap: { width: '48%' },
+  tile: { minHeight: 130, justifyContent: 'space-between' },
+  tileIcon: { width: 52, height: 52, borderRadius: theme.radius.md + 2, alignItems: 'center', justifyContent: 'center' },
+  tileTitle: { fontSize: 15, fontWeight: '700', color: theme.colors.text, marginTop: theme.spacing.sm + 2 },
 
   liveInfo: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20,
-    backgroundColor: 'rgba(229,57,53,0.1)', padding: 12, borderRadius: 12,
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginTop: theme.spacing.lg,
+    backgroundColor: 'rgba(229,57,53,0.1)', padding: theme.spacing.sm + 4, borderRadius: theme.radius.md,
     borderWidth: 1, borderColor: 'rgba(229,57,53,0.3)',
   },
   liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E53935' },
