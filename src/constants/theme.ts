@@ -21,6 +21,7 @@ export const palette = {
   textMuted: '#8A7A6A',
   success: '#2E7D5B',
   danger: '#B22222',
+  saffron: '#8B3520',     // secondary warm accent (Home tab hero copy, etc.)
   white: '#FFFFFF',
 };
 
@@ -116,6 +117,15 @@ export const theme = {
     headerPrimary: [palette.maroon, palette.maroonDeep] as [string, string],
     goldCta: [palette.goldLight, palette.gold, palette.goldDark] as [string, string, string],
     hero: [palette.maroonDeep, palette.maroon, `${palette.gold}22`] as [string, string, string],
+  },
+  // Status pill / badge bg+text pairs — single source of truth for the
+  // success/warning/danger/info colors previously re-declared per screen.
+  statusColors: {
+    success: { bg: '#E8F5E9', text: '#2E7D32' },
+    warning: { bg: '#FFF3E0', text: '#E65100' },
+    danger: { bg: '#FFEBEE', text: '#C62828' },
+    info: { bg: '#E3F2FD', text: '#1565C0' },
+    neutral: { bg: 'rgba(122,48,32,0.08)', text: palette.textMuted },
   },
 };
 

@@ -5,3 +5,7 @@ export { default as Input } from './Input';
 export { default as OtpInput } from './OtpInput';
 export { default as ScreenHeader } from './ScreenHeader';
 export { default as ResponsiveContainer } from './ResponsiveContainer';
+export { default as Chip } from './Chip';
+export { default as Badge } from './Badge';
+export { default as StatTile } from './StatTile';
+export { default as AutoCarousel } from './AutoCarousel';
