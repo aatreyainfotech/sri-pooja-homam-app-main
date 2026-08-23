@@ -30,6 +30,7 @@ const Input = forwardRef<TextInput, InputProps>(function Input({
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const dark = tone === 'onDark';
+  const multiline = !!rest.multiline;
 
   const iconColor = focused ? theme.colors.secondary : dark ? 'rgba(255,255,255,0.55)' : '#9CA3AF';
   const labelColor = dark ? 'rgba(255,255,255,0.85)' : theme.colors.text;
@@ -42,18 +43,20 @@ const Input = forwardRef<TextInput, InputProps>(function Input({
       <View
         style={[
           styles.inputWrap,
+          multiline && styles.inputWrapMultiline,
           dark ? styles.inputWrapDark : styles.inputWrapLight,
           focused && (dark ? styles.inputWrapFocusedDark : styles.inputWrapFocusedLight),
           !!error && styles.inputWrapError,
         ]}
       >
-        {icon && <Ionicons name={icon} size={18} color={iconColor} style={styles.icon} />}
+        {icon && <Ionicons name={icon} size={18} color={iconColor} style={[styles.icon, multiline && { marginTop: 2 }]} />}
         <TextInput
           {...rest}
           ref={ref}
           secureTextEntry={secureTextEntry && !showPassword}
           placeholderTextColor={placeholderColor}
-          style={[styles.input, { color: textColor }]}
+          textAlignVertical={multiline ? 'top' : undefined}
+          style={[styles.input, multiline && styles.inputMultiline, { color: textColor }]}
           onFocus={(e) => { setFocused(true); onFocus?.(e); }}
           onBlur={(e) => { setFocused(false); onBlur?.(e); }}
         />
@@ -89,6 +92,12 @@ const styles = StyleSheet.create({
     height: 50,
     overflow: 'hidden',
   },
+  inputWrapMultiline: {
+    alignItems: 'flex-start',
+    height: undefined,
+    minHeight: 100,
+    paddingVertical: theme.spacing.sm + 2,
+  },
   inputWrapLight: {
     backgroundColor: theme.colors.white,
     borderColor: theme.colors.border,
@@ -115,6 +124,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     height: '100%',
     ...(Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : {}),
+  },
+  inputMultiline: {
+    height: undefined,
+    minHeight: 84,
   },
   errorText: {
     marginTop: theme.spacing.xs,

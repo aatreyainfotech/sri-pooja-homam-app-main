@@ -35,6 +35,7 @@ export default function AdminDashboard() {
     { title: 'Live Streams', icon: 'radio', color: '#E53935', route: '/admin/live-streams', testID: 'admin-streams-tile' },
     { title: 'Videos', icon: 'videocam', color: '#D4AF37', route: '/admin/videos', testID: 'admin-videos-tile' },
     { title: 'Bookings', icon: 'receipt', color: '#2E7D32', route: '/admin/bookings', testID: 'admin-bookings-tile' },
+    { title: 'Send Notification', icon: 'megaphone', color: '#AD1457', route: '/admin/notifications', testID: 'admin-notifications-tile' },
     { title: 'Add Pujari', icon: 'account-tie-hat', iconLib: 'mci', color: '#FF6F00', route: '/admin/create-pujari', testID: 'admin-create-pujari-tile' },
     { title: 'Pujari Stats', icon: 'chart-donut', iconLib: 'mci', color: '#1565C0', route: '/admin/pujari-stats', testID: 'admin-pujari-stats-tile' },
     { title: 'Pujari Payouts', icon: 'send', color: '#00897B', route: '/admin/payouts', testID: 'admin-payouts-tile' },

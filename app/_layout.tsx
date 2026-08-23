@@ -381,6 +381,7 @@ const NAV_ITEMS = [
   { label: 'Live Streams',      icon: 'radio-outline',        route: '/admin/live-streams' },
   { label: 'Videos',            icon: 'videocam-outline',     route: '/admin/videos' },
   { label: 'Bookings',          icon: 'receipt-outline',      route: '/admin/bookings' },
+  { label: 'Send Notification', icon: 'megaphone-outline',    route: '/admin/notifications' },
   { label: 'Add Pujari',        icon: 'person-add-outline',   route: '/admin/create-pujari' },
   { label: 'Pujari Stats',      icon: 'bar-chart-outline',    route: '/admin/pujari-stats' },
   { label: 'Payouts',           icon: 'send-outline',         route: '/admin/payouts' },
