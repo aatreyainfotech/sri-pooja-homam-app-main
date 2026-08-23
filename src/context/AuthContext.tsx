@@ -17,7 +17,7 @@ export type User = {
   address: string;
   city: string;
   pincode: string;
-  role: 'super_admin' | 'admin' | 'poojari' | 'devotee';
+  role: 'super_admin' | 'admin' | 'poojari' | 'devotee' | 'hotel_manager';
   is_active: boolean;
   verified: boolean;
   photo_url?: string | null;

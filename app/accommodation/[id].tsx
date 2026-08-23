@@ -561,7 +561,7 @@ export default function PropertyDetailPage() {
                 {/* ── CTA ── */}
                 <TouchableOpacity style={styles.bookCta} onPress={handleBook} activeOpacity={0.88}>
                   <LinearGradient colors={[DARK_BLUE, BLUE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bookCtaGrad}>
-                    <Ionicons name="calendar-check-outline" size={20} color="#fff" />
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
                     <Text style={styles.bookCtaText}>
                       {nights > 0 ? `Confirm Booking — ₹${amount.toFixed(0)}` : 'Confirm Booking'}
                     </Text>

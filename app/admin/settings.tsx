@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, ReactElement } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Switch, Alert, Platform, ActivityIndicator, Image,
@@ -1050,7 +1050,7 @@ export default function PlatformSettings() {
     );
   }
 
-  const tabContent: Record<TabId, JSX.Element> = {
+  const tabContent: Record<TabId, ReactElement> = {
     general:  <GeneralTab  s={settings} set={set} />,
     branding: <BrandingTab s={settings} set={set} />,
     hero:     <HeroTab     s={settings} set={set} />,

@@ -103,7 +103,7 @@ export default function TempleDetail() {
                 {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <View style={styles.typeTag(p.type)}>
+                <View style={typeTagStyle(p.type)}>
                   <Text style={styles.typeTagText}>{p.type === 'homam' ? '🔥 HOMAM' : '🌸 POOJA'}</Text>
                 </View>
                 <Text style={styles.poojaName}>{p.name}</Text>
@@ -166,11 +166,6 @@ const styles: any = StyleSheet.create({
     borderWidth: 1, borderColor: theme.colors.border, marginBottom: theme.spacing.sm + 4,
   },
   poojaImgWrap: { width: 100, height: 130, borderRadius: theme.radius.md, backgroundColor: palette.creamDeep, overflow: 'hidden' },
-  typeTag: (type: string) => ({
-    alignSelf: 'flex-start',
-    backgroundColor: type === 'homam' ? '#FFF3E0' : 'rgba(122,48,32,0.08)',
-    paddingHorizontal: theme.spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, marginBottom: 4,
-  }),
   typeTagText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: theme.colors.primary },
   poojaName: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
   poojaDesc: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2, lineHeight: 16 },
@@ -183,4 +178,10 @@ const styles: any = StyleSheet.create({
     borderRadius: theme.radius.full, marginTop: theme.spacing.sm,
   },
   bookBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+});
+
+const typeTagStyle = (type: string) => ({
+  alignSelf: 'flex-start' as const,
+  backgroundColor: type === 'homam' ? '#FFF3E0' : 'rgba(122,48,32,0.08)',
+  paddingHorizontal: theme.spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, marginBottom: 4,
 });
