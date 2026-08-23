@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { theme } from '../../constants/theme';
 
 interface OtpInputProps {
@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 22,
     fontWeight: '700',
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : {}),
   },
   boxSolid: {
     borderColor: theme.colors.secondary,

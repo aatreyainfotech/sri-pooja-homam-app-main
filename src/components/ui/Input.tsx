@@ -1,6 +1,6 @@
 import { forwardRef, useState } from 'react';
 import {
-  StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View,
+  Platform, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     paddingHorizontal: theme.spacing.md,
     height: 50,
+    overflow: 'hidden',
   },
   inputWrapLight: {
     backgroundColor: theme.colors.white,
@@ -113,6 +114,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.font.body,
     fontSize: 15,
     height: '100%',
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : {}),
   },
   errorText: {
     marginTop: theme.spacing.xs,
