@@ -415,7 +415,11 @@ function AdminSidebar() {
 
       <View style={cms.divider} />
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
+      <ScrollView
+        style={[{ flex: 1 }, Platform.OS === 'web' ? ({ minHeight: 0, overflowY: 'auto' } as any) : null]}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingVertical: 8 }}
+      >
         {items.map((item) => {
           const active = isActive(item.route);
           return (
@@ -618,7 +622,7 @@ const cms = StyleSheet.create({
   },
   sidebar: {
     width: 232, backgroundColor: '#140808', flexDirection: 'column', flexShrink: 0,
-    ...(Platform.OS === 'web' ? { boxShadow: '4px 0 24px rgba(0,0,0,0.55)', overflowY: 'auto' } as any : {}),
+    ...(Platform.OS === 'web' ? { boxShadow: '4px 0 24px rgba(0,0,0,0.55)', overflow: 'hidden' } as any : {}),
   },
   sidebarBrand: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, paddingTop: 22 },
   sidebarLogo: {
