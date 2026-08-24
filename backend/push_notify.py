@@ -33,15 +33,27 @@ async def send_expo_push(
     body: str,
     data: Optional[dict] = None,
     channel_id: str = "default",
+    image: Optional[str] = None,
 ) -> dict:
     """Send a single notification to one or more Expo tokens.
 
     Returns a dict with counts. Invalid tokens are silently skipped.
     Failures are logged but never raise — notifications are best-effort.
+
+    `image`, if given, must be a public HTTPS URL (not a data: URI or local
+    file) — it's fetched by Apple/Google's push infrastructure outside the
+    app process, so anything not reachable over the network won't render.
+    Shown as a rich-notification image on iOS (via Expo's richContent) and
+    passed through `data.image` so the client can use it too (e.g. Android
+    big-picture style, or an in-app notification feed).
     """
     unique_valid = list({t for t in tokens if _is_valid_expo_token(t)})
     if not unique_valid:
         return {"sent": 0, "invalid": 0, "errors": []}
+
+    merged_data = dict(data or {})
+    if image:
+        merged_data["image"] = image
 
     messages: List[dict] = [
         {
@@ -51,7 +63,8 @@ async def send_expo_push(
             "sound": "default",
             "priority": "high",
             "channelId": channel_id,
-            "data": data or {},
+            "data": merged_data,
+            **({"richContent": {"image": image}, "mutableContent": True} if image else {}),
         }
         for t in unique_valid
     ]

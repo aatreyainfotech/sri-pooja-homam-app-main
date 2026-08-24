@@ -2002,6 +2002,7 @@ class BroadcastNotifIn(BaseModel):
     title: str
     body: str
     url: Optional[str] = "/(tabs)/index"
+    image: Optional[str] = None
 
 @api.post("/admin/broadcast-notification")
 async def admin_broadcast_notification(data: BroadcastNotifIn, user: dict = Depends(require_admin)):
@@ -2010,7 +2011,13 @@ async def admin_broadcast_notification(data: BroadcastNotifIn, user: dict = Depe
     tokens = [r["token"] for r in rows if r.get("token")]
     if not tokens:
         return {"ok": False, "sent": 0, "reason": "no tokens registered"}
-    result = await send_expo_push(tokens, title=data.title, body=data.body, data={"url": data.url or "/(tabs)/index"})
+    image = (data.image or "").strip() or None
+    if image and not image.lower().startswith("https://"):
+        raise HTTPException(400, "Image must be a public HTTPS URL")
+    result = await send_expo_push(
+        tokens, title=data.title, body=data.body,
+        data={"url": data.url or "/(tabs)/index"}, image=image,
+    )
     return {"ok": True, "total_tokens": len(tokens), **result}
 
 # ----------------------------- Notification Prefs ----------------------------

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -16,12 +16,17 @@ export default function AdminNotifications() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [url, setUrl] = useState('');
+  const [image, setImage] = useState('');
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; total_tokens?: number; reason?: string } | null>(null);
 
   const send = () => {
     if (!title.trim() || !body.trim()) {
       Alert.alert('Required', 'Enter both a title and a message.');
+      return;
+    }
+    if (image.trim() && !image.trim().toLowerCase().startsWith('https://')) {
+      Alert.alert('Invalid Image URL', 'The image must be a public HTTPS link — a device photo or http:// link won\'t render in the notification.');
       return;
     }
     Alert.alert(
@@ -42,12 +47,14 @@ export default function AdminNotifications() {
         title: title.trim(),
         body: body.trim(),
         url: url.trim() || undefined,
+        image: image.trim() || undefined,
       });
       setResult(data);
       if (data.ok) {
         setTitle('');
         setBody('');
         setUrl('');
+        setImage('');
       }
     } catch (e) {
       setResult({ ok: false, reason: apiError(e) });
@@ -94,6 +101,29 @@ export default function AdminNotifications() {
             <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: -theme.spacing.sm, marginBottom: theme.spacing.md }}>
               Where tapping the notification takes the user. Defaults to the home tab.
             </Text>
+
+            <Input
+              label="Image URL (optional)"
+              icon="image-outline"
+              value={image}
+              onChangeText={setImage}
+              placeholder="https://example.com/photo.jpg"
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: -theme.spacing.sm, marginBottom: theme.spacing.md }}>
+              Must be a public HTTPS link — a photo picked from this device won't work, since the
+              notification is rendered outside the app by Apple/Google's servers. Shown as a rich
+              image on supported devices.
+            </Text>
+            {!!image.trim() && image.trim().toLowerCase().startsWith('https://') && (
+              <Image
+                source={{ uri: image.trim() }}
+                style={{ width: '100%', height: 140, borderRadius: theme.radius.md, marginBottom: theme.spacing.md, backgroundColor: theme.colors.bgPaper }}
+                resizeMode="cover"
+              />
+            )}
+
             <Button
               testID="admin-notif-send-btn"
               title="Send to All Users"
