@@ -10,6 +10,17 @@ import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
 import Surface from '../../src/components/ui/Surface';
 import Input from '../../src/components/ui/Input';
 import Button from '../../src/components/ui/Button';
+import Chip from '../../src/components/ui/Chip';
+
+type Audience = 'all' | 'devotee' | 'poojari' | 'admin' | 'hotel_manager';
+
+const AUDIENCES: { value: Audience; label: string }[] = [
+  { value: 'all', label: 'All Users' },
+  { value: 'devotee', label: 'Devotees' },
+  { value: 'poojari', label: 'Poojaris' },
+  { value: 'admin', label: 'Admins' },
+  { value: 'hotel_manager', label: 'Hotel Managers' },
+];
 
 export default function AdminNotifications() {
   const router = useRouter();
@@ -17,8 +28,11 @@ export default function AdminNotifications() {
   const [body, setBody] = useState('');
   const [url, setUrl] = useState('');
   const [image, setImage] = useState('');
+  const [audience, setAudience] = useState<Audience>('all');
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; total_tokens?: number; reason?: string } | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; total_tokens?: number; audience?: string; reason?: string } | null>(null);
+
+  const audienceLabel = AUDIENCES.find((a) => a.value === audience)?.label ?? 'All Users';
 
   const send = () => {
     if (!title.trim() || !body.trim()) {
@@ -30,8 +44,8 @@ export default function AdminNotifications() {
       return;
     }
     Alert.alert(
-      'Send to all users?',
-      `This will push "${title.trim()}" to every device currently registered for notifications. This can't be undone.`,
+      `Send to ${audienceLabel}?`,
+      `This will push "${title.trim()}" to every registered device in this group. This can't be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Send', style: 'destructive', onPress: doSend },
@@ -48,6 +62,7 @@ export default function AdminNotifications() {
         body: body.trim(),
         url: url.trim() || undefined,
         image: image.trim() || undefined,
+        audience,
       });
       setResult(data);
       if (data.ok) {
@@ -67,12 +82,27 @@ export default function AdminNotifications() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top']}>
       <ScreenHeader
         title="Send Notification"
-        subtitle="Broadcast a push notification to every registered device"
+        subtitle="Broadcast a push notification to devotees, poojaris, or admins"
         onBack={() => router.back()}
       />
       <ScrollView contentContainerStyle={{ padding: theme.spacing.lg, alignItems: 'center' }}>
         <ResponsiveContainer maxWidth={560}>
           <Surface elevation="sm" padding="lg" radius="lg">
+            <Text style={{ fontFamily: theme.font.body, fontSize: 13, fontWeight: '600', color: theme.colors.text, marginBottom: theme.spacing.xs + 2 }}>
+              Send To
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
+              {AUDIENCES.map((a) => (
+                <Chip
+                  key={a.value}
+                  testID={`admin-notif-audience-${a.value}`}
+                  label={a.label}
+                  selected={audience === a.value}
+                  onPress={() => setAudience(a.value)}
+                />
+              ))}
+            </View>
+
             <Input
               label="Title"
               icon="megaphone-outline"
@@ -126,7 +156,7 @@ export default function AdminNotifications() {
 
             <Button
               testID="admin-notif-send-btn"
-              title="Send to All Users"
+              title={`Send to ${audienceLabel}`}
               icon="send"
               variant="primary"
               size="lg"
@@ -161,7 +191,7 @@ export default function AdminNotifications() {
                 </Text>
                 <Text style={{ fontSize: 12, color: theme.colors.textSecondary, marginTop: 2 }}>
                   {result.ok
-                    ? `Delivered to ${result.total_tokens ?? 0} registered device(s).`
+                    ? `Delivered to ${result.total_tokens ?? 0} device(s) — ${AUDIENCES.find((a) => a.value === result.audience)?.label ?? 'All Users'}.`
                     : result.reason || 'No devices are registered for push notifications yet.'}
                 </Text>
               </View>

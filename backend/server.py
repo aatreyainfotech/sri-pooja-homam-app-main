@@ -1998,19 +1998,40 @@ async def admin_mark_payout(pujari_id: str, data: PayoutMarkIn, user: dict = Dep
     return {"ok": True, "paid_amount": total, "pujari_name": pujari.get("full_name") if pujari else ""}
 
 # ----------------------------- Admin broadcast notification ------------------
+BROADCAST_AUDIENCE_ROLES = {
+    "devotee": ["devotee"],
+    "poojari": ["poojari"],
+    "admin": ["admin", "super_admin"],
+    "hotel_manager": ["hotel_manager"],
+}
+
 class BroadcastNotifIn(BaseModel):
     title: str
     body: str
     url: Optional[str] = "/(tabs)/index"
     image: Optional[str] = None
+    audience: Optional[str] = "all"  # 'all' | 'devotee' | 'poojari' | 'admin' | 'hotel_manager'
 
 @api.post("/admin/broadcast-notification")
 async def admin_broadcast_notification(data: BroadcastNotifIn, user: dict = Depends(require_admin)):
-    """Send a push notification to ALL registered devices."""
-    rows = await sql_fetch_all("SELECT TOP 5000 token FROM dbo.push_tokens")
+    """Send a push notification to registered devices, optionally filtered by role."""
+    audience = (data.audience or "all").strip().lower()
+    if audience == "all":
+        rows = await sql_fetch_all("SELECT TOP 5000 token FROM dbo.push_tokens")
+    else:
+        roles = BROADCAST_AUDIENCE_ROLES.get(audience)
+        if not roles:
+            raise HTTPException(400, "Invalid audience")
+        placeholders = ",".join("?" for _ in roles)
+        rows = await sql_fetch_all(
+            f"SELECT TOP 5000 pt.token FROM dbo.push_tokens pt "
+            f"JOIN dbo.users u ON u.id = pt.user_id "
+            f"WHERE u.role IN ({placeholders})",
+            tuple(roles),
+        )
     tokens = [r["token"] for r in rows if r.get("token")]
     if not tokens:
-        return {"ok": False, "sent": 0, "reason": "no tokens registered"}
+        return {"ok": False, "sent": 0, "reason": "no tokens registered for this audience"}
     image = (data.image or "").strip() or None
     if image and not image.lower().startswith("https://"):
         raise HTTPException(400, "Image must be a public HTTPS URL")
@@ -2018,7 +2039,7 @@ async def admin_broadcast_notification(data: BroadcastNotifIn, user: dict = Depe
         tokens, title=data.title, body=data.body,
         data={"url": data.url or "/(tabs)/index"}, image=image,
     )
-    return {"ok": True, "total_tokens": len(tokens), **result}
+    return {"ok": True, "total_tokens": len(tokens), "audience": audience, **result}
 
 # ----------------------------- Notification Prefs ----------------------------
 class NotifPrefsIn(BaseModel):
