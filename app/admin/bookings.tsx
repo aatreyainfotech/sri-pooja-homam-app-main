@@ -1,15 +1,19 @@
 import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useSafeBack } from '../../src/hooks/useSafeBack';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
+import StatTile from '../../src/components/ui/StatTile';
+import Chip from '../../src/components/ui/Chip';
+import Badge from '../../src/components/ui/Badge';
 
 export default function AllBookings() {
-  const router = useRouter();
   const safeBack = useSafeBack();
   const [items, setItems] = useState<any[]>([]);
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'unassigned'>('all');
@@ -62,84 +66,66 @@ export default function AllBookings() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top']}>
-      <LinearGradient colors={['#8B1515', '#630B0B']} style={styles.header}>
-        <TouchableOpacity testID="bmg-back" onPress={() => safeBack('/admin')} style={styles.back}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>All Bookings</Text>
-        <View style={styles.back} />
-      </LinearGradient>
+      <ScreenHeader title="All Bookings" onBack={() => safeBack('/admin')} />
 
-      <View style={styles.summary}>
-        <View style={styles.sumCard}>
-          <Text style={styles.sumLabel}>TOTAL</Text>
-          <Text style={styles.sumValue}>{items.length}</Text>
+      <ResponsiveContainer maxWidth={900} style={{ flex: 1, alignSelf: 'center' }}>
+        <View style={styles.summary}>
+          <StatTile label="Total" value={items.length} variant="mini" color={theme.colors.text} />
+          <StatTile label="Revenue" value={`₹${totalRevenue.toFixed(0)}`} variant="mini" color={theme.colors.secondaryDark} />
+          <StatTile
+            label="Unassigned"
+            value={unassignedCount}
+            variant="mini"
+            color={unassignedCount > 0 ? theme.statusColors.warning.text : theme.statusColors.success.text}
+          />
         </View>
-        <View style={styles.sumCard}>
-          <Text style={styles.sumLabel}>REVENUE</Text>
-          <Text style={[styles.sumValue, { color: theme.colors.secondary }]}>₹{totalRevenue.toFixed(0)}</Text>
-        </View>
-        <View style={[styles.sumCard, unassignedCount > 0 && { borderColor: '#E65100' }]}>
-          <Text style={styles.sumLabel}>UNASSIGNED</Text>
-          <Text style={[styles.sumValue, { color: unassignedCount > 0 ? '#E65100' : '#2E7D32', fontSize: 18 }]}>
-            {unassignedCount}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.chipRow}>
-        {(['all', 'paid', 'pending', 'unassigned'] as const).map((f) => (
-          <TouchableOpacity key={f} testID={`bmg-filter-${f}`} onPress={() => setFilter(f)} style={[styles.chip, filter === f && styles.chipActive]}>
-            <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>{f.toUpperCase()}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={styles.chipRow}>
+          {(['all', 'paid', 'pending', 'unassigned'] as const).map((f) => (
+            <Chip key={f} label={f.toUpperCase()} selected={filter === f} onPress={() => setFilter(f)} />
+          ))}
+        </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(i) => i.id}
-        contentContainerStyle={{ padding: 16, gap: 10 }}
-        renderItem={({ item }) => (
-          <View testID={`bmg-item-${item.id}`} style={styles.card}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.name}>{item.pooja_name}</Text>
-              <Text style={styles.meta}>{item.devotee_name} • {item.user_mobile}</Text>
-              {item.gotra ? <Text style={styles.sub}>Gotra: {item.gotra}</Text> : null}
-              <Text style={styles.sub}>
-                {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
-              </Text>
-              {item.pujari_name ? (
-                <View style={styles.pujariTag}>
-                  <Ionicons name="person-circle" size={13} color={theme.colors.primary} />
-                  <Text style={styles.pujariTagText}>{item.pujari_name}</Text>
-                </View>
-              ) : (
-                <View style={styles.unassignedTag}>
-                  <Ionicons name="alert-circle-outline" size={12} color="#E65100" />
-                  <Text style={styles.unassignedText}>Unassigned</Text>
-                </View>
-              )}
-            </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.amt}>₹{item.amount?.toFixed(0)}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: item.payment_status === 'paid' ? '#E8F5E9' : '#FFF8E1' }]}>
-                <Text style={[styles.statusText, { color: item.payment_status === 'paid' ? '#2E7D32' : '#E65100' }]}>
-                  {item.payment_status === 'paid' ? '✓ PAID' : 'PENDING'}
+        <FlatList
+          data={filtered}
+          keyExtractor={(i) => i.id}
+          contentContainerStyle={{ padding: theme.spacing.md, gap: theme.spacing.sm + 2 }}
+          renderItem={({ item }) => (
+            <Surface testID={`bmg-item-${item.id}`} elevation="sm" padding="sm" radius="lg" style={styles.card}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>{item.pooja_name}</Text>
+                <Text style={styles.meta}>{item.devotee_name} • {item.user_mobile}</Text>
+                {item.gotra ? <Text style={styles.sub}>Gotra: {item.gotra}</Text> : null}
+                <Text style={styles.sub}>
+                  {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                 </Text>
+                {item.pujari_name ? (
+                  <Badge label={item.pujari_name} status="warning" size="sm" style={{ marginTop: 5 }} />
+                ) : (
+                  <Badge label="Unassigned" status="warning" size="sm" style={{ marginTop: 5 }} />
+                )}
               </View>
-              <TouchableOpacity
-                testID={`assign-pujari-${item.id}`}
-                onPress={() => openAssign(item)}
-                style={styles.assignBtn}
-              >
-                <Ionicons name="person-add" size={12} color="#fff" />
-                <Text style={styles.assignBtnText}>{item.pujari_name ? 'Reassign' : 'Assign Pujari'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-        ListEmptyComponent={<Text style={styles.empty}>No bookings yet</Text>}
-      />
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.amt}>₹{item.amount?.toFixed(0)}</Text>
+                <Badge
+                  label={item.payment_status === 'paid' ? '✓ PAID' : 'PENDING'}
+                  status={item.payment_status === 'paid' ? 'success' : 'warning'}
+                  style={{ marginTop: 4 }}
+                />
+                <TouchableOpacity
+                  testID={`assign-pujari-${item.id}`}
+                  onPress={() => openAssign(item)}
+                  style={styles.assignBtn}
+                >
+                  <Ionicons name="person-add" size={12} color="#fff" />
+                  <Text style={styles.assignBtnText}>{item.pujari_name ? 'Reassign' : 'Assign Pujari'}</Text>
+                </TouchableOpacity>
+              </View>
+            </Surface>
+          )}
+          ListEmptyComponent={<Text style={styles.empty}>No bookings yet</Text>}
+        />
+      </ResponsiveContainer>
 
       <Modal visible={!!assignFor} transparent animationType="slide" onRequestClose={() => setAssignFor(null)}>
         <View style={styles.mBackdrop}>
@@ -148,7 +134,7 @@ export default function AllBookings() {
             <Text style={styles.mSub}>{assignFor?.pooja_name} • {assignFor?.devotee_name}</Text>
             {assignFor?.pujari_name && (
               <View style={styles.currentPujari}>
-                <Ionicons name="checkmark-circle" size={14} color="#2E7D32" />
+                <Ionicons name="checkmark-circle" size={14} color={theme.statusColors.success.text} />
                 <Text style={styles.currentPujariText}>Currently: {assignFor.pujari_name}</Text>
               </View>
             )}
@@ -186,46 +172,33 @@ export default function AllBookings() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
-  back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  summary: { flexDirection: 'row', padding: theme.spacing.md, gap: theme.spacing.sm + 2 },
 
-  summary: { flexDirection: 'row', padding: 16, gap: 12 },
-  sumCard: { flex: 1, backgroundColor: '#fff', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.border },
-  sumLabel: { fontSize: 10, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1 },
-  sumValue: { fontSize: 22, fontWeight: '800', color: theme.colors.text, marginTop: 4 },
+  chipRow: { flexDirection: 'row', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.md },
 
-  chipRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
-  chip: { backgroundColor: '#fff', borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 },
-  chipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  chipText: { fontSize: 11, fontWeight: '700', color: theme.colors.text },
-  chipTextActive: { color: '#fff' },
-
-  card: { flexDirection: 'row', backgroundColor: '#fff', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.border },
+  card: { flexDirection: 'row' },
   name: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
   meta: { fontSize: 12, color: theme.colors.textSecondary, marginTop: 2 },
   sub: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
   amt: { fontSize: 18, fontWeight: '800', color: theme.colors.primary },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  statusText: { fontSize: 10, fontWeight: '800' },
   empty: { textAlign: 'center', color: theme.colors.textMuted, marginTop: 40 },
 
   assignBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: theme.colors.primary, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, marginTop: 6,
+    backgroundColor: theme.colors.primary, paddingHorizontal: 10, paddingVertical: 6, borderRadius: theme.radius.full, marginTop: 6,
   },
   assignBtnText: { color: '#fff', fontSize: 11, fontWeight: '700' },
 
   mBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 20 },
-  mCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, maxHeight: '85%' },
+  mCard: { backgroundColor: theme.colors.white, borderRadius: theme.radius.xl, padding: theme.spacing.lg, maxHeight: '85%' },
   mTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
   mSub: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4 },
-  currentPujari: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: '#E8F5E9', padding: 8, borderRadius: 8 },
-  currentPujariText: { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
+  currentPujari: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: theme.statusColors.success.bg, padding: 8, borderRadius: theme.radius.sm + 2 },
+  currentPujariText: { fontSize: 12, color: theme.statusColors.success.text, fontWeight: '600' },
   mEmpty: { textAlign: 'center', color: theme.colors.textMuted, padding: 24, fontSize: 13 },
   pujariRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12,
-    borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm + 4, padding: theme.spacing.sm + 4,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, marginBottom: theme.spacing.sm,
   },
   avatar: {
     width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.primary,
@@ -233,19 +206,6 @@ const styles = StyleSheet.create({
   },
   pujariName: { fontSize: 14, fontWeight: '700', color: theme.colors.text },
   pujariMobile: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
-  mClose: { marginTop: 14, backgroundColor: '#F5F5F5', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
+  mClose: { marginTop: 14, backgroundColor: '#F5F5F5', paddingVertical: 12, borderRadius: theme.radius.full, alignItems: 'center' },
   mCloseText: { color: theme.colors.text, fontWeight: '700' },
-
-  pujariTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
-    backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 6, alignSelf: 'flex-start',
-  },
-  pujariTagText: { fontSize: 11, fontWeight: '700', color: theme.colors.primary },
-  unassignedTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
-    backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 6, alignSelf: 'flex-start',
-  },
-  unassignedText: { fontSize: 11, fontWeight: '700', color: '#E65100' },
 });
