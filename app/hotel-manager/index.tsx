@@ -1,16 +1,22 @@
 import { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, Modal,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
+import ScreenHeader from '../../src/components/ui/ScreenHeader';
+import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
+import Surface from '../../src/components/ui/Surface';
+import StatTile from '../../src/components/ui/StatTile';
+import Input from '../../src/components/ui/Input';
+import Button from '../../src/components/ui/Button';
 
 const BLUE = '#0288D1';
+const HOTEL_GRADIENT: [string, string, string] = ['#4A2C2A', '#0277BD', BLUE];
 
 export default function HotelManagerDashboard() {
   const router = useRouter();
@@ -56,78 +62,74 @@ export default function HotelManagerDashboard() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#4A2C2A', '#0277BD', BLUE]} style={styles.header}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/profile' as any)} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Hotel Manager</Text>
-          <View style={{ width: 40 }} />
-        </View>
-        <Text style={styles.headerSub}>
-          {prop ? prop.name : 'No property assigned yet'}
-        </Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Hotel Manager"
+        subtitle={prop ? prop.name : 'No property assigned yet'}
+        gradientColors={HOTEL_GRADIENT}
+        onBack={() => router.push('/(tabs)/profile' as any)}
+      />
 
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: 40, alignItems: 'center' }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BLUE} />}
       >
-        {!prop ? (
-          <View style={styles.noProp}>
-            <Ionicons name="bed-outline" size={60} color={theme.colors.border} />
-            <Text style={styles.noPropTitle}>No Property Assigned</Text>
-            <Text style={styles.noPropSub}>Contact your super admin to assign a property to your account.</Text>
-          </View>
-        ) : (
-          <>
-            {/* Stats */}
-            <View style={styles.statsGrid}>
-              <StatCard label="Total Bookings" value={stats.total_bookings || 0} icon="receipt" color="#E67E22" />
-              <StatCard label="Confirmed" value={stats.confirmed_bookings || 0} icon="checkmark-circle" color="#2E7D32" />
-              <StatCard label="Revenue" value={`₹${parseFloat(stats.revenue || 0).toFixed(0)}`} icon="cash" color={BLUE} />
-              <StatCard label="Room Types" value={stats.room_categories || 0} icon="albums" color="#7B1FA2" />
+        <ResponsiveContainer maxWidth={900}>
+          {!prop ? (
+            <View style={styles.noProp}>
+              <Ionicons name="bed-outline" size={60} color={theme.colors.border} />
+              <Text style={styles.noPropTitle}>No Property Assigned</Text>
+              <Text style={styles.noPropSub}>Contact your super admin to assign a property to your account.</Text>
             </View>
-
-            {/* Status */}
-            {!prop.is_active && (
-              <View style={styles.inactiveBanner}>
-                <Ionicons name="warning-outline" size={18} color="#FF9800" />
-                <Text style={styles.inactiveBannerText}>
-                  Property is <Text style={{ fontWeight: '800' }}>inactive</Text>. Contact super admin to activate.
-                </Text>
+          ) : (
+            <>
+              {/* Stats */}
+              <View style={styles.statsGrid}>
+                <StatTile label="Total Bookings" value={stats.total_bookings || 0} icon="receipt" color="#E67E22" />
+                <StatTile label="Confirmed" value={stats.confirmed_bookings || 0} icon="checkmark-circle" color={theme.statusColors.success.text} />
+                <StatTile label="Revenue" value={`₹${parseFloat(stats.revenue || 0).toFixed(0)}`} icon="cash" color={BLUE} />
+                <StatTile label="Room Types" value={stats.room_categories || 0} icon="albums" color="#7B1FA2" />
               </View>
-            )}
 
-            {/* Property Info */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Hotel Info</Text>
-                <TouchableOpacity style={styles.editBtn} onPress={() => setShowEditInfo(true)}>
-                  <Ionicons name="pencil-outline" size={14} color={BLUE} />
-                  <Text style={styles.editBtnText}>Edit</Text>
-                </TouchableOpacity>
+              {/* Status */}
+              {!prop.is_active && (
+                <View style={styles.inactiveBanner}>
+                  <Ionicons name="warning-outline" size={18} color={theme.statusColors.warning.text} />
+                  <Text style={styles.inactiveBannerText}>
+                    Property is <Text style={{ fontWeight: '800' }}>inactive</Text>. Contact super admin to activate.
+                  </Text>
+                </View>
+              )}
+
+              {/* Property Info */}
+              <Surface elevation="sm" padding="md" radius="lg" style={{ marginBottom: theme.spacing.sm + 4 }}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Hotel Info</Text>
+                  <TouchableOpacity style={styles.editBtn} onPress={() => setShowEditInfo(true)}>
+                    <Ionicons name="pencil-outline" size={14} color={BLUE} />
+                    <Text style={styles.editBtnText}>Edit</Text>
+                  </TouchableOpacity>
+                </View>
+                <InfoRow icon="bed-outline" text={`Type: ${prop.type || 'hotel'}`} />
+                <InfoRow icon="location-outline" text={`${prop.address}${prop.city ? `, ${prop.city}` : ''}`} />
+                {prop.phone ? <InfoRow icon="call-outline" text={prop.phone} /> : null}
+                {prop.temple_name ? <InfoRow icon="business-outline" text={`Near ${prop.temple_name}`} /> : null}
+                <InfoRow icon="time-outline" text={`Check-in: ${prop.check_in_time} | Check-out: ${prop.check_out_time}`} />
+              </Surface>
+
+              {/* Quick Actions */}
+              <Text style={styles.actionsTitle}>Quick Actions</Text>
+              <View style={styles.actionsGrid}>
+                <ActionTile icon="calendar-outline" label="Manage Bookings" color="#E67E22" onPress={() => router.push('/hotel-manager/bookings' as any)} />
+                <ActionTile icon="today-outline" label="Set Room Quota" color={theme.colors.primary} onPress={() => router.push('/hotel-manager/quota' as any)} />
               </View>
-              <InfoRow icon="bed-outline" text={`Type: ${prop.type || 'hotel'}`} />
-              <InfoRow icon="location-outline" text={`${prop.address}${prop.city ? `, ${prop.city}` : ''}`} />
-              {prop.phone ? <InfoRow icon="call-outline" text={prop.phone} /> : null}
-              {prop.temple_name ? <InfoRow icon="business-outline" text={`Near ${prop.temple_name}`} /> : null}
-              <InfoRow icon="time-outline" text={`Check-in: ${prop.check_in_time} | Check-out: ${prop.check_out_time}`} />
-            </View>
-
-            {/* Quick Actions */}
-            <Text style={styles.actionsTitle}>Quick Actions</Text>
-            <View style={styles.actionsGrid}>
-              <ActionTile icon="calendar-outline" label="Manage Bookings" color="#E67E22" onPress={() => router.push('/hotel-manager/bookings' as any)} />
-              <ActionTile icon="today-outline" label="Set Room Quota" color="#7A3020" onPress={() => router.push('/hotel-manager/quota' as any)} />
-            </View>
-          </>
-        )}
+            </>
+          )}
+        </ResponsiveContainer>
       </ScrollView>
 
       {/* Success toast on main screen */}
       {!!updateMsg && updateMsg.type === 'success' && !showEditInfo && (
-        <View style={[styles.toast, { backgroundColor: '#2E7D32' }]}>
+        <View style={[styles.toast, { backgroundColor: theme.statusColors.success.text }]}>
           <Ionicons name="checkmark-circle" size={20} color="#fff" />
           <Text style={styles.toastText}>{updateMsg.text}</Text>
           <TouchableOpacity onPress={() => setUpdateMsg(null)}>
@@ -148,25 +150,23 @@ export default function HotelManagerDashboard() {
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
               {!!updateMsg && updateMsg.type === 'error' && (
-                <View style={{ backgroundColor: '#FFEBEE', borderRadius: 10, padding: 12, marginBottom: 14, flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-                  <Ionicons name="alert-circle-outline" size={18} color="#C62828" />
-                  <Text style={{ color: '#C62828', fontSize: 13, flex: 1 }}>{updateMsg.text}</Text>
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle-outline" size={18} color={theme.colors.danger} />
+                  <Text style={{ color: theme.colors.danger, fontSize: 13, flex: 1 }}>{updateMsg.text}</Text>
                 </View>
               )}
-              <FormInput label="Hotel Name" value={editForm.name || ''} onChangeText={(v: string) => setEditForm({ ...editForm, name: v })} />
-              <FormInput label="Address" value={editForm.address || ''} onChangeText={(v: string) => setEditForm({ ...editForm, address: v })} />
-              <FormInput label="City" value={editForm.city || ''} onChangeText={(v: string) => setEditForm({ ...editForm, city: v })} />
-              <FormInput label="Phone" value={editForm.phone || ''} onChangeText={(v: string) => setEditForm({ ...editForm, phone: v })} />
-              <FormInput label="Description" value={editForm.description || ''} onChangeText={(v: string) => setEditForm({ ...editForm, description: v })} multiline />
-              <FormInput label="Amenities" value={editForm.amenities || ''} onChangeText={(v: string) => setEditForm({ ...editForm, amenities: v })} placeholder="WiFi, Parking, Restaurant..." />
-              <FormInput label="UPI ID (for guest payments)" value={editForm.upi_id || ''} onChangeText={(v: string) => setEditForm({ ...editForm, upi_id: v })} placeholder="name@upi or 9876543210@okaxis" />
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ flex: 1 }}><FormInput label="Check-in" value={editForm.check_in_time || ''} onChangeText={(v: string) => setEditForm({ ...editForm, check_in_time: v })} /></View>
-                <View style={{ flex: 1 }}><FormInput label="Check-out" value={editForm.check_out_time || ''} onChangeText={(v: string) => setEditForm({ ...editForm, check_out_time: v })} /></View>
+              <Input label="Hotel Name" value={editForm.name || ''} onChangeText={(v: string) => setEditForm({ ...editForm, name: v })} />
+              <Input label="Address" value={editForm.address || ''} onChangeText={(v: string) => setEditForm({ ...editForm, address: v })} />
+              <Input label="City" value={editForm.city || ''} onChangeText={(v: string) => setEditForm({ ...editForm, city: v })} />
+              <Input label="Phone" value={editForm.phone || ''} onChangeText={(v: string) => setEditForm({ ...editForm, phone: v })} />
+              <Input label="Description" value={editForm.description || ''} onChangeText={(v: string) => setEditForm({ ...editForm, description: v })} multiline />
+              <Input label="Amenities" value={editForm.amenities || ''} onChangeText={(v: string) => setEditForm({ ...editForm, amenities: v })} placeholder="WiFi, Parking, Restaurant..." />
+              <Input label="UPI ID (for guest payments)" value={editForm.upi_id || ''} onChangeText={(v: string) => setEditForm({ ...editForm, upi_id: v })} placeholder="name@upi or 9876543210@okaxis" />
+              <View style={{ flexDirection: 'row', gap: theme.spacing.sm + 4 }}>
+                <View style={{ flex: 1 }}><Input label="Check-in" value={editForm.check_in_time || ''} onChangeText={(v: string) => setEditForm({ ...editForm, check_in_time: v })} /></View>
+                <View style={{ flex: 1 }}><Input label="Check-out" value={editForm.check_out_time || ''} onChangeText={(v: string) => setEditForm({ ...editForm, check_out_time: v })} /></View>
               </View>
-              <TouchableOpacity style={styles.submitBtn} onPress={handleUpdateInfo}>
-                <Text style={styles.submitText}>Save Changes</Text>
-              </TouchableOpacity>
+              <Button title="Save Changes" variant="secondary" size="lg" fullWidth onPress={handleUpdateInfo} style={{ backgroundColor: BLUE, marginBottom: theme.spacing.lg }} />
             </ScrollView>
           </View>
         </View>
@@ -175,26 +175,16 @@ export default function HotelManagerDashboard() {
   );
 }
 
-function StatCard({ label, value, icon, color }: any) {
-  return (
-    <View style={styles.statCard}>
-      <View style={[styles.statIcon, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={20} color={color} />
-      </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function ActionTile({ icon, label, color, onPress }: any) {
   return (
-    <TouchableOpacity style={[styles.actionTile, { borderLeftColor: color }]} onPress={onPress} activeOpacity={0.85}>
-      <View style={[styles.actionIcon, { backgroundColor: color + '18' }]}>
-        <Ionicons name={icon} size={24} color={color} />
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+      <Surface elevation="sm" padding="md" radius="lg" style={[styles.actionTile, { borderLeftColor: color }]}>
+        <View style={[styles.actionIcon, { backgroundColor: color + '18' }]}>
+          <Ionicons name={icon} size={24} color={color} />
+        </View>
+        <Text style={styles.actionLabel}>{label}</Text>
+        <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+      </Surface>
     </TouchableOpacity>
   );
 }
@@ -208,61 +198,35 @@ function InfoRow({ icon, text }: any) {
   );
 }
 
-function FormInput({ label, ...props }: any) {
-  return (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        style={[styles.input, props.multiline && { height: 80, textAlignVertical: 'top' }]}
-        placeholderTextColor={theme.colors.textMuted}
-        {...props}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
-  header: { paddingTop: 8, paddingBottom: 22, paddingHorizontal: 16, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  headerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 13, textAlign: 'center', marginTop: 4 },
 
   noProp: { alignItems: 'center', marginTop: 80, padding: 24 },
   noPropTitle: { fontSize: 20, fontWeight: '800', color: theme.colors.text, marginTop: 20 },
   noPropSub: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', marginTop: 10, lineHeight: 22 },
 
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
-  statCard: { flex: 1, minWidth: '45%', backgroundColor: '#fff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'flex-start' },
-  statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  statValue: { fontSize: 22, fontWeight: '800', color: theme.colors.text },
-  statLabel: { fontSize: 11, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 2 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm + 4, marginBottom: theme.spacing.md },
 
-  inactiveBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF3E0', padding: 14, borderRadius: 12, marginBottom: 14, borderWidth: 1, borderColor: '#FFE0B2' },
-  inactiveBannerText: { flex: 1, fontSize: 13, color: '#E65100' },
+  inactiveBanner: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm + 2, backgroundColor: theme.statusColors.warning.bg, padding: theme.spacing.sm + 6, borderRadius: theme.radius.md, marginBottom: theme.spacing.sm + 4, borderWidth: 1, borderColor: '#FFE0B2' },
+  inactiveBannerText: { flex: 1, fontSize: 13, color: theme.statusColors.warning.text },
 
-  section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: theme.colors.border },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm + 6 },
   sectionTitle: { fontSize: 14, fontWeight: '800', color: theme.colors.text, textTransform: 'uppercase', letterSpacing: 0.8 },
-  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: BLUE + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: BLUE + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: theme.radius.full },
   editBtnText: { fontSize: 12, fontWeight: '600', color: BLUE },
 
-  actionsTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginBottom: 10, marginTop: 4 },
-  actionsGrid: { gap: 12 },
-  actionTile: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: theme.colors.border, borderLeftWidth: 4 },
-  actionIcon: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  actionsTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1.5, marginBottom: theme.spacing.sm + 2, marginTop: 4 },
+  actionsGrid: { gap: theme.spacing.sm + 4 },
+  actionTile: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md - 2, borderLeftWidth: 4 },
+  actionIcon: { width: 46, height: 46, borderRadius: theme.radius.sm + 6, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { flex: 1, fontSize: 15, fontWeight: '700', color: theme.colors.text },
 
-  inputLabel: { fontSize: 12, fontWeight: '700', color: theme.colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
-  input: { borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: theme.colors.text, backgroundColor: '#FAFAFA' },
+  errorBox: { backgroundColor: theme.statusColors.danger.bg, borderRadius: theme.radius.sm + 4, padding: theme.spacing.sm + 4, marginBottom: theme.spacing.sm + 6, flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'flex-start' },
 
-  toast: { position: 'absolute', bottom: 24, left: 16, right: 16, borderRadius: 14, padding: 14, flexDirection: 'row', gap: 10, alignItems: 'center', zIndex: 999 },
+  toast: { position: 'absolute', bottom: 24, left: 16, right: 16, borderRadius: theme.radius.sm + 8, padding: theme.spacing.sm + 6, flexDirection: 'row', gap: theme.spacing.sm + 2, alignItems: 'center', zIndex: 999 },
   toastText: { flex: 1, color: '#fff', fontWeight: '600', fontSize: 13 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: '88%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalCard: { backgroundColor: theme.colors.white, borderTopLeftRadius: theme.radius.xl, borderTopRightRadius: theme.radius.xl, padding: theme.spacing.lg, maxHeight: '88%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg - 4 },
   modalTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
-  submitBtn: { backgroundColor: BLUE, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 8, marginBottom: 20 },
-  submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 });
