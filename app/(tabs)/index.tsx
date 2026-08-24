@@ -13,14 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
-import { theme } from '../../src/constants/theme';
+import { palette, theme } from '../../src/constants/theme';
 import WebFooter from '../../src/components/WebFooter';
 import WelcomePopup from '../../src/components/WelcomePopup';
 import AutoCarousel from '../../src/components/ui/AutoCarousel';
 
-const GOLD    = '#C9922A';
-const SAFFRON = '#8B3520';   // warm amber-brown (was blood-red #B22222)
-const BG      = '#FFFFFF';
+const GOLD    = palette.gold;
+const SAFFRON = palette.saffron;   // warm amber-brown (was blood-red #B22222)
+const BG      = theme.colors.white;
 const IS_WEB  = Platform.OS === 'web';
 
 function parseImages(s: string | null | undefined): string[] {
@@ -1274,7 +1274,7 @@ const wh: any = {
   searchDivider: { width: 1, height: 28, backgroundColor: 'rgba(139,21,21,0.12)' },
   searchBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#7A3020', paddingHorizontal: 22, paddingVertical: 13,
+    backgroundColor: palette.maroon, paddingHorizontal: 22, paddingVertical: 13,
     borderRadius: 12, margin: 4,
     ...(Platform.OS === 'web' ? { boxShadow: '0 4px 16px rgba(139,21,21,0.4)' } as any : {}),
   },
@@ -1452,8 +1452,8 @@ function MobileHome() {
           <Text style={mob.sectionTitle}>Browse Services</Text>
           <View style={mob.catRow}>
             <CategoryCard icon="flame" title="Homam" subtitle="Fire rituals" color="#E65100" gradColors={['#E65100', '#BF360C']} onPress={() => router.push('/(tabs)/temples')} />
-            <CategoryCard icon="rose"  title="Pooja"  subtitle="Daily sevas" color="#8B3520" gradColors={['#A34020', '#5A1A0A']} onPress={() => router.push('/(tabs)/temples')} />
-            <CategoryCard icon="videocam" title="Live" subtitle="Watch live" color="#C9922A" gradColors={['#C9922A', '#A67A1E']} onPress={() => router.push('/(tabs)/live')} />
+            <CategoryCard icon="rose"  title="Pooja"  subtitle="Daily sevas" color={palette.saffron} gradColors={['#A34020', '#5A1A0A']} onPress={() => router.push('/(tabs)/temples')} />
+            <CategoryCard icon="videocam" title="Live" subtitle="Watch live" color={palette.gold} gradColors={[palette.gold, palette.goldDark]} onPress={() => router.push('/(tabs)/live')} />
           </View>
         </View>
 
