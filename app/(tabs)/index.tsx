@@ -141,203 +141,116 @@ function DestinationsCarousel({ items, innerW }: { items: any[]; innerW: number 
 }
 
 // ── Temple Multi-Card Carousel (4 visible, auto-scroll) ──────────────────
-const ssArrow = {
-  width: 44, height: 44, borderRadius: 22,
-  backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center' as const,
-  justifyContent: 'center' as const, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
-  ...(Platform.OS === 'web' ? { boxShadow: '0 2px 8px rgba(0,0,0,0.4)' } : {}),
-};
-
 function TempleMultiCarousel({ temples, innerW }: { temples: any[]; innerW: number }) {
   const router = useRouter();
-  const [idx, setIdx] = useState(0);
-  const anim = useRef(new Animated.Value(0)).current;
-
-  const VISIBLE = 4;
-  const GAP = 20;
-  const cardW = Math.floor((innerW - GAP * (VISIBLE - 1)) / VISIBLE);
-  const step = cardW + GAP;
-  const maxIdx = Math.max(0, temples.length - VISIBLE);
-
-  const goTo = useCallback((next: number) => {
-    const n = ((next % (maxIdx + 1)) + (maxIdx + 1)) % (maxIdx + 1);
-    setIdx(n);
-    Animated.timing(anim, { toValue: -n * step, duration: 600, useNativeDriver: false }).start();
-  }, [maxIdx, step, anim]);
-
-  useEffect(() => {
-    if (temples.length <= VISIBLE) return;
-    const t = setInterval(() => goTo(idx + 1), 3500);
-    return () => clearInterval(t);
-  }, [idx, temples.length, goTo]);
-
-  if (temples.length === 0) return null;
-
   return (
-    <View>
-      <View style={{ overflow: 'hidden' } as any}>
-        <Animated.View style={{
-          flexDirection: 'row', gap: GAP,
-          transform: [{ translateX: anim }],
-          width: (cardW + GAP) * temples.length,
-        }}>
-          {temples.map((t: any) => (
-            <TouchableOpacity
-              key={t.id} activeOpacity={0.88}
-              onPress={() => router.push(`/temple/${t.id}` as any)}
-              style={{ width: cardW, height: 260, borderRadius: 20, overflow: 'hidden', backgroundColor: '#1C0606', borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)', flexShrink: 0 } as any}
-            >
-              {!!t.banner && <Image source={{ uri: t.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
-              <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(10,2,2,0.93)']} style={StyleSheet.absoluteFill} />
-              <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)' }}>
-                <Text style={{ color: GOLD, fontSize: 10, fontWeight: '700' }}>Explore →</Text>
-              </View>
-              <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 }}>
-                <Text style={{ color: 'rgba(212,175,55,0.75)', fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 5 }}>
-                  {(t.deity || '').toUpperCase()}
-                </Text>
-                <Text style={{ color: '#FFF8F0', fontSize: 17, fontWeight: '900', marginBottom: 4 }}>{t.name}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="location" size={11} color={GOLD} />
-                  <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{t.location}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </Animated.View>
-      </View>
-
-      {/* Controls */}
-      {temples.length > VISIBLE && (
-        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 24 }}>
-          <TouchableOpacity onPress={() => goTo(idx - 1)} style={ssArrow}>
-            <Ionicons name="chevron-back" size={20} color="#4A2C2A" />
-          </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {Array.from({ length: maxIdx + 1 }).map((_, i) => (
-              <TouchableOpacity key={i} onPress={() => goTo(i)}>
-                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
-              </TouchableOpacity>
-            ))}
+    <AutoCarousel
+      items={temples}
+      containerWidth={innerW}
+      visibleCount={4}
+      gap={20}
+      duration={600}
+      autoAdvanceMs={3500}
+      accentColor={GOLD}
+      arrowVariant="onDark"
+      arrowIconColor="#4A2C2A"
+      keyExtractor={(t: any) => t.id}
+      renderItem={(t: any, _i, cardW) => (
+        <TouchableOpacity
+          activeOpacity={0.88}
+          onPress={() => router.push(`/temple/${t.id}` as any)}
+          style={{ width: cardW, height: 260, borderRadius: 20, overflow: 'hidden', backgroundColor: '#1C0606', borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)' } as any}
+        >
+          {!!t.banner && <Image source={{ uri: t.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+          <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(10,2,2,0.93)']} style={StyleSheet.absoluteFill} />
+          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)' }}>
+            <Text style={{ color: GOLD, fontSize: 10, fontWeight: '700' }}>Explore →</Text>
           </View>
-          <TouchableOpacity onPress={() => goTo(idx + 1)} style={ssArrow}>
-            <Ionicons name="chevron-forward" size={20} color="#4A2C2A" />
-          </TouchableOpacity>
-        </View>
+          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 }}>
+            <Text style={{ color: 'rgba(212,175,55,0.75)', fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 5 }}>
+              {(t.deity || '').toUpperCase()}
+            </Text>
+            <Text style={{ color: '#FFF8F0', fontSize: 17, fontWeight: '900', marginBottom: 4 }}>{t.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="location" size={11} color={GOLD} />
+              <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{t.location}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
       )}
-    </View>
+    />
   );
 }
 
 // ── Pooja 3-Card Auto Carousel ────────────────────────────────────────────
 function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
   const router = useRouter();
-  const [idx, setIdx] = useState(0);
-  const anim = useRef(new Animated.Value(0)).current;
-
-  const VISIBLE = 3;
-  const GAP = 22;
-  const cardW = Math.floor((innerW - GAP * (VISIBLE - 1)) / VISIBLE);
-  const step = cardW + GAP;
-  const maxIdx = Math.max(0, poojas.length - VISIBLE);
-
-  const goTo = useCallback((next: number) => {
-    const n = ((next % (maxIdx + 1)) + (maxIdx + 1)) % (maxIdx + 1);
-    setIdx(n);
-    Animated.timing(anim, { toValue: -n * step, duration: 600, useNativeDriver: false }).start();
-  }, [maxIdx, step, anim]);
-
-  useEffect(() => {
-    if (poojas.length <= VISIBLE) return;
-    const t = setInterval(() => goTo(idx + 1), 3500);
-    return () => clearInterval(t);
-  }, [idx, poojas.length, goTo]);
-
-  if (poojas.length === 0) return null;
-
   return (
-    <View>
-      <View style={{ overflow: 'hidden' } as any}>
-        <Animated.View style={{
-          flexDirection: 'row', gap: GAP,
-          transform: [{ translateX: anim }],
-          width: (cardW + GAP) * poojas.length,
-        }}>
-          {poojas.map((p: any) => (
+    <AutoCarousel
+      items={poojas}
+      containerWidth={innerW}
+      visibleCount={3}
+      gap={22}
+      duration={600}
+      autoAdvanceMs={3500}
+      accentColor={GOLD}
+      arrowVariant="onDark"
+      arrowIconColor="#4A2C2A"
+      keyExtractor={(p: any) => p.id}
+      renderItem={(p: any, _i, cardW) => (
+        <TouchableOpacity
+          activeOpacity={0.88}
+          onPress={() => router.push(`/book-pooja/${p.id}` as any)}
+          style={{
+            width: cardW, borderRadius: 20, overflow: 'hidden',
+            backgroundColor: '#fff',
+            borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
+            ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(0,0,0,0.1)' } : {}),
+          } as any}
+        >
+          {/* Image */}
+          <View style={{ height: 210, position: 'relative', backgroundColor: '#F5E8E0' }}>
+            {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+          </View>
+          {/* Card body */}
+          <View style={{ padding: 18, borderTopWidth: 1, borderTopColor: 'rgba(139,21,21,0.08)' }}>
+            <View style={{
+              alignSelf: 'flex-start', marginBottom: 10,
+              backgroundColor: p.type === 'homam' ? 'rgba(139,21,21,0.08)' : 'rgba(178,34,34,0.1)',
+              borderWidth: 1,
+              borderColor: p.type === 'homam' ? 'rgba(139,21,21,0.35)' : 'rgba(178,34,34,0.35)',
+              paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
+            }}>
+              <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: '#1A0505' }}>
+                {p.type?.toUpperCase()}
+              </Text>
+            </View>
+            <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', marginBottom: 6, lineHeight: 22 }} numberOfLines={2}>
+              {p.name}
+            </Text>
+            <Text style={{ color: '#555555', fontSize: 12, lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
+              {p.description}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Text style={{ fontSize: 20, fontWeight: '900', color: SAFFRON }}>₹{p.price}</Text>
+              {!!p.duration && <Text style={{ fontSize: 11, color: '#8A7A6A' }}>{p.duration}</Text>}
+            </View>
             <TouchableOpacity
-              key={p.id} activeOpacity={0.88}
               onPress={() => router.push(`/book-pooja/${p.id}` as any)}
               style={{
-                width: cardW, borderRadius: 20, overflow: 'hidden', flexShrink: 0,
-                backgroundColor: '#fff',
-                borderWidth: 1, borderColor: 'rgba(139,21,21,0.12)',
-                ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(0,0,0,0.1)' } : {}),
+                borderRadius: 12, paddingVertical: 11, alignItems: 'center',
+                backgroundColor: '#8B3520',
+                ...(Platform.OS === 'web' ? {
+                  boxShadow: '0 4px 16px rgba(139,53,32,0.4)',
+                } : {}),
               } as any}
             >
-              {/* Image */}
-              <View style={{ height: 210, position: 'relative', backgroundColor: '#F5E8E0' }}>
-                {!!p.image && <Image source={{ uri: p.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
-              </View>
-              {/* Card body */}
-              <View style={{ padding: 18, borderTopWidth: 1, borderTopColor: 'rgba(139,21,21,0.08)' }}>
-                <View style={{
-                  alignSelf: 'flex-start', marginBottom: 10,
-                  backgroundColor: p.type === 'homam' ? 'rgba(139,21,21,0.08)' : 'rgba(178,34,34,0.1)',
-                  borderWidth: 1,
-                  borderColor: p.type === 'homam' ? 'rgba(139,21,21,0.35)' : 'rgba(178,34,34,0.35)',
-                  paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
-                }}>
-                  <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: '#1A0505' }}>
-                    {p.type?.toUpperCase()}
-                  </Text>
-                </View>
-                <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', marginBottom: 6, lineHeight: 22 }} numberOfLines={2}>
-                  {p.name}
-                </Text>
-                <Text style={{ color: '#555555', fontSize: 12, lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
-                  {p.description}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <Text style={{ fontSize: 20, fontWeight: '900', color: SAFFRON }}>₹{p.price}</Text>
-                  {!!p.duration && <Text style={{ fontSize: 11, color: '#8A7A6A' }}>{p.duration}</Text>}
-                </View>
-                <TouchableOpacity
-                  onPress={() => router.push(`/book-pooja/${p.id}` as any)}
-                  style={{
-                    borderRadius: 12, paddingVertical: 11, alignItems: 'center',
-                    backgroundColor: '#8B3520',
-                    ...(Platform.OS === 'web' ? {
-                      boxShadow: '0 4px 16px rgba(139,53,32,0.4)',
-                    } : {}),
-                  } as any}
-                >
-                  <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 }}>Book Now →</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 }}>Book Now →</Text>
             </TouchableOpacity>
-          ))}
-        </Animated.View>
-      </View>
-
-      {/* Controls */}
-      {poojas.length > VISIBLE && (
-        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 24 }}>
-          <TouchableOpacity onPress={() => goTo(idx - 1)} style={ssArrow}>
-            <Ionicons name="chevron-back" size={20} color="#4A2C2A" />
-          </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {Array.from({ length: maxIdx + 1 }).map((_, i) => (
-              <TouchableOpacity key={i} onPress={() => goTo(i)}>
-                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
-              </TouchableOpacity>
-            ))}
           </View>
-          <TouchableOpacity onPress={() => goTo(idx + 1)} style={ssArrow}>
-            <Ionicons name="chevron-forward" size={20} color="#4A2C2A" />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       )}
-    </View>
+    />
   );
 }
 
@@ -345,129 +258,92 @@ function PoojaCarousel({ poojas, innerW }: { poojas: any[]; innerW: number }) {
 function LiveGrid({ items, innerW }: { items: any[]; innerW: number }) {
   const router = useRouter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [idx, setIdx] = useState(0);
-  const anim = useRef(new Animated.Value(0)).current;
-
-  const COLS   = Math.min(3, items.length);
-  const GAP    = 16;
-  const cardW  = Math.floor((innerW - GAP * (COLS - 1)) / COLS);
-  const cardH  = Math.floor(cardW * 9 / 16);
-  const pageW  = innerW;
-  const maxIdx = Math.max(0, items.length - COLS);
-
-  const goTo = useCallback((next: number) => {
-    const n = Math.max(0, Math.min(next, maxIdx));
-    setIdx(n);
-    Animated.timing(anim, { toValue: -n * (cardW + GAP), duration: 550, useNativeDriver: false }).start();
-  }, [maxIdx, cardW, GAP, anim]);
-
-  useEffect(() => {
-    if (items.length <= COLS) return;
-    const t = setInterval(() => goTo(idx < maxIdx ? idx + 1 : 0), 4000);
-    return () => clearInterval(t);
-  }, [idx, items.length, COLS, maxIdx, goTo]);
-
-  if (items.length === 0) return null;
-
+  const COLS = Math.min(3, items.length);
   const FALLBACK = 'https://images.pexels.com/photos/30679068/pexels-photo-30679068.jpeg?auto=compress&cs=tinysrgb&w=800';
 
   return (
-    <View>
-      {/* Scrolling row */}
-      <View style={{ overflow: 'hidden' } as any}>
-        <Animated.View style={{ flexDirection: 'row', gap: GAP, transform: [{ translateX: anim }], width: (cardW + GAP) * items.length }}>
-          {items.map((item: any) => {
-            const hov = hoveredId === item.id;
-            return (
-              <View
-                key={item.id}
-                style={{ width: cardW, position: 'relative', zIndex: hov ? 50 : 1 } as any}
-                {...(IS_WEB ? {
-                  onMouseEnter: () => setHoveredId(item.id),
-                  onMouseLeave: () => setHoveredId(null),
-                } : {})}
-              >
-                {/* Thumbnail */}
+    <AutoCarousel
+      items={items}
+      containerWidth={innerW}
+      visibleCount={COLS}
+      gap={16}
+      duration={550}
+      autoAdvanceMs={4000}
+      accentColor={GOLD}
+      arrowVariant="onDark"
+      arrowIconColor="#fff"
+      keyExtractor={(item: any) => item.id}
+      renderItem={(item: any, _i, cardW) => {
+        const hov = hoveredId === item.id;
+        const cardH = Math.floor(cardW * 9 / 16);
+        return (
+          <View
+            style={{ position: 'relative', zIndex: hov ? 50 : 1 } as any}
+            {...(IS_WEB ? {
+              onMouseEnter: () => setHoveredId(item.id),
+              onMouseLeave: () => setHoveredId(null),
+            } : {})}
+          >
+            {/* Thumbnail */}
+            <TouchableOpacity
+              onPress={() => router.push(`/live-stream/${item.id}` as any)}
+              activeOpacity={0.88}
+              style={{
+                height: cardH, borderRadius: 14, overflow: 'hidden',
+                borderWidth: 2, borderColor: hov ? GOLD : 'transparent',
+                ...(IS_WEB && hov ? { boxShadow: '0 0 0 2px rgba(201,146,42,0.4), 0 16px 40px rgba(0,0,0,0.8)' } : {}),
+              } as any}
+            >
+              <Image source={{ uri: item.thumbnail || FALLBACK }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              {/* Strong gradient at bottom for text readability */}
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.88)']}
+                locations={[0.35, 0.6, 1]}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* LIVE badge — top left */}
+              <View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E53935', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
+                <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
+              </View>
+              {/* Title overlaid at bottom of image */}
+              <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12 }}>
+                <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', lineHeight: 18 }} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <Text style={{ color: GOLD, fontSize: 11, fontWeight: '600', marginTop: 4 }}>Tap to watch →</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* ── Hotstar-style hover popup ── */}
+            {hov && IS_WEB && (
+              <View style={{
+                position: 'absolute', top: cardH + 2, left: -10, right: -10,
+                backgroundColor: '#1C0606', borderRadius: 14, padding: 16, zIndex: 60,
+                borderWidth: 1, borderColor: 'rgba(201,146,42,0.22)',
+                boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+              } as any}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', marginBottom: 12 }} numberOfLines={2}>
+                  {item.title}
+                </Text>
                 <TouchableOpacity
                   onPress={() => router.push(`/live-stream/${item.id}` as any)}
-                  activeOpacity={0.88}
-                  style={{
-                    height: cardH, borderRadius: 14, overflow: 'hidden',
-                    borderWidth: 2, borderColor: hov ? GOLD : 'transparent',
-                    ...(IS_WEB && hov ? { boxShadow: '0 0 0 2px rgba(201,146,42,0.4), 0 16px 40px rgba(0,0,0,0.8)' } : {}),
-                  } as any}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start', marginBottom: 10 }}
                 >
-                  <Image source={{ uri: item.thumbnail || FALLBACK }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                  {/* Strong gradient at bottom for text readability */}
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.88)']}
-                    locations={[0.35, 0.6, 1]}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {/* LIVE badge — top left */}
-                  <View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E53935', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
-                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }}>LIVE NOW</Text>
-                  </View>
-                  {/* Title overlaid at bottom of image */}
-                  <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12 }}>
-                    <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', lineHeight: 18 }} numberOfLines={2}>
-                      {item.title}
-                    </Text>
-                    <Text style={{ color: GOLD, fontSize: 11, fontWeight: '600', marginTop: 4 }}>Tap to watch →</Text>
-                  </View>
+                  <Ionicons name="play" size={13} color="#1C0606" />
+                  <Text style={{ color: '#1C0606', fontWeight: '800', fontSize: 13 }}>Watch Live</Text>
                 </TouchableOpacity>
-
-                {/* ── Hotstar-style hover popup ── */}
-                {hov && IS_WEB && (
-                  <View style={{
-                    position: 'absolute', top: cardH + 2, left: -10, right: -10,
-                    backgroundColor: '#1C0606', borderRadius: 14, padding: 16, zIndex: 60,
-                    borderWidth: 1, borderColor: 'rgba(201,146,42,0.22)',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
-                  } as any}>
-                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', marginBottom: 12 }} numberOfLines={2}>
-                      {item.title}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/live-stream/${item.id}` as any)}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start', marginBottom: 10 }}
-                    >
-                      <Ionicons name="play" size={13} color="#1C0606" />
-                      <Text style={{ color: '#1C0606', fontWeight: '800', fontSize: 13 }}>Watch Live</Text>
-                    </TouchableOpacity>
-                    {!!item.description && (
-                      <Text style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12, lineHeight: 18 }} numberOfLines={2}>
-                        {item.description}
-                      </Text>
-                    )}
-                  </View>
+                {!!item.description && (
+                  <Text style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12, lineHeight: 18 }} numberOfLines={2}>
+                    {item.description}
+                  </Text>
                 )}
               </View>
-            );
-          })}
-        </Animated.View>
-      </View>
-
-      {/* Arrow + dots */}
-      {items.length > COLS && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 24 }}>
-          <TouchableOpacity onPress={() => goTo(idx - 1)} style={ssArrow}>
-            <Ionicons name="chevron-back" size={18} color="#fff" />
-          </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {Array.from({ length: maxIdx + 1 }).map((_, i) => (
-              <TouchableOpacity key={i} onPress={() => goTo(i)}>
-                <View style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === idx ? GOLD : 'rgba(255,255,255,0.25)' }} />
-              </TouchableOpacity>
-            ))}
+            )}
           </View>
-          <TouchableOpacity onPress={() => goTo(idx + 1)} style={ssArrow}>
-            <Ionicons name="chevron-forward" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+        );
+      }}
+    />
   );
 }
 

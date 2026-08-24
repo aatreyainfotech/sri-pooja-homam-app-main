@@ -13,6 +13,11 @@ interface AutoCarouselProps<T> {
   duration?: number;
   accentColor?: string;
   keyExtractor?: (item: T, index: number) => string;
+  /** 'light' (default): solid white arrow chip, for carousels on light
+   * section backgrounds. 'onDark': translucent arrow chip matching the
+   * dot color, for carousels rendered over a dark section background. */
+  arrowVariant?: 'light' | 'onDark';
+  arrowIconColor?: string;
 }
 
 // Generic version of the identical idx/Animated.Value/goTo()/setInterval/
@@ -30,6 +35,8 @@ export default function AutoCarousel<T>({
   duration = 650,
   accentColor = theme.colors.secondary,
   keyExtractor,
+  arrowVariant = 'light',
+  arrowIconColor,
 }: AutoCarouselProps<T>) {
   const [idx, setIdx] = useState(0);
   const anim = useRef(new Animated.Value(0)).current;
@@ -72,8 +79,11 @@ export default function AutoCarousel<T>({
 
       {maxIdx > 0 && (
         <View style={styles.controls}>
-          <TouchableOpacity onPress={() => goTo(idx - 1)} style={[styles.arrow, { borderColor: `${accentColor}30` }]}>
-            <Ionicons name="chevron-back" size={18} color={accentColor} />
+          <TouchableOpacity
+            onPress={() => goTo(idx - 1)}
+            style={[styles.arrow, arrowVariant === 'onDark' ? styles.arrowOnDark : [styles.arrowLight, { borderColor: `${accentColor}30` }]]}
+          >
+            <Ionicons name="chevron-back" size={18} color={arrowIconColor ?? accentColor} />
           </TouchableOpacity>
           <View style={styles.dots}>
             {Array.from({ length: maxIdx + 1 }).map((_, i) => (
@@ -87,8 +97,11 @@ export default function AutoCarousel<T>({
               </TouchableOpacity>
             ))}
           </View>
-          <TouchableOpacity onPress={() => goTo(idx + 1)} style={[styles.arrow, { borderColor: `${accentColor}30` }]}>
-            <Ionicons name="chevron-forward" size={18} color={accentColor} />
+          <TouchableOpacity
+            onPress={() => goTo(idx + 1)}
+            style={[styles.arrow, arrowVariant === 'onDark' ? styles.arrowOnDark : [styles.arrowLight, { borderColor: `${accentColor}30` }]]}
+          >
+            <Ionicons name="chevron-forward" size={18} color={arrowIconColor ?? accentColor} />
           </TouchableOpacity>
         </View>
       )}
@@ -112,10 +125,17 @@ const styles = StyleSheet.create({
   },
   arrow: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: theme.colors.white,
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
+  },
+  arrowLight: {
+    backgroundColor: theme.colors.white,
     ...(Platform.OS === 'web' ? ({ boxShadow: '0 2px 10px rgba(0,0,0,0.12)', cursor: 'pointer' } as any) : {}),
+  },
+  arrowOnDark: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.2)',
+    ...(Platform.OS === 'web' ? ({ boxShadow: '0 2px 8px rgba(0,0,0,0.4)' } as any) : {}),
   },
   dots: {
     flexDirection: 'row',
