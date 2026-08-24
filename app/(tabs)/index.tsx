@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated,
-  RefreshControl, FlatList, Dimensions, NativeSyntheticEvent,
+  RefreshControl, FlatList, NativeSyntheticEvent,
   NativeScrollEvent, useWindowDimensions, Linking, Platform, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -1321,11 +1321,10 @@ const wh: any = {
 };
 
 // ── Mobile Home (unchanged) ─────────────────────────────────────────────────
-const { width: SCREEN_W } = Dimensions.get('window');
-
 function MobileHome() {
   const router = useRouter();
   const { user } = useAuth();
+  const { width: SCREEN_W } = useWindowDimensions();
   const [temples, setTemples] = useState<any[]>([]);
   const [poojas, setPoojas] = useState<any[]>([]);
   const [live, setLive] = useState<any[]>([]);
@@ -1476,7 +1475,7 @@ function MobileHome() {
                 testID={`home-temple-card-${item.id}`}
                 activeOpacity={0.9}
                 onPress={() => router.push(`/temple/${item.id}`)}
-                style={mob.templeCard}
+                style={[mob.templeCard, { width: SCREEN_W * 0.75 }]}
               >
                 {!!item.banner && <Image source={{ uri: item.banner }} style={mob.templeImg} />}
                 <LinearGradient colors={['transparent', 'rgba(45,27,25,0.95)']} style={mob.templeOverlay}>
@@ -1715,69 +1714,6 @@ function AccomCarousel({ properties, innerW }: { properties: any[]; innerW: numb
   );
 }
 
-function AccomCard({ property: p, img, onPress }: { property: any; img: string | null; onPress: () => void }) {
-  const [imgError, setImgError] = useState(false);
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.88}
-      style={{
-        flex: 1, minWidth: 260,
-        backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-        borderWidth: 1, borderColor: 'rgba(139,21,21,0.1)',
-        ...(Platform.OS === 'web' ? { boxShadow: '0 6px 28px rgba(0,0,0,0.1)' } as any : {}),
-      } as any}
-    >
-      <View style={{ height: 180 }}>
-        {img && !imgError ? (
-          <Image
-            source={{ uri: img }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <LinearGradient
-            colors={['#3D1408', '#7A3020']}
-            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Ionicons name="bed-outline" size={48} color="rgba(255,255,255,0.7)" />
-          </LinearGradient>
-        )}
-        <View style={{
-          position: 'absolute', top: 12, left: 12,
-          backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
-        }}>
-          <Text style={{ color: SAFFRON, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>
-            {p.type || 'Hotel'}
-          </Text>
-        </View>
-        {p.min_price ? (
-          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#7A3020', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>₹{parseFloat(p.min_price).toFixed(0)}/night</Text>
-          </View>
-        ) : null}
-      </View>
-      <View style={{ padding: 16 }}>
-        <Text style={{ color: '#1A0505', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{p.name}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-          <Ionicons name="location-outline" size={13} color={SAFFRON} />
-          <Text style={{ color: '#666666', fontSize: 12 }} numberOfLines={1}>{p.city || p.address}</Text>
-        </View>
-        {p.amenities ? (
-          <Text style={{ color: '#999', fontSize: 11, marginBottom: 8 }} numberOfLines={1}>{p.amenities}</Text>
-        ) : null}
-        <TouchableOpacity
-          onPress={onPress}
-          style={{ paddingVertical: 10, borderRadius: 10, alignItems: 'center', backgroundColor: '#D35400' }}
-        >
-          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>View Rooms</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 // ── Root export ─────────────────────────────────────────────────────────────
 export default function Home() {
   const { width: W } = useWindowDimensions();
@@ -1834,7 +1770,7 @@ const mob: any = {
   catGrad: { padding: 16, alignItems: 'flex-start', borderRadius: 18, minHeight: 110 },
   catTitle: { fontSize: 14, color: '#fff', fontWeight: '700' },
   catSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
-  templeCard: { width: SCREEN_W * 0.75, height: 180, borderRadius: 20, overflow: 'hidden', backgroundColor: '#3D1515' },
+  templeCard: { height: 180, borderRadius: 20, overflow: 'hidden', backgroundColor: '#3D1515' },
   templeImg: { ...StyleSheet.absoluteFillObject },
   templeOverlay: { ...StyleSheet.absoluteFillObject, padding: 14, justifyContent: 'flex-end' },
   templeName: { color: '#fff', fontSize: 16, fontWeight: '700' },
