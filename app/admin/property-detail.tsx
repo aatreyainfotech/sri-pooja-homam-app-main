@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
-import { theme } from '../../src/constants/theme';
+import { palette, theme } from '../../src/constants/theme';
 
 const BLUE = '#0288D1';
 const IS_WEB = Platform.OS === 'web';
@@ -354,7 +354,7 @@ export default function PropertyDetail() {
   if (user && user.role !== 'super_admin') {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <LinearGradient colors={['#3D1408', '#7A3020', '#9A4130']} style={styles.header}>
+        <LinearGradient colors={[palette.maroonDeep, palette.maroon, palette.maroonLight]} style={styles.header}>
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <Ionicons name="chevron-back" size={24} color="#fff" />

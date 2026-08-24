@@ -9,12 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
+import { palette, theme } from '../../src/constants/theme';
 
 const STORAGE_KEY = 'sph_platform_settings';
 
 const GOLD   = '#D4AF37';
-const MAROON = '#7A3020';
-const DARK   = '#1A0C07';
+const MAROON = theme.colors.primary;
+const DARK   = palette.dark;
 const IS_WEB = Platform.OS === 'web';
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
