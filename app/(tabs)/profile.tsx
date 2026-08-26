@@ -12,9 +12,9 @@ import { useAuth } from '../../src/context/AuthContext';
 import { api, apiError } from '../../src/services/api';
 import { theme } from '../../src/constants/theme';
 import ResponsiveContainer from '../../src/components/ui/ResponsiveContainer';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as biometrics from '../../src/services/biometrics';
 import * as secureCredentials from '../../src/services/secureCredentials';
+import { getAuthToken } from '../../src/services/sessionStore';
 import { useScreenCaptureProtection, useScreenshotWarning } from '../../src/hooks/useScreenCaptureProtection';
 
 const IS_WEB = Platform.OS === 'web';
@@ -58,7 +58,7 @@ export default function Profile() {
       if (next) {
         const ok = await biometrics.authenticate(`Confirm ${biometricLabel} to enable it for sign-in`);
         if (!ok) return;
-        const token = await AsyncStorage.getItem('auth_token');
+        const token = await getAuthToken();
         if (!token || !user) {
           Alert.alert('Error', 'Could not read your current session. Try signing in again.');
           return;

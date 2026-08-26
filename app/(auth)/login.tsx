@@ -30,10 +30,39 @@ export default function Login() {
   const [showBiometricBtn, setShowBiometricBtn] = useState(false);
   const [biometricLabel, setBiometricLabel] = useState('Biometric Login');
   const [bioLoading, setBioLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownUntil, setCooldownUntil] = useState<number>(0);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
   const retryTimer = useRef<any>(null);
+  const cooldownTimer = useRef<any>(null);
   const passwordRef = useRef<TextInput>(null);
 
-  useEffect(() => () => { if (retryTimer.current) clearInterval(retryTimer.current); }, []);
+  useEffect(() => () => {
+    if (retryTimer.current) clearInterval(retryTimer.current);
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+  }, []);
+
+  useEffect(() => {
+    if (!cooldownUntil) {
+      setCooldownLeft(0);
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+      return;
+    }
+
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setCooldownLeft(left);
+      if (left === 0) {
+        if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+        setCooldownUntil(0);
+        setFailedAttempts(0);
+      }
+    };
+
+    tick();
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    cooldownTimer.current = setInterval(tick, 1000);
+  }, [cooldownUntil]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !biometricEnabled) { setShowBiometricBtn(false); return; }
@@ -76,6 +105,11 @@ export default function Login() {
   };
 
   const onLogin = async () => {
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      setLoginError(`Too many failed attempts. Try again in ${cooldownLeft}s.`);
+      return;
+    }
+
     if (!mobile.trim() || !password) {
       setLoginError('Please enter your mobile number and password.');
       return;
@@ -86,6 +120,8 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', { mobile: mobile.trim(), password });
+      setFailedAttempts(0);
+      setCooldownUntil(0);
       await setSession(data.token, data.user);
       router.replace('/(tabs)');
     } catch (e) {
@@ -95,9 +131,17 @@ export default function Login() {
         setLoginError('__waking__');
         startRetryCountdown(onLogin);
       } else {
-        setLoginError(msg);
-        setLoading(false);
+        const nextFails = failedAttempts + 1;
+        setFailedAttempts(nextFails);
+        if (nextFails >= 5) {
+          setCooldownUntil(Date.now() + 60_000);
+          setLoginError('Too many failed attempts. Wait 60s before trying again.');
+        } else {
+          setLoginError(msg);
+        }
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -355,8 +399,15 @@ export default function Login() {
                 fullWidth
                 loading={loading}
                 onPress={onLogin}
+                disabled={cooldownLeft > 0}
                 style={{ marginTop: theme.spacing.xs }}
               />
+
+              {cooldownLeft > 0 ? (
+                <Text style={{ color: '#9CA3AF', textAlign: 'center', marginTop: 8, fontSize: 12 }}>
+                  Security cooldown active: try again in {cooldownLeft}s
+                </Text>
+              ) : null}
 
               {showBiometricBtn && (
                 <Button

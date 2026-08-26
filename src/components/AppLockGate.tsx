@@ -48,6 +48,7 @@ function NativeAppLockGate({ children }: { children: ReactNode }) {
     if (Platform.OS === 'ios') {
       ScreenCapture.enableAppSwitcherProtectionAsync().catch(() => {});
     }
+    ScreenCapture.preventScreenCaptureAsync().catch(() => {});
     (async () => {
       try {
         const alreadyShown = await AsyncStorage.getItem(ROOTED_WARNING_SHOWN_KEY);
@@ -62,6 +63,10 @@ function NativeAppLockGate({ children }: { children: ReactNode }) {
         }
       } catch {}
     })();
+
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync().catch(() => {});
+    };
   }, []);
 
   // Re-lock the instant the app leaves the foreground, if biometric lock is on.

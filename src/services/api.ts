@@ -1,5 +1,5 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuthToken } from './sessionStore';
 
 const PROD_BACKEND = 'https://sripoojahomam-f7bvaqfxgreghkeu.centralindia-01.azurewebsites.net';
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL || PROD_BACKEND;
@@ -12,7 +12,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('auth_token');
+  const token = await getAuthToken();
   if (token) {
     config.headers = config.headers ?? {};
     (config.headers as any).Authorization = `Bearer ${token}`;

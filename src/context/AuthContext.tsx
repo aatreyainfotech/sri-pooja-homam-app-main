@@ -8,6 +8,7 @@ import {
   removePushTokenFromBackend,
 } from '../services/notifications';
 import * as secureCredentials from '../services/secureCredentials';
+import { clearAuthToken, getAuthToken, setAuthToken } from '../services/sessionStore';
 
 export type User = {
   id: string;
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMe = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const token = await getAuthToken();
       if (!token) {
         setUser(null);
         return;
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Register for push after restoring session
       registerPushForUser();
     } catch {
-      await AsyncStorage.removeItem('auth_token');
+      await clearAuthToken();
       setUser(null);
     } finally {
       setLoading(false);
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setSession = async (token: string, u: User) => {
-    await AsyncStorage.setItem('auth_token', token);
+    await setAuthToken(token);
     setUser(u);
     // Register push token right after login
     registerPushForUser();
@@ -111,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await removePushTokenFromBackend(pushTokenRef.current);
       pushTokenRef.current = null;
     }
-    await AsyncStorage.removeItem('auth_token');
+    await clearAuthToken();
     setUser(null);
     // Clear the cached biometric credential (but keep the user's preference
     // flag, so biometric login re-arms automatically on their next sign-in).
