@@ -124,7 +124,7 @@ export default function ManagePoojas() {
         renderItem={({ item }) => (
           <ResponsiveContainer maxWidth={900}>
             <Surface testID={`pmg-item-${item.id}`} elevation="sm" padding="sm" radius="lg" style={styles.card}>
-              <Image source={{ uri: item.image }} style={styles.img} />
+              <Image source={{ uri: item.image }} style={styles.img} resizeMode="contain" />
               <View style={{ flex: 1, marginLeft: theme.spacing.sm + 4 }}>
                 <Badge label={item.type.toUpperCase()} status="neutral" size="sm" />
                 <Text style={styles.name}>{item.name}</Text>
@@ -228,7 +228,7 @@ function ImagePickerField({ label, value, onChangeValue, testID }: any) {
           </TouchableOpacity>
         )}
       </View>
-      {value ? <Image source={{ uri: value }} style={styles.preview} resizeMode="cover" /> : null}
+      {value ? <Image source={{ uri: value }} style={styles.preview} resizeMode="contain" /> : null}
     </View>
   );
 }
@@ -266,7 +266,7 @@ function DateTimeField({ label, value, onChangeValue, testID, type }: {
 
 const styles = StyleSheet.create({
   card: { flexDirection: 'row' },
-  img: { width: 80, height: 80, borderRadius: theme.radius.sm + 4 },
+  img: { width: 80, height: 80, borderRadius: theme.radius.sm + 4, backgroundColor: theme.colors.bgPaper },
   name: { fontSize: 15, fontWeight: '700', color: theme.colors.text, marginTop: 2 },
   sub: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
   actEdit: { backgroundColor: theme.statusColors.neutral.bg, padding: 8, borderRadius: theme.radius.sm + 2 },
@@ -281,5 +281,5 @@ const styles = StyleSheet.create({
   imgRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   pickBtn: { backgroundColor: theme.colors.primary, padding: 13, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center' },
   clearBtn: { backgroundColor: theme.statusColors.danger.bg, padding: 13, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center' },
-  preview: { width: '100%', height: 160, borderRadius: theme.radius.md, marginTop: theme.spacing.sm + 2 },
+  preview: { width: '100%', height: 160, borderRadius: theme.radius.md, marginTop: theme.spacing.sm + 2, backgroundColor: theme.colors.bgPaper },
 });
