@@ -82,18 +82,20 @@ export default function BookPooja() {
       Alert.alert('Required', 'Please enter devotee name');
       return;
     }
-    if (!selectedDate) {
-      Alert.alert('Required', 'Please select a date for the pooja');
-      return;
-    }
-    if (!selectedTime) {
-      Alert.alert('Required', 'Please select a time slot for the pooja');
-      return;
+    if (!fixedScheduledAt) {
+      if (!selectedDate) {
+        Alert.alert('Required', 'Please select a date for the pooja');
+        return;
+      }
+      if (!selectedTime) {
+        Alert.alert('Required', 'Please select a time slot for the pooja');
+        return;
+      }
     }
     setLoading(true);
     try {
       const { data } = await api.post('/bookings', {
-        pooja_id: id, ...form, scheduled_at: buildScheduledAt(),
+        pooja_id: id, ...form, scheduled_at: fixedScheduledAt || buildScheduledAt(),
       });
       setBooking(data);
       setStep('payment');
@@ -136,6 +138,8 @@ export default function BookPooja() {
     return <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /></View>;
   }
 
+  const fixedScheduledAt: string | null = pooja.scheduled_at || null;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScreenHeader
@@ -161,51 +165,74 @@ export default function BookPooja() {
             <>
               <Surface elevation="sm" padding="md" radius="lg" style={{ marginBottom: theme.spacing.lg }}>
                 <Text style={styles.formTitle}>Schedule Pooja</Text>
-                <Text style={styles.formSub}>Choose the date and time for your pooja</Text>
 
-                {/* Date picker */}
-                <Text style={styles.fieldLabel}>Select Date *</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={{ marginBottom: 18 }}
-                  contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
-                >
-                  {dateOptions.map((item, i) => {
-                    const isSel = selectedDate?.toDateString() === item.toDateString();
-                    const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
-                    const date = item.getDate();
-                    const month = item.toLocaleDateString('en-IN', { month: 'short' });
-                    return (
-                      <TouchableOpacity
-                        key={i}
-                        onPress={() => setSelectedDate(item)}
-                        style={[styles.dateChip, isSel && styles.dateChipSel]}
-                      >
-                        <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
-                        <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
-                        <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                {fixedScheduledAt ? (
+                  <>
+                    <Text style={styles.formSub}>This pooja is performed at a fixed date and time set by the temple</Text>
+                    <View style={styles.fixedScheduleCard}>
+                      <View style={styles.fixedScheduleRow}>
+                        <Ionicons name="calendar" size={20} color={theme.colors.primary} />
+                        <Text style={styles.fixedScheduleText}>
+                          {new Date(fixedScheduledAt).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        </Text>
+                      </View>
+                      <View style={styles.fixedScheduleRow}>
+                        <Ionicons name="time" size={20} color={theme.colors.primary} />
+                        <Text style={styles.fixedScheduleText}>
+                          {new Date(fixedScheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </Text>
+                      </View>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.formSub}>Choose the date and time for your pooja</Text>
 
-                {/* Time slot picker */}
-                <Text style={styles.fieldLabel}>Select Time *</Text>
-                <View style={styles.timeGrid}>
-                  {timeSlots.map((slot) => {
-                    const isSel = selectedTime === slot;
-                    return (
-                      <Button
-                        key={slot}
-                        title={slot}
-                        variant={isSel ? 'secondary' : 'outline'}
-                        onPress={() => setSelectedTime(slot)}
-                        style={styles.timeChip}
-                      />
-                    );
-                  })}
-                </View>
+                    {/* Date picker */}
+                    <Text style={styles.fieldLabel}>Select Date *</Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={{ marginBottom: 18 }}
+                      contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
+                    >
+                      {dateOptions.map((item, i) => {
+                        const isSel = selectedDate?.toDateString() === item.toDateString();
+                        const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
+                        const date = item.getDate();
+                        const month = item.toLocaleDateString('en-IN', { month: 'short' });
+                        return (
+                          <TouchableOpacity
+                            key={i}
+                            onPress={() => setSelectedDate(item)}
+                            style={[styles.dateChip, isSel && styles.dateChipSel]}
+                          >
+                            <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
+                            <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
+                            <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+
+                    {/* Time slot picker */}
+                    <Text style={styles.fieldLabel}>Select Time *</Text>
+                    <View style={styles.timeGrid}>
+                      {timeSlots.map((slot) => {
+                        const isSel = selectedTime === slot;
+                        return (
+                          <Button
+                            key={slot}
+                            title={slot}
+                            variant={isSel ? 'secondary' : 'outline'}
+                            onPress={() => setSelectedTime(slot)}
+                            style={styles.timeChip}
+                          />
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
               </Surface>
 
               <Surface elevation="sm" padding="md" radius="lg" style={{ marginBottom: theme.spacing.lg }}>
@@ -469,4 +496,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },
+
+  fixedScheduleCard: {
+    backgroundColor: 'rgba(212,175,55,0.08)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.35)',
+    borderRadius: 14, padding: 14, gap: 10,
+  },
+  fixedScheduleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  fixedScheduleText: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
 });
