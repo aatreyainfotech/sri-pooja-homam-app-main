@@ -171,8 +171,8 @@ export default function ManagePoojas() {
               <Input testID="pmg-price-input" label="Price (₹)" value={form.price} onChangeText={(v: string) => setForm({ ...form, price: v })} keyboardType="decimal-pad" />
               <Input testID="pmg-duration-input" label="Duration" value={form.duration} onChangeText={(v: string) => setForm({ ...form, duration: v })} />
               <ImagePickerField testID="pmg-image-input" label="Pooja Image" value={form.image} onChangeValue={(v: string) => setForm({ ...form, image: v })} />
-              <Input testID="pmg-sched-date-input" label="Pooja Date (YYYY-MM-DD)" value={form.sched_date || ''} onChangeText={(v: string) => setForm({ ...form, sched_date: v })} />
-              <Input testID="pmg-sched-time-input" label="Pooja Time (HH:MM, 24h)" value={form.sched_time || ''} onChangeText={(v: string) => setForm({ ...form, sched_time: v })} />
+              <DateTimeField testID="pmg-sched-date-input" type="date" label="Pooja Date" value={form.sched_date || ''} onChangeValue={(v: string) => setForm({ ...form, sched_date: v })} />
+              <DateTimeField testID="pmg-sched-time-input" type="time" label="Pooja Time" value={form.sched_time || ''} onChangeValue={(v: string) => setForm({ ...form, sched_time: v })} />
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -229,6 +229,37 @@ function ImagePickerField({ label, value, onChangeValue, testID }: any) {
         )}
       </View>
       {value ? <Image source={{ uri: value }} style={styles.preview} resizeMode="cover" /> : null}
+    </View>
+  );
+}
+
+function DateTimeField({ label, value, onChangeValue, testID, type }: {
+  label: string; value: string; onChangeValue: (v: string) => void; testID?: string; type: 'date' | 'time';
+}) {
+  return (
+    <View style={{ marginBottom: theme.spacing.md }}>
+      <Text style={styles.flabel}>{label}</Text>
+      {Platform.OS === 'web' ? (
+        <input
+          type={type}
+          value={value || ''}
+          onChange={(e: any) => onChangeValue(e.target.value)}
+          style={{
+            backgroundColor: theme.colors.white, borderWidth: 1, borderColor: theme.colors.border,
+            borderRadius: theme.radius.md, padding: theme.spacing.sm + 4, fontSize: 14, color: theme.colors.text,
+            width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none',
+          } as any}
+        />
+      ) : (
+        <TextInput
+          testID={testID}
+          value={value || ''}
+          onChangeText={onChangeValue}
+          placeholder={type === 'date' ? 'YYYY-MM-DD' : 'HH:MM'}
+          placeholderTextColor={theme.colors.textMuted}
+          style={styles.finput}
+        />
+      )}
     </View>
   );
 }
