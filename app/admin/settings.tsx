@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { palette, theme } from '../../src/constants/theme';
+import Chip from '../../src/components/ui/Chip';
+import { AUDIENCE_OPTIONS } from '../../src/constants/audiences';
 
 const STORAGE_KEY = 'sph_platform_settings';
 
@@ -27,7 +29,7 @@ type ShowcaseItem = { id: string; name: string; url: string; description: string
 type ServiceCard = { id: string; icon: string; title: string; desc: string };
 type DestItem = { id: string; name: string; state: string; color: string; route: string; photo?: string };
 type StateItem = { id: string; name: string; color: string; highlights: string; temples: string[] };
-type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'destinations' | 'states' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features';
+type TabId = 'general' | 'branding' | 'hero' | 'sections' | 'destinations' | 'states' | 'services' | 'pricing' | 'showcase' | 'contact' | 'social' | 'seo' | 'features' | 'popup';
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'general',  label: 'General',        icon: 'settings-outline' },
@@ -43,9 +45,18 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'social',   label: 'Social Media',   icon: 'share-social-outline' },
   { id: 'seo',      label: 'SEO',            icon: 'search-outline' },
   { id: 'features', label: 'Feature Toggles',icon: 'toggle-outline' },
+  { id: 'popup',    label: 'Welcome Popup',  icon: 'megaphone-outline' },
 ];
 
 const DEFAULT_SETTINGS = {
+  // Welcome Popup
+  popupEnabled: true,
+  popupAudience: 'all',
+  popupTitle: 'Sri Pooja Homam',
+  popupSubtitle: "India's most trusted platform for sacred rituals",
+  popupImage: '',
+  popupCtaLabel: 'Register Free',
+  popupCtaRoute: '/(auth)/register',
   // General
   platformName: 'Sri Pooja Homam',
   tagline: 'Book Sacred Poojas & Homams Online',
@@ -932,6 +943,52 @@ function FeaturesTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, 
   );
 }
 
+/* ── Tab: Welcome Popup ────────────────────────────────────────────────── */
+function PopupTab({ s, set }: { s: typeof DEFAULT_SETTINGS; set: (k: string, v: any) => void }) {
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <SectionTitle title="Welcome Popup" sub="The promo popup shown on the home screen" />
+      <Toggle
+        label="Show Popup"
+        desc="Turn the popup off entirely without losing its content"
+        value={s.popupEnabled}
+        onChange={v => set('popupEnabled', v)}
+      />
+
+      <Text style={[f.label, { marginTop: 16 }]}>Send To</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        {AUDIENCE_OPTIONS.map((a) => (
+          <Chip
+            key={a.value}
+            label={a.label}
+            selected={s.popupAudience === a.value}
+            onPress={() => set('popupAudience', a.value)}
+          />
+        ))}
+      </View>
+
+      <Field label="Title" value={s.popupTitle} onChange={v => set('popupTitle', v)} />
+      <Field label="Subtitle" value={s.popupSubtitle} onChange={v => set('popupSubtitle', v)} multi />
+      <Field
+        label="Image URL (optional)"
+        value={s.popupImage}
+        onChange={v => set('popupImage', v)}
+        placeholder="https://example.com/photo.jpg"
+        hint="Shown inside the popup body. Leave blank to hide."
+      />
+      <Field label="Button Label" value={s.popupCtaLabel} onChange={v => set('popupCtaLabel', v)} />
+      <Field
+        label="Button Link"
+        value={s.popupCtaRoute}
+        onChange={v => set('popupCtaRoute', v)}
+        placeholder="/(auth)/register"
+        hint="An in-app route, e.g. /(tabs)/temples"
+      />
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
 /* ── Main Component ────────────────────────────────────────────────────── */
 export default function PlatformSettings() {
   const router = useRouter();
@@ -1065,6 +1122,7 @@ export default function PlatformSettings() {
     social:   <SocialTab   s={settings} set={set} />,
     seo:      <SEOTab      s={settings} set={set} />,
     features: <FeaturesTab s={settings} set={set} />,
+    popup:    <PopupTab    s={settings} set={set} />,
   };
 
   return (

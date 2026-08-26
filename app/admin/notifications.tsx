@@ -11,16 +11,7 @@ import Surface from '../../src/components/ui/Surface';
 import Input from '../../src/components/ui/Input';
 import Button from '../../src/components/ui/Button';
 import Chip from '../../src/components/ui/Chip';
-
-type Audience = 'all' | 'devotee' | 'poojari' | 'admin' | 'hotel_manager';
-
-const AUDIENCES: { value: Audience; label: string }[] = [
-  { value: 'all', label: 'All Users' },
-  { value: 'devotee', label: 'Devotees' },
-  { value: 'poojari', label: 'Poojaris' },
-  { value: 'admin', label: 'Admins' },
-  { value: 'hotel_manager', label: 'Hotel Managers' },
-];
+import { AUDIENCE_OPTIONS as AUDIENCES, Audience } from '../../src/constants/audiences';
 
 export default function AdminNotifications() {
   const router = useRouter();

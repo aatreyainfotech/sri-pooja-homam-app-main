@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import {
-  Modal, View, Text, TouchableOpacity, StyleSheet, Platform, ScrollView,
+  Modal, View, Text, TouchableOpacity, StyleSheet, Platform, ScrollView, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { matchesAudience } from '../constants/audiences';
 
 const SAFFRON = '#8B3520';
 const GOLD    = '#C9922A';
@@ -18,16 +21,60 @@ const FEATURES = [
   { icon: 'shield-checkmark-outline', text: '100% verified pujaris • Secure payments • 24/7 support' },
 ];
 
+type PopupConfig = {
+  popupEnabled: boolean;
+  popupAudience: string;
+  popupTitle: string;
+  popupSubtitle: string;
+  popupImage: string;
+  popupCtaLabel: string;
+  popupCtaRoute: string;
+};
+
+const DEFAULTS: PopupConfig = {
+  popupEnabled: true,
+  popupAudience: 'all',
+  popupTitle: 'Sri Pooja Homam',
+  popupSubtitle: "India's most trusted platform for sacred rituals",
+  popupImage: '',
+  popupCtaLabel: 'Register Free',
+  popupCtaRoute: '/(auth)/register',
+};
+
 export default function WelcomePopup() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [visible, setVisible] = useState(false);
+  const [config, setConfig] = useState<PopupConfig>(DEFAULTS);
 
   useEffect(() => {
-    const show = () => setVisible(true);
-    // Show the welcome popup on every visit (no session/once gate).
-    const t = setTimeout(show, 1800);
-    return () => clearTimeout(t);
+    (async () => {
+      try {
+        const { data } = await api.get('/platform-settings');
+        if (data && typeof data === 'object') {
+          setConfig({
+            popupEnabled: data.popupEnabled ?? DEFAULTS.popupEnabled,
+            popupAudience: data.popupAudience || DEFAULTS.popupAudience,
+            popupTitle: data.popupTitle || DEFAULTS.popupTitle,
+            popupSubtitle: data.popupSubtitle || DEFAULTS.popupSubtitle,
+            popupImage: data.popupImage || DEFAULTS.popupImage,
+            popupCtaLabel: data.popupCtaLabel || DEFAULTS.popupCtaLabel,
+            popupCtaRoute: data.popupCtaRoute || DEFAULTS.popupCtaRoute,
+          });
+        }
+      } catch {
+        // Keep defaults on failure — popup still works without the CMS.
+      }
+    })();
   }, []);
+
+  useEffect(() => {
+    if (authLoading) return; // wait for the session to resolve before audience-gating
+    if (!config.popupEnabled) return;
+    if (!matchesAudience(config.popupAudience, user?.role ?? null)) return;
+    const t = setTimeout(() => setVisible(true), 1800);
+    return () => clearTimeout(t);
+  }, [authLoading, user?.role, config]);
 
   const close = () => {
     setVisible(false);
@@ -50,13 +97,17 @@ export default function WelcomePopup() {
               <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#4CAF50' }} />
               <Text style={s.headerBadgeTxt}>LIVE POOJAS AVAILABLE</Text>
             </View>
-            <Text style={s.headerTitle}>Sri Pooja Homam</Text>
+            <Text style={s.headerTitle}>{config.popupTitle}</Text>
             <Text style={s.headerTelugu}>శ్రీ పూజా హోమం</Text>
-            <Text style={s.headerSub}>India's most trusted platform for sacred rituals</Text>
+            <Text style={s.headerSub}>{config.popupSubtitle}</Text>
           </LinearGradient>
 
           {/* Body */}
           <ScrollView style={s.body} showsVerticalScrollIndicator={false}>
+            {!!config.popupImage && (
+              <Image source={{ uri: config.popupImage }} style={s.promoImage} resizeMode="cover" />
+            )}
+
             <Text style={s.bodyTitle}>🙏 Why Choose Us?</Text>
 
             {FEATURES.map((f, i) => (
@@ -87,10 +138,10 @@ export default function WelcomePopup() {
             <View style={s.btns}>
               <TouchableOpacity
                 style={s.btn1}
-                onPress={() => { close(); router.push('/(auth)/register' as any); }}
+                onPress={() => { close(); router.push(config.popupCtaRoute as any); }}
               >
                 <Ionicons name="person-add" size={16} color="#fff" />
-                <Text style={s.btn1Text}>Register Free</Text>
+                <Text style={s.btn1Text}>{config.popupCtaLabel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={s.btn2}
@@ -144,9 +195,11 @@ const s = StyleSheet.create({
     borderRadius: 999, marginBottom: 12,
   },
   headerBadgeTxt: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
-  headerTitle: { color: '#fff', fontSize: IS_WEB ? 28 : 24, fontWeight: '900', letterSpacing: 0.5 },
+  headerTitle: { color: '#fff', fontSize: IS_WEB ? 28 : 24, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' },
   headerTelugu: { color: 'rgba(255,255,255,0.8)', fontSize: IS_WEB ? 16 : 14, fontWeight: '700', marginTop: 4 },
   headerSub: { color: 'rgba(255,255,255,0.65)', fontSize: 12, marginTop: 6, textAlign: 'center' },
+
+  promoImage: { width: '100%', height: 160, borderRadius: 16, marginBottom: 16, backgroundColor: '#F5E8E0' },
 
   body: { padding: 22, maxHeight: IS_WEB ? 420 : 340 },
   bodyTitle: { fontSize: IS_WEB ? 17 : 15, fontWeight: '800', color: DARK, marginBottom: 14 },
