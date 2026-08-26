@@ -15,7 +15,7 @@ import string
 import re
 import json
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from decimal import Decimal
 from typing import List, Optional, Literal
 
@@ -233,6 +233,29 @@ def safe_parse_dt(value) -> Optional[str]:
     except (ValueError, TypeError):
         return None
 
+def safe_parse_date(value) -> Optional[str]:
+    """Return YYYY-MM-DD only if it parses as a valid date, else None."""
+    if not value:
+        return None
+    try:
+        s = str(value).strip()[:10]
+        datetime.strptime(s, "%Y-%m-%d")
+        return s
+    except (ValueError, TypeError):
+        return None
+
+def to_date_value(value) -> Optional[date]:
+    if not value:
+        return None
+    try:
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, date):
+            return value
+        return datetime.fromisoformat(str(value).replace('Z', '+00:00')).date()
+    except (ValueError, TypeError):
+        return None
+
 def clean_user(u: dict) -> dict:
     if not u:
         return u
@@ -371,6 +394,8 @@ class PoojaIn(BaseModel):
     duration: str
     image: str
     scheduled_at: Optional[str] = None
+    release_from: Optional[str] = None
+    release_to: Optional[str] = None
 
 class BookingIn(BaseModel):
     pooja_id: str
@@ -499,6 +524,8 @@ async def _startup_init():
         "IF COL_LENGTH('dbo.temples','opening_hours') IS NULL ALTER TABLE dbo.temples ADD opening_hours NVARCHAR(200) NULL",
         "IF COL_LENGTH('dbo.poojas','duration') IS NULL ALTER TABLE dbo.poojas ADD duration NVARCHAR(50) NULL",
         "IF COL_LENGTH('dbo.poojas','scheduled_at') IS NULL ALTER TABLE dbo.poojas ADD scheduled_at DATETIME2 NULL",
+        "IF COL_LENGTH('dbo.poojas','release_from') IS NULL ALTER TABLE dbo.poojas ADD release_from DATE NULL",
+        "IF COL_LENGTH('dbo.poojas','release_to') IS NULL ALTER TABLE dbo.poojas ADD release_to DATE NULL",
         "IF COL_LENGTH('dbo.bookings','user_name') IS NULL ALTER TABLE dbo.bookings ADD user_name NVARCHAR(120) NULL",
         "IF COL_LENGTH('dbo.bookings','user_mobile') IS NULL ALTER TABLE dbo.bookings ADD user_mobile NVARCHAR(15) NULL",
         "IF COL_LENGTH('dbo.bookings','nakshatra') IS NULL ALTER TABLE dbo.bookings ADD nakshatra NVARCHAR(120) NULL",
@@ -961,7 +988,7 @@ async def delete_temple(temple_id: str, user: dict = Depends(require_super_admin
 
 # ----------------------------- Poojas ----------------------------------------
 POOJA_COLS = ("id, temple_id, name, pooja_type AS [type], description, price, "
-              "duration, image_url AS image, scheduled_at, is_active, created_at")
+              "duration, image_url AS image, scheduled_at, release_from, release_to, is_active, created_at")
 
 @api.get("/poojas")
 async def list_poojas(temple_id: Optional[str] = None, type: Optional[str] = None):
@@ -987,9 +1014,10 @@ async def create_pooja(data: PoojaIn, user: dict = Depends(require_admin)):
     p_id = str(uuid.uuid4())
     await sql_execute(
         "INSERT INTO dbo.poojas (id, temple_id, name, pooja_type, description, price, "
-        "duration, image_url, scheduled_at, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        "duration, image_url, scheduled_at, release_from, release_to, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
         (p_id, data.temple_id, data.name, data.type, data.description,
-         data.price, data.duration, data.image, safe_parse_dt(data.scheduled_at), now_naive())
+         data.price, data.duration, data.image, safe_parse_dt(data.scheduled_at),
+         safe_parse_date(data.release_from), safe_parse_date(data.release_to), now_naive())
     )
     try:
         tokens = await _tokens_for_topic("pooja")
@@ -1007,9 +1035,10 @@ async def create_pooja(data: PoojaIn, user: dict = Depends(require_admin)):
 async def update_pooja(pooja_id: str, data: PoojaIn, user: dict = Depends(require_admin)):
     rc = await sql_execute(
         "UPDATE dbo.poojas SET temple_id=?, name=?, pooja_type=?, description=?, "
-        "price=?, duration=?, image_url=?, scheduled_at=? WHERE id=?",
+        "price=?, duration=?, image_url=?, scheduled_at=?, release_from=?, release_to=? WHERE id=?",
         (data.temple_id, data.name, data.type, data.description,
-         data.price, data.duration, data.image, safe_parse_dt(data.scheduled_at), pooja_id)
+         data.price, data.duration, data.image, safe_parse_dt(data.scheduled_at),
+         safe_parse_date(data.release_from), safe_parse_date(data.release_to), pooja_id)
     )
     if rc == 0:
         raise HTTPException(404, "Pooja not found")
@@ -1036,11 +1065,29 @@ BOOKING_COLS = ("id, user_id, user_name, user_mobile, pooja_id, pooja_name, pooj
 @api.post("/bookings")
 async def create_booking(data: BookingIn, user: dict = Depends(get_current_user)):
     pooja = await sql_fetch_one(
-        "SELECT id, temple_id, name, pooja_type AS [type], price, scheduled_at FROM dbo.poojas WHERE id = ?",
+        "SELECT id, temple_id, name, pooja_type AS [type], price, scheduled_at, release_from, release_to "
+        "FROM dbo.poojas WHERE id = ?",
         (data.pooja_id,)
     )
     if not pooja:
         raise HTTPException(404, "Pooja not found")
+
+    release_from = to_date_value(pooja.get("release_from"))
+    release_to = to_date_value(pooja.get("release_to"))
+    chosen_schedule = data.scheduled_at or pooja.get("scheduled_at")
+
+    if not pooja.get("scheduled_at"):
+        if not release_from or not release_to:
+            raise HTTPException(400, "Booking schedule not released by super admin yet")
+        if not chosen_schedule:
+            raise HTTPException(400, "Please select a released pooja date and time")
+
+        chosen_date = to_date_value(chosen_schedule)
+        if not chosen_date:
+            raise HTTPException(400, "Invalid scheduled date/time")
+        if chosen_date < release_from or chosen_date > release_to:
+            raise HTTPException(400, "Selected date is not in released schedule")
+
     b_id = str(uuid.uuid4())
     # Create real Razorpay order if credentials are available
     order_id = None
@@ -1063,7 +1110,7 @@ async def create_booking(data: BookingIn, user: dict = Depends(get_current_user)
          pooja["name"], pooja["type"], pooja["temple_id"], pooja["price"],
          data.devotee_name, data.gotra, data.nakshatra, data.notes,
          "pending_payment", "pending", order_id,
-         data.scheduled_at or pooja.get("scheduled_at"), now_naive())
+            chosen_schedule, now_naive())
     )
     return await sql_fetch_one(f"SELECT {BOOKING_COLS} FROM dbo.bookings WHERE id = ?", (b_id,))
 

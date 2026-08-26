@@ -17,7 +17,10 @@ import Input from '../../src/components/ui/Input';
 import Chip from '../../src/components/ui/Chip';
 import Badge from '../../src/components/ui/Badge';
 
-const EMPTY = { temple_id: '', name: '', type: 'pooja', description: '', price: '', duration: '', image: '', sched_date: '', sched_time: '' };
+const EMPTY = {
+  temple_id: '', name: '', type: 'pooja', description: '', price: '', duration: '', image: '',
+  sched_date: '', sched_time: '', release_from: '', release_to: '',
+};
 
 function toISOScheduled(date: string, time: string): string | null {
   if (!date || !time) return null;
@@ -29,6 +32,12 @@ function fromISOScheduled(iso: string | null): { sched_date: string; sched_time:
     const d = new Date(iso);
     return { sched_date: d.toISOString().slice(0, 10), sched_time: d.toTimeString().slice(0, 5) };
   } catch { return { sched_date: '', sched_time: '' }; }
+}
+
+function toInputDate(value: string | null | undefined): string {
+  if (!value) return '';
+  try { return new Date(value).toISOString().slice(0, 10); }
+  catch { return ''; }
 }
 
 export default function ManagePoojas() {
@@ -65,13 +74,23 @@ export default function ManagePoojas() {
 
   const openEdit = (p: any) => {
     setEditing(p);
-    setForm({ ...p, price: String(p.price), ...fromISOScheduled(p.scheduled_at) });
+    setForm({
+      ...p,
+      price: String(p.price),
+      ...fromISOScheduled(p.scheduled_at),
+      release_from: toInputDate(p.release_from),
+      release_to: toInputDate(p.release_to),
+    });
     setModal(true);
   };
 
   const save = async () => {
     if (!form.temple_id || !form.name || !form.description || !form.price) {
       Alert.alert('Required', 'Temple, name, description and price are required');
+      return;
+    }
+    if (form.release_from && form.release_to && form.release_from > form.release_to) {
+      Alert.alert('Invalid dates', 'From Date cannot be after To Date');
       return;
     }
     const payload = {
@@ -83,6 +102,8 @@ export default function ManagePoojas() {
       duration: form.duration || '',
       image: form.image || '',
       scheduled_at: toISOScheduled(form.sched_date, form.sched_time),
+      release_from: form.release_from || null,
+      release_to: form.release_to || null,
     };
     try {
       if (editing) await api.put(`/poojas/${editing.id}`, payload);
@@ -171,8 +192,22 @@ export default function ManagePoojas() {
               <Input testID="pmg-price-input" label="Price (₹)" value={form.price} onChangeText={(v: string) => setForm({ ...form, price: v })} keyboardType="decimal-pad" />
               <Input testID="pmg-duration-input" label="Duration" value={form.duration} onChangeText={(v: string) => setForm({ ...form, duration: v })} />
               <ImagePickerField testID="pmg-image-input" label="Pooja Image" value={form.image} onChangeValue={(v: string) => setForm({ ...form, image: v })} />
-              <DateTimeField testID="pmg-sched-date-input" type="date" label="Pooja Date" value={form.sched_date || ''} onChangeValue={(v: string) => setForm({ ...form, sched_date: v })} />
-              <DateTimeField testID="pmg-sched-time-input" type="time" label="Pooja Time" value={form.sched_time || ''} onChangeValue={(v: string) => setForm({ ...form, sched_time: v })} />
+              <DateTimeField testID="pmg-release-from-input" type="date" label="From Date" value={form.release_from || ''} onChangeValue={(v: string) => setForm({ ...form, release_from: v })} />
+              <DateTimeField testID="pmg-release-to-input" type="date" label="To Date" value={form.release_to || ''} onChangeValue={(v: string) => setForm({ ...form, release_to: v })} />
+              <DateTimeField
+                testID="pmg-sched-date-input"
+                type="date"
+                label={form.type === 'homam' ? 'Homam Date' : 'Pooja Date'}
+                value={form.sched_date || ''}
+                onChangeValue={(v: string) => setForm({ ...form, sched_date: v })}
+              />
+              <DateTimeField
+                testID="pmg-sched-time-input"
+                type="time"
+                label={form.type === 'homam' ? 'Homam Time' : 'Pooja Time'}
+                value={form.sched_time || ''}
+                onChangeValue={(v: string) => setForm({ ...form, sched_time: v })}
+              />
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>

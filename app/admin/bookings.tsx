@@ -90,39 +90,48 @@ export default function AllBookings() {
           data={filtered}
           keyExtractor={(i) => i.id}
           contentContainerStyle={{ padding: theme.spacing.md, gap: theme.spacing.sm + 2 }}
-          renderItem={({ item }) => (
-            <Surface testID={`bmg-item-${item.id}`} elevation="sm" padding="sm" radius="lg" style={styles.card}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{item.pooja_name}</Text>
-                <Text style={styles.meta}>{item.devotee_name} • {item.user_mobile}</Text>
-                {item.gotra ? <Text style={styles.sub}>Gotra: {item.gotra}</Text> : null}
-                <Text style={styles.sub}>
-                  {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
-                </Text>
-                {item.pujari_name ? (
-                  <Badge label={item.pujari_name} status="warning" size="sm" style={{ marginTop: 5 }} />
-                ) : (
-                  <Badge label="Unassigned" status="warning" size="sm" style={{ marginTop: 5 }} />
-                )}
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.amt}>₹{item.amount?.toFixed(0)}</Text>
-                <Badge
-                  label={item.payment_status === 'paid' ? '✓ PAID' : 'PENDING'}
-                  status={item.payment_status === 'paid' ? 'success' : 'warning'}
-                  style={{ marginTop: 4 }}
-                />
-                <TouchableOpacity
-                  testID={`assign-pujari-${item.id}`}
-                  onPress={() => openAssign(item)}
-                  style={styles.assignBtn}
-                >
-                  <Ionicons name="person-add" size={12} color="#fff" />
-                  <Text style={styles.assignBtnText}>{item.pujari_name ? 'Reassign' : 'Assign Pujari'}</Text>
-                </TouchableOpacity>
-              </View>
-            </Surface>
-          )}
+          renderItem={({ item }) => {
+            const slot = item.scheduled_at || item.created_at;
+            const slotDate = slot
+              ? new Date(slot).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              : '-';
+            const slotTime = slot
+              ? new Date(slot).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
+              : '-';
+
+            return (
+              <Surface testID={`bmg-item-${item.id}`} elevation="sm" padding="sm" radius="lg" style={styles.card}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name}>{item.pooja_name}</Text>
+                  <Text style={styles.meta}>{item.devotee_name} • {item.user_mobile}</Text>
+                  {item.gotra ? <Text style={styles.sub}>Gotra: {item.gotra}</Text> : null}
+                  <Text style={styles.sub}>Pooja Date: {slotDate}</Text>
+                  <Text style={styles.sub}>Pooja Time: {slotTime}</Text>
+                  {item.pujari_name ? (
+                    <Badge label={item.pujari_name} status="warning" size="sm" style={{ marginTop: 5 }} />
+                  ) : (
+                    <Badge label="Unassigned" status="warning" size="sm" style={{ marginTop: 5 }} />
+                  )}
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={styles.amt}>₹{item.amount?.toFixed(0)}</Text>
+                  <Badge
+                    label={item.payment_status === 'paid' ? '✓ PAID' : 'PENDING'}
+                    status={item.payment_status === 'paid' ? 'success' : 'warning'}
+                    style={{ marginTop: 4 }}
+                  />
+                  <TouchableOpacity
+                    testID={`assign-pujari-${item.id}`}
+                    onPress={() => openAssign(item)}
+                    style={styles.assignBtn}
+                  >
+                    <Ionicons name="person-add" size={12} color="#fff" />
+                    <Text style={styles.assignBtnText}>{item.pujari_name ? 'Reassign' : 'Assign Pujari'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </Surface>
+            );
+          }}
           ListEmptyComponent={<Text style={styles.empty}>No bookings yet</Text>}
         />
       </ResponsiveContainer>

@@ -40,15 +40,26 @@ export default function BookPooja() {
   const [selectedTime, setSelectedTime] = useState<string>('');
 
   const dateOptions = useMemo(() => {
+    if (!pooja || pooja.scheduled_at) return [];
+
+    const fromRaw = pooja.release_from ? new Date(pooja.release_from) : null;
+    const toRaw = pooja.release_to ? new Date(pooja.release_to) : null;
+    if (!fromRaw || !toRaw || Number.isNaN(fromRaw.getTime()) || Number.isNaN(toRaw.getTime())) return [];
+
+    const from = new Date(fromRaw);
+    const to = new Date(toRaw);
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+    if (from > to) return [];
+
     const days: Date[] = [];
-    const today = new Date();
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
+    const d = new Date(from);
+    while (d <= to && days.length <= 120) {
       days.push(d);
+      d.setDate(d.getDate() + 1);
     }
     return days;
-  }, []);
+  }, [pooja]);
 
   const timeSlots = [
     '5:00 AM', '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
@@ -64,6 +75,12 @@ export default function BookPooja() {
     })();
   }, [id]);
 
+  useEffect(() => {
+    if (!selectedDate) return;
+    const stillValid = dateOptions.some((d) => d.toDateString() === selectedDate.toDateString());
+    if (!stillValid) setSelectedDate(null);
+  }, [dateOptions, selectedDate]);
+
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const buildScheduledAt = (): string | null => {
@@ -72,9 +89,12 @@ export default function BookPooja() {
     let [hours, minutes] = timePart.split(':').map(Number);
     if (meridiem === 'PM' && hours !== 12) hours += 12;
     if (meridiem === 'AM' && hours === 12) hours = 0;
-    const dt = new Date(selectedDate);
-    dt.setHours(hours, minutes, 0, 0);
-    return dt.toISOString();
+    const y = selectedDate.getFullYear();
+    const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const d = String(selectedDate.getDate()).padStart(2, '0');
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(minutes).padStart(2, '0');
+    return `${y}-${m}-${d}T${hh}:${mm}:00`;
   };
 
   const createBooking = async () => {
@@ -83,8 +103,17 @@ export default function BookPooja() {
       return;
     }
     if (!fixedScheduledAt) {
+      if (dateOptions.length === 0) {
+        Alert.alert('Not released', 'Super Admin has not released booking dates for this pooja yet.');
+        return;
+      }
       if (!selectedDate) {
         Alert.alert('Required', 'Please select a date for the pooja');
+        return;
+      }
+      const isReleasedDate = dateOptions.some((d) => d.toDateString() === selectedDate.toDateString());
+      if (!isReleasedDate) {
+        Alert.alert('Invalid date', 'Please choose only from released dates.');
         return;
       }
       if (!selectedTime) {
@@ -186,34 +215,42 @@ export default function BookPooja() {
                   </>
                 ) : (
                   <>
-                    <Text style={styles.formSub}>Choose the date and time for your pooja</Text>
+                    <Text style={styles.formSub}>
+                      {dateOptions.length > 0
+                        ? 'Choose the date and time for your pooja'
+                        : 'No dates released by Super Admin yet for this pooja'}
+                    </Text>
 
                     {/* Date picker */}
                     <Text style={styles.fieldLabel}>Select Date *</Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      style={{ marginBottom: 18 }}
-                      contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
-                    >
-                      {dateOptions.map((item, i) => {
-                        const isSel = selectedDate?.toDateString() === item.toDateString();
-                        const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
-                        const date = item.getDate();
-                        const month = item.toLocaleDateString('en-IN', { month: 'short' });
-                        return (
-                          <TouchableOpacity
-                            key={i}
-                            onPress={() => setSelectedDate(item)}
-                            style={[styles.dateChip, isSel && styles.dateChipSel]}
-                          >
-                            <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
-                            <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
-                            <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </ScrollView>
+                    {dateOptions.length > 0 ? (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={{ marginBottom: 18 }}
+                        contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
+                      >
+                        {dateOptions.map((item, i) => {
+                          const isSel = selectedDate?.toDateString() === item.toDateString();
+                          const day = item.toLocaleDateString('en-IN', { weekday: 'short' });
+                          const date = item.getDate();
+                          const month = item.toLocaleDateString('en-IN', { month: 'short' });
+                          return (
+                            <TouchableOpacity
+                              key={i}
+                              onPress={() => setSelectedDate(item)}
+                              style={[styles.dateChip, isSel && styles.dateChipSel]}
+                            >
+                              <Text style={[styles.dateChipDay, isSel && styles.dateChipTextSel]}>{day}</Text>
+                              <Text style={[styles.dateChipNum, isSel && styles.dateChipTextSel]}>{date}</Text>
+                              <Text style={[styles.dateChipMonth, isSel && styles.dateChipTextSel]}>{month}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    ) : (
+                      <Text style={{ color: theme.colors.textMuted, marginBottom: 18 }}>No released dates available.</Text>
+                    )}
 
                     {/* Time slot picker */}
                     <Text style={styles.fieldLabel}>Select Time *</Text>
